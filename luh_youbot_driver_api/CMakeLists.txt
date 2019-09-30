@@ -14,18 +14,20 @@ find_package(catkin REQUIRED COMPONENTS
   youbot_driver
   roslib
   luh_youbot_kinematics
+  rospy
+  message_generation
 )
+catkin_python_setup()
 catkin_package(
  INCLUDE_DIRS include
  LIBRARIES luh_youbot_driver_api
- CATKIN_DEPENDS youbot_driver #geometry_msgs nav_msgs roscpp setcap std_msgs std_srvs tf youbot_driver
+ CATKIN_DEPENDS youbot_driver #geometry_msgs nav_msgs roscpp setcap std_msgs std_srvs tf youbot_driver rospy message_generation
 #  DEPENDS system_lib
 )
 
 ###########
 ## Build ##
 ###########
-
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
@@ -46,3 +48,4 @@ add_library(luh_youbot_driver_api
 )
 
 add_dependencies(luh_youbot_driver_api luh_youbot_kinematics)
+

@@ -78,6 +78,31 @@ YoubotBaseInterface::~YoubotBaseInterface()
     delete base_;
 }
 
+void YoubotBaseInterface::cmd_vel_callback(const geometry_msgs::Twist::ConstPtr& msg){
+
+    // security thresholding for x-axis
+    if (msg->linear.x > max_linear_vel_)
+        velocity_command_.linear.x = max_linear_vel_;
+    if (msg->linear.x < -max_linear_vel_)
+        velocity_command_.linear.x = -max_linear_vel_;
+
+    // security thresholding for y-axis
+    if (msg->linear.y > max_linear_vel_)
+        velocity_command_.linear.y = max_linear_vel_;
+    if (msg->linear.y < -max_linear_vel_)
+        velocity_command_.linear.y = -max_linear_vel_;
+
+    // security thresholding for z-axis
+    if (msg->angular.z > max_angular_vel_)
+        velocity_command_.angular.z = max_angular_vel_;
+    if (msg->angular.z < -max_angular_vel_)
+        velocity_command_.angular.z = -max_angular_vel_;
+
+
+    updateController();
+    writeCommands();
+}
+
 //########## INITIALISE ################################################################################################
 void YoubotBaseInterface::initialise()
 {
@@ -155,7 +180,7 @@ void YoubotBaseInterface::initialise()
     joint_state_publisher_ = config_->node_handle->advertise<sensor_msgs::JointState>("base/joint_states", 1);
     //    joint_current_publisher_ = node.advertise<std_msgs::Float64MultiArray>("base/joint_currents", 1);
     //    joint_torque_publisher_ = node.advertise<std_msgs::Float64MultiArray>("base/joint_torques", 1);
-
+    config_->node_handle->subscribe("cmd_vel_0", 1000, &YoubotBaseInterface::cmd_vel_callback, this);
     // === SERVICE SERVERS ===
     switch_off_server_ = config_->node_handle->advertiseService(
                 "base/switchOffMotors", &YoubotBaseInterface::switchOffBaseMotorsCallback, this);
@@ -616,4 +641,21 @@ bool YoubotBaseInterface::switchOnBaseMotorsCallback(std_srvs::Empty::Request &r
 geometry_msgs::Pose2D YoubotBaseInterface::getPose()
 {
     return current_pose_;
+}
+
+
+int main(int argc, char** argv){
+    ros::init(argc, argv, "base_interface_node");
+
+    ros::NodeHandle node_handle;
+    YoubotBaseInterface node("youbot-base", node_handle); 
+    node.initialise();
+    ROS_INFO_STREAM("base_interface_node namespace:"<< ros::this_node::getNamespace());
+    ROS_INFO("base_interface_node is spinning...");
+    ros::AsyncSpinner spinner(4);
+    spinner.start();
+
+    ros::waitForShutdown();
+
+    return 0;
 }

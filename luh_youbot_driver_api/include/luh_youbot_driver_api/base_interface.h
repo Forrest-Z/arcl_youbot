@@ -89,7 +89,6 @@ public:
     void setVelocity(double v_x, double v_y, double v_theta);
     void setVelocity(const geometry_msgs::Twist &velocity);
     geometry_msgs::Pose2D getPose();
-
     virtual bool isInitialised(){return base_ != NULL;}
 
 protected:
@@ -106,6 +105,7 @@ protected:
 
     ros::ServiceServer switch_off_server_;
     ros::ServiceServer switch_on_server_;
+    ros::Subscriber base_velocity_sub_;
 
     tf::TransformBroadcaster odom_broadcaster_;
 
@@ -156,6 +156,6 @@ protected:
 
     bool switchOffBaseMotorsCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
     bool switchOnBaseMotorsCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
-
+    void cmd_vel_callback(const geometry_msgs::Twist::ConstPtr& msg);
 };
 #endif // LUH_YOUBOT_BASE_INTERFACE_H

@@ -211,3 +211,20 @@ YoubotBaseInterface* YoubotInterface::base()
 {
     return base_;
 }
+
+
+int main(int argc, char** argv){
+    ros::init(argc, argv, "base_interface_node");
+
+    ros::NodeHandle node_handle;
+    YoubotInterface node(node_handle); 
+    node.initialise();
+    ROS_INFO_STREAM("youbot_interface_node namespace:"<< ros::this_node::getNamespace());
+    ROS_INFO("youbot_interface_node is spinning...");
+    ros::AsyncSpinner spinner(4);
+    spinner.start();
+
+    ros::waitForShutdown();
+
+    return 0;
+}
