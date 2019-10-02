@@ -47,46 +47,36 @@ from tf.transformations import euler_from_quaternion
 class baseGazeboInterface(baseInterface):
     def __init__(self, robot_id):
         self.robot_id = robot_id
+        self.init()
+        self.odom_msg_ = nav_msgs.msg.Odometry()
 
     def odom_callback(data):
         self.odom_msg_ = data
 
     def init(self): 
         self.cmd_vel_pub_ = rospy.Publisher("gazebo/cmd_vel", geometry_msgs.msg.Twist, queue_size=10)
-        # rospy.Subscriber("odom_" + str(self.robot_id), nav_msgs.msg.Odometry, odom_callback)
+        #rospy.Subscriber("odom_" + str(self.robot_id), nav_msgs.msg.Odometry, odom_callback)
 
-    def readState(self):
+    def read_state(self):
         self.pose2d = geometry_msgs.msg.Pose2D()
         self.pose2d.x = self.odom_msg_.pose.pose.position.x
         self.pose2d.y = self.odom_msg_.pose.pose.position.y
-        (roll, pitch, yaw) = euler_from_quaternion(self.odom_msg_.pose.pose.orientation)
+        q = (self.odom_msg_.pose.pose.orientation.x,
+             self.odom_msg_.pose.pose.orientation.y,
+             self.odom_msg_.pose.pose.orientation.z,
+             self.odom_msg_.pose.pose.orientation.w)
+        (roll, pitch, yaw) = euler_from_quaternion(q)
         if yaw > math.pi:
             yaw -= 2 * math.pi
         elif yaw < - math.pi:
             yaw += 2 * math.pi
         self.pose2d.theta = yaw
         
-    def writeCommand(self):
+    def write_command(self):
         self.cmd_vel_pub_.publish(self.velocity_command_)
-
-    def setVelocity(self, vel):
+    
+    def set_velocity(self, vel):
         self.velocity_command_ = vel
-
-
-
-if __name__ == '__main__':
-    rospy.init_node("base_gazebo_interface", anonymous=True)
-    try:
-        r = rospy.Rate(0.2) # 10hz
-        while not rospy.is_shutdown():
-            interface_ = baseGazeboInterface(0)
-            vel_cmd = geometry_msgs.msg.Twist()
-            vel_cmd.linear.x = 1
-            vel_cmd.linear.y = 0
-            vel_cmd.angular.z = 0
-            interface_.init()
-            interface_.setVelocity(vel_cmd)
-            interface_.writeCommand()
-            r.sleep()
-    except rospy.ROSInterruptException:
+    
+    def publish_message(self):
         pass

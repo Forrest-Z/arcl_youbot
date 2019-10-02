@@ -4,8 +4,8 @@
 #include <ros/ros.h>
 #include <boost/asio.hpp>
 #include "actionlib/server/simple_action_server.h"
-#include "luh_youbot_msgs/GripObjectAction.h"
-#include <luh_youbot_msgs/SetGripperAction.h>
+#include "arcl_youbot_msgs/GripObjectAction.h"
+#include <arcl_youbot_msgs/SetGripperAction.h>
 #include <std_msgs/Float32.h>
 
 namespace luh_youbot_gripper

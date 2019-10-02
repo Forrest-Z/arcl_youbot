@@ -199,7 +199,7 @@ void GripperNode::setGripperCallback()
 {
     ROS_INFO("==== Module Gripper ====");
 
-    luh_youbot_msgs::SetGripperGoal::ConstPtr goal = set_gripper_server_->acceptNewGoal();
+    arcl_youbot_msgs::SetGripperGoal::ConstPtr goal = set_gripper_server_->acceptNewGoal();
 
     double new_goal_width = goal->gripper_width;
 

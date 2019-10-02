@@ -62,7 +62,7 @@
 
 #include "luh_youbot_driver_api/arm_interface.h"
 
-namespace ykin = luh_youbot_kinematics;
+namespace ykin = arcl_youbot_kinematics;
 
 //########## CONSTRUCTOR ###############################################################################################
 YoubotArmInterface::YoubotArmInterface(std::string name, YoubotConfiguration &config):

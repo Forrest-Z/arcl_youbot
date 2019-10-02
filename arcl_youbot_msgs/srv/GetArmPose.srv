@@ -1,0 +1,4 @@
+---
+arcl_youbot_msgs/JointVector joint_pose
+arcl_youbot_msgs/CartesianVector cartesian_pose
+arcl_youbot_msgs/CylindricVector cylindric_pose

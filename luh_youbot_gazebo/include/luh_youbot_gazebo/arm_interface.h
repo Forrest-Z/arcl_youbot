@@ -65,7 +65,7 @@
 
 #include <sensor_msgs/JointState.h>
 #include <std_srvs/Empty.h>
-#include <luh_youbot_kinematics/arm_kinematics.h>
+#include <arcl_youbot_kinematics/arm_kinematics.h>
 #include <luh_youbot_driver_api/arm_interface.h>
 
 class YoubotArmGazeboInterface : public YoubotArmInterface

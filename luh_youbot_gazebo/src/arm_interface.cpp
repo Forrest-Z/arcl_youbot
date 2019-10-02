@@ -61,9 +61,9 @@
  ******************************************************************************/
 
 #include "luh_youbot_gazebo/arm_interface.h"
-#include <luh_youbot_msgs/JointVector.h>
+#include <arcl_youbot_msgs/JointVector.h>
 
-namespace ykin = luh_youbot_kinematics;
+namespace ykin = arcl_youbot_kinematics;
 
 //########## CONSTRUCTOR ###############################################################################################
 YoubotArmGazeboInterface::YoubotArmGazeboInterface(std::string name, YoubotConfiguration &config):
@@ -111,11 +111,11 @@ void YoubotArmGazeboInterface::initialise(bool use_standard_gripper, bool use_lu
     joint_state_publisher_ = config_->node_handle->advertise<sensor_msgs::JointState>(topic_name, 1);
 
     // === GAZEBO STUFF ===
-    position_command_publisher_ = config_->node_handle->advertise<luh_youbot_msgs::JointVector>(
+    position_command_publisher_ = config_->node_handle->advertise<arcl_youbot_msgs::JointVector>(
                 "gazebo/joint_position_command", 1);
-    velocity_command_publisher_ = config_->node_handle->advertise<luh_youbot_msgs::JointVector>(
+    velocity_command_publisher_ = config_->node_handle->advertise<arcl_youbot_msgs::JointVector>(
                 "gazebo/joint_velocity_command", 1);
-    torque_command_publisher_ = config_->node_handle->advertise<luh_youbot_msgs::JointVector>(
+    torque_command_publisher_ = config_->node_handle->advertise<arcl_youbot_msgs::JointVector>(
                 "gazebo/joint_torque_command", 1);
     joint_state_subscriber_ = config_->node_handle->subscribe("gazebo/joint_states", 1,
                                                               &YoubotArmGazeboInterface::jointStateCallback, this);
@@ -162,7 +162,7 @@ bool YoubotArmGazeboInterface::writeCommands()
 {
     if(has_new_arm_command_)
     {
-        luh_youbot_msgs::JointVector msg;
+        arcl_youbot_msgs::JointVector msg;
 
         if(mode_ == POSITION)
         {
@@ -189,7 +189,7 @@ bool YoubotArmGazeboInterface::writeCommands()
             msg.q3 = torque_command_[2];
             msg.q4 = torque_command_[3];
             msg.q5 = torque_command_[4];
-            torque_command_publisher_.publish(msg);
+            torque_command_publisher_.publish(msg); 
         }
 
         has_new_arm_command_ = false;

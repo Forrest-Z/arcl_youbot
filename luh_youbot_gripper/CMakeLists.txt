@@ -7,7 +7,7 @@ find_package(catkin REQUIRED COMPONENTS
   roslib
   sensor_msgs
   actionlib
-  luh_youbot_msgs
+  arcl_youbot_msgs
 )
 
 add_service_files(
@@ -19,7 +19,7 @@ generate_messages()
 
 catkin_package(
   INCLUDE_DIRS include
-  DEPENDS luh_youbot_msgs
+  DEPENDS arcl_youbot_msgs
 )
 
 ###########

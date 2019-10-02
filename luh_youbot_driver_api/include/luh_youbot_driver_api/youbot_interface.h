@@ -66,6 +66,7 @@
 #include "luh_youbot_driver_api/arm_interface.h"
 #include "luh_youbot_driver_api/base_interface.h"
 #include <ros/package.h>
+#include <boost/thread/mutex.hpp>
 
 class YoubotInterface
 {
@@ -85,15 +86,22 @@ public:
 
     bool hasArms(){return arms_.size() > 0;}
     bool hasBase(){return config_.has_base;}
+    // arm timer callback
+    void armTimerCallback(const ros::TimerEvent &evt);
 
+    // base timer callback
+    void baseTimerCallback(const ros::TimerEvent &evt);
 protected:
 
     YoubotConfiguration config_;
 
     YoubotBaseInterface *base_;
     std::vector<YoubotArmInterface*> arms_;
-
-
+    ros::Timer arm_timer_;
+    ros::Timer base_timer_;
+    double arm_frequency_;
+    double base_frequency_;
+    boost::mutex ethercat_mutex_;
 
 
 };

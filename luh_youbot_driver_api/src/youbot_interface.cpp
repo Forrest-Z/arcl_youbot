@@ -90,7 +90,7 @@ void YoubotInterface::initialise(bool use_standard_gripper, bool use_luh_gripper
     config_.config_path = ros::package::getPath("youbot_driver");
     config_.config_path.append("/config");
     config_.node_handle->param<std::string>("youBotConfigurationFilePath", config_.config_path, config_.config_path);
-
+    config_.node_handle->param("luh_youbot_controller/base_controller_frequency", base_frequency_, 50.0);
     // === CREATE ARMS ===
     if(youbot_has_arms)
     {
@@ -128,6 +128,44 @@ void YoubotInterface::initialise(bool use_standard_gripper, bool use_luh_gripper
         arms_[i]->initialise(use_standard_gripper,use_luh_gripper_v3);
         ROS_ASSERT(arms_[i]->isInitialised());
     }
+
+    base_timer_ = config_.node_handle->createTimer(ros::Duration(1.0/base_frequency_),
+                                     &YoubotInterface::baseTimerCallback, this, false, false);
+
+    base_timer_.start();
+}
+
+void YoubotInterface::baseTimerCallback(const ros::TimerEvent &evt)
+{
+    //boost::mutex::scoped_lock lock(ControllerModule::base_mutex_);
+
+    if(!base_->isInitialised())
+        return;
+
+    // === READ BASE SENSORS ===
+    ethercat_mutex_.lock();
+    base_->readState();
+    ethercat_mutex_.unlock();
+
+    // === UPDATE MODULES ===
+    //for(uint i=0; i<base_modules_.size(); i++)
+    //{
+    //    base_modules_[i]->update();
+    //}
+
+    // === UPDATE BASE CONTROLLER ===
+    base_->updateController();
+
+    // === WRITE BASE COMMANDS ===
+    ethercat_mutex_.lock();
+    bool error = !base_->writeCommands();
+    ethercat_mutex_.unlock();
+
+    //if(error)
+      //  stopBase();
+    ros::spinOnce();
+    // == PUBLISH BASE MESSAGES ===
+    base_->publishMessages();
 }
 
 //########## READ STATE ################################################################################################
@@ -218,11 +256,12 @@ int main(int argc, char** argv){
 
     ros::NodeHandle node_handle;
     YoubotInterface node(node_handle); 
-    node.initialise();
+    node.initialise(true, false);
     ROS_INFO_STREAM("youbot_interface_node namespace:"<< ros::this_node::getNamespace());
     ROS_INFO("youbot_interface_node is spinning...");
     ros::AsyncSpinner spinner(4);
     spinner.start();
+
 
     ros::waitForShutdown();
 

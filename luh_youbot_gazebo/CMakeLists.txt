@@ -9,7 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_srvs
   tf
   roslib
-  luh_youbot_kinematics
+  arcl_youbot_kinematics
   luh_youbot_driver_api
   gazebo_ros
   luh_youbot_gripper

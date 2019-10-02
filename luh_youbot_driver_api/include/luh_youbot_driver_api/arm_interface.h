@@ -67,7 +67,7 @@
 #include <youbot/YouBotManipulator.hpp>
 #include <sensor_msgs/JointState.h>
 #include <std_srvs/Empty.h>
-#include <luh_youbot_kinematics/arm_kinematics.h>
+#include <arcl_youbot_kinematics/arm_kinematics.h>
 #include "luh_youbot_driver_api/arduino_gripper.h"
 
 class YoubotArmInterface
@@ -80,14 +80,14 @@ public:
     virtual bool writeCommands();
     virtual void stop();
     virtual void publishMessages();
-    void setJointPositions(luh_youbot_kinematics::JointPosition positions);
-    void setJointVelocities(luh_youbot_kinematics::JointVelocity velocities);
-    void setJointTorques(luh_youbot_kinematics::JointVector torques);
+    void setJointPositions(arcl_youbot_kinematics::JointPosition positions);
+    void setJointVelocities(arcl_youbot_kinematics::JointVelocity velocities);
+    void setJointTorques(arcl_youbot_kinematics::JointVector torques);
     void setGripperPosition(double left, double right);
     void setGripperPosition(double width);
-    luh_youbot_kinematics::JointPosition getJointPosition();
-    luh_youbot_kinematics::JointVelocity getJointVelocity();
-    luh_youbot_kinematics::JointVector getJointTorque();
+    arcl_youbot_kinematics::JointPosition getJointPosition();
+    arcl_youbot_kinematics::JointVelocity getJointVelocity();
+    arcl_youbot_kinematics::JointVector getJointTorque();
     double getGripperEffort(){return gripper_effort_;}
     double getGripperVelocity(){return gripper_velocity_;}
     double getGripperPosition(){return gripper_position_;}
@@ -109,9 +109,9 @@ protected:
 
     sensor_msgs::JointState joint_state_;
 
-    luh_youbot_kinematics::JointPosition joint_position_;
-    luh_youbot_kinematics::JointVelocity joint_velocity_;
-    luh_youbot_kinematics::JointVector joint_torque_;
+    arcl_youbot_kinematics::JointPosition joint_position_;
+    arcl_youbot_kinematics::JointVelocity joint_velocity_;
+    arcl_youbot_kinematics::JointVector joint_torque_;
     double gripper_position_;
     double gripper_velocity_;
     double gripper_effort_;
@@ -147,7 +147,7 @@ protected:
     ros::Time last_sample_time_;
     double delta_t_;
 
-    luh_youbot_kinematics::JointVector max_effort_;
+    arcl_youbot_kinematics::JointVector max_effort_;
     double max_effort_max_duration_;
     std::vector<ros::Time> effort_watchdog_time_;
 

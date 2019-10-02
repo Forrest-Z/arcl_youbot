@@ -1,0 +1,7 @@
+# goal
+arcl_youbot_msgs/CylindricPath path
+---
+# result
+---
+# feedback
+float32 percent_done

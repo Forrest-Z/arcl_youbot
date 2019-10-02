@@ -12,8 +12,8 @@
 
 namespace luh_youbot_gripper
 {
-typedef actionlib::SimpleActionServer<luh_youbot_msgs::GripObjectAction> GripObjectServer;
-typedef actionlib::SimpleActionServer<luh_youbot_msgs::SetGripperAction> SetGripperServer;
+typedef actionlib::SimpleActionServer<arcl_youbot_msgs::GripObjectAction> GripObjectServer;
+typedef actionlib::SimpleActionServer<arcl_youbot_msgs::SetGripperAction> SetGripperServer;
 
 
 class GripperNode

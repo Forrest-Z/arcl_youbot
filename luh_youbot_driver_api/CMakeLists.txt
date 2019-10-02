@@ -13,7 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   youbot_driver
   roslib
-  luh_youbot_kinematics
+  arcl_youbot_kinematics
   rospy
   message_generation
 )
@@ -47,5 +47,11 @@ add_library(luh_youbot_driver_api
   src/arduino_gripper.cpp
 )
 
-add_dependencies(luh_youbot_driver_api luh_youbot_kinematics)
+add_executable(youbot_interface_node src/youbot_interface.cpp src/arm_interface.cpp src/base_interface.cpp src/arduino_gripper.cpp)
+
+target_link_libraries(youbot_interface_node
+    ${catkin_LIBRARIES}
+)
+
+add_dependencies(luh_youbot_driver_api arcl_youbot_kinematics)
 
