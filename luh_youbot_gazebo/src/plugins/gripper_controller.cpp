@@ -208,7 +208,7 @@ void YoubotGripperController::setGripperCallback()
 {
     boost::mutex::scoped_lock scoped_lock(lock);
 
-    luh_youbot_msgs::SetGripperGoal::ConstPtr goal = set_gripper_server_->acceptNewGoal();
+    arcl_youbot_msgs::SetGripperGoal::ConstPtr goal = set_gripper_server_->acceptNewGoal();
 
     if(goal->is_relative)
     {

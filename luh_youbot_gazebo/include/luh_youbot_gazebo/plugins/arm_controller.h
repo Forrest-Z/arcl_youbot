@@ -37,7 +37,7 @@
 #include <ros/callback_queue.h>
 #include <ros/ros.h>
 
-#include <luh_youbot_msgs/JointVector.h>
+#include <arcl_youbot_msgs/JointVector.h>
 
 namespace gazebo {
 
@@ -78,11 +78,11 @@ namespace gazebo {
       void QueueThread();
 
       // command velocity callback
-      void posCmdCallback(const luh_youbot_msgs::JointVector::ConstPtr &pos);
-      void velCmdCallback(const luh_youbot_msgs::JointVector::ConstPtr &vel);
-      void trqCmdCallback(const luh_youbot_msgs::JointVector::ConstPtr &trq);
+      void posCmdCallback(const arcl_youbot_msgs::JointVector::ConstPtr &pos);
+      void velCmdCallback(const arcl_youbot_msgs::JointVector::ConstPtr &vel);
+      void trqCmdCallback(const arcl_youbot_msgs::JointVector::ConstPtr &trq);
 
-      luh_youbot_msgs::JointVector cmd_;
+      arcl_youbot_msgs::JointVector cmd_;
       std::vector<physics::JointPtr> arm_joints_;
       bool alive_;
       bool command_recived_;

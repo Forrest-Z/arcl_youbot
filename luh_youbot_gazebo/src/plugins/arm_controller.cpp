@@ -72,17 +72,17 @@ namespace gazebo
 
     // subscribe to the odometry topic
     ros::SubscribeOptions so =
-      ros::SubscribeOptions::create<luh_youbot_msgs::JointVector>("joint_position_command", 1,
+      ros::SubscribeOptions::create<arcl_youbot_msgs::JointVector>("joint_position_command", 1,
           boost::bind(&YoubotArmController::posCmdCallback, this, _1),
           ros::VoidPtr(), &queue_);
     pos_sub_ = rosnode_->subscribe(so);
     so =
-          ros::SubscribeOptions::create<luh_youbot_msgs::JointVector>("joint_velocity_command", 1,
+          ros::SubscribeOptions::create<arcl_youbot_msgs::JointVector>("joint_velocity_command", 1,
               boost::bind(&YoubotArmController::velCmdCallback, this, _1),
               ros::VoidPtr(), &queue_);
     vel_sub_ = rosnode_->subscribe(so);
     so =
-          ros::SubscribeOptions::create<luh_youbot_msgs::JointVector>("joint_torque_command", 1,
+          ros::SubscribeOptions::create<arcl_youbot_msgs::JointVector>("joint_torque_command", 1,
               boost::bind(&YoubotArmController::trqCmdCallback, this, _1),
               ros::VoidPtr(), &queue_);
     trq_sub_ = rosnode_->subscribe(so);
@@ -180,20 +180,20 @@ namespace gazebo
     }
   }  
 
-  void YoubotArmController::posCmdCallback(const luh_youbot_msgs::JointVector::ConstPtr &pos)
+  void YoubotArmController::posCmdCallback(const arcl_youbot_msgs::JointVector::ConstPtr &pos)
   {
       cmd_mode_ = CMD_POSITION;
       command_recived_ = true;
       cmd_ = *pos;
   }
 
-  void YoubotArmController::velCmdCallback(const luh_youbot_msgs::JointVector::ConstPtr &vel)
+  void YoubotArmController::velCmdCallback(const arcl_youbot_msgs::JointVector::ConstPtr &vel)
   {
       cmd_mode_ = CMD_VELOCITY;
       cmd_ = *vel;
   }
 
-  void YoubotArmController::trqCmdCallback(const luh_youbot_msgs::JointVector::ConstPtr &trq)
+  void YoubotArmController::trqCmdCallback(const arcl_youbot_msgs::JointVector::ConstPtr &trq)
   {
       cmd_mode_ = CMD_TORQUE;
       cmd_ = *trq;

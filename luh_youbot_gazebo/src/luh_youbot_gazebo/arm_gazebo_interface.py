@@ -93,9 +93,9 @@ class armGazeboInterface():
             self.joint_state_.effort[index] = data.effort[i]
 
     def init(self): 
-        self.position_cmd_pub_ = rospy.Publisher("/gazebo/joint_position_command", luh_youbot_msgs.msg.JointVector, queue_size=10)
-        self.velocity_cmd_pub_ = rospy.Publisher("/gazebo/joint_velocity_command", luh_youbot_msgs.msg.JointVector, queue_size=10)
-        self.torque_cmd_pub_ = rospy.Publisher("/gazebo/joint_torque_command", luh_youbot_msgs.msg.JointVector, queue_size=10)
+        self.position_cmd_pub_ = rospy.Publisher("/gazebo/joint_position_command", arcl_youbot_msgs.msg.JointVector, queue_size=10)
+        self.velocity_cmd_pub_ = rospy.Publisher("/gazebo/joint_velocity_command", arcl_youbot_msgs.msg.JointVector, queue_size=10)
+        self.torque_cmd_pub_ = rospy.Publisher("/gazebo/joint_torque_command", arcl_youbot_msgs.msg.JointVector, queue_size=10)
         rospy.Subscriber("gazebo/joint_states", sensor_msgs.msg.JointState, self.joint_state_callback)
         # rospy.Subscriber("odom_" + str(self.robot_id), nav_msgs.msg.Odometry, odom_callback)
 

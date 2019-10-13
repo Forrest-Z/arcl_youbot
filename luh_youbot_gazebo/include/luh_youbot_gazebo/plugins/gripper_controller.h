@@ -37,8 +37,8 @@
 #include <ros/callback_queue.h>
 #include <ros/ros.h>
 
-#include <luh_youbot_msgs/GripObjectAction.h>
-#include <luh_youbot_msgs/SetGripperAction.h>
+#include <arcl_youbot_msgs/GripObjectAction.h>
+#include <arcl_youbot_msgs/SetGripperAction.h>
 #include <luh_youbot_gripper/GripCheck.h>
 #include <std_msgs/Float32.h>
 #include <actionlib/server/simple_action_server.h>
@@ -49,8 +49,8 @@ namespace gazebo {
 
     public: 
 
-      typedef actionlib::SimpleActionServer<luh_youbot_msgs::GripObjectAction> GripObjectServer;
-      typedef actionlib::SimpleActionServer<luh_youbot_msgs::SetGripperAction> SetGripperServer;
+      typedef actionlib::SimpleActionServer<arcl_youbot_msgs::GripObjectAction> GripObjectServer;
+      typedef actionlib::SimpleActionServer<arcl_youbot_msgs::SetGripperAction> SetGripperServer;
 
       YoubotGripperController();
       ~YoubotGripperController();
