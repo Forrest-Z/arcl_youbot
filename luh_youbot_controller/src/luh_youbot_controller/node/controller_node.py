@@ -7,14 +7,17 @@ import luh_youbot_controller.module_base_controller.base_controller as base_cont
 
 class controller_node():
     
-    def __init__(self):
+    def __init__(self, robot_id):
         self.base_frequency = rospy.get_param('luh_youbot_controller/base_controller_frequency', 50.0)
         self.arm_frequency = rospy.get_param('luh_youbot_controller/arm_controller_frequency', 200.0)
         self.is_using_robot = rospy.get_param('arcl_youbot_controller/use_youbot', False)
         self.is_using_gazebo = rospy.get_param('arcl_youbot_controller/use_gazebo', True)
-        self.robot_id = rospy.get_param('arcl_youbot_controller/robot_id', 0)
+        self.robot_id = robot_id
+
+
         rospy.Timer(rospy.Duration(1.0 / self.base_frequency), self.base_timer_callback)
         rospy.Timer(rospy.Duration(1.0 / self.arm_frequency), self.arm_timer_callback)
+        
         if self.is_using_robot == True:
             self.youbot_ = youbot_interface.YoubotInterface(self.robot_id)
         elif self.is_using_gazebo == True:
@@ -43,7 +46,10 @@ class controller_node():
         # self.youbot_.arm_interface.write_command()
 
         # self.youbot_.arm_interface.publish_message()
+
+
 if __name__ == "__main__":
     rospy.init_node('controller_node')
-    node = controller_node()
+    node = controller_node(0)
+    #node_1 = controller_node(1)
     rospy.spin()
