@@ -55,3 +55,20 @@ target_link_libraries(youbot_interface_node
 
 add_dependencies(luh_youbot_driver_api arcl_youbot_kinematics)
 
+set(EXECUTABLE_PATH "${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_BIN_DESTINATION}")
+
+
+message("=========================================================")
+message("Jenkins: ${JENKINS}")
+
+if (${JENKINS})
+    message("JENKINS BUILD - Skipping  sudo setcap cap_net_raw+ep youbot_interface_node")
+
+else()
+    add_custom_command(TARGET youbot_interface_node POST_BUILD
+        #COMMAND sudo setcap cap_net_raw+ep youbot_interface_node
+        COMMAND sudo setcap cap_net_raw+ep youbot_interface_node
+        WORKING_DIRECTORY ${EXECUTABLE_PATH}
+    )
+    message("PRODUCTION BUILD - EXECUTING  sudo setcap cap_net_raw+ep youbot_interface_node")
+endif()

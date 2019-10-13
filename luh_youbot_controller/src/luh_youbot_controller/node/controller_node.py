@@ -4,19 +4,18 @@ import luh_youbot_gazebo
 import luh_youbot_gazebo.arm_gazebo_interface as arm_gazebo_interface
 import luh_youbot_gazebo.youbot_gazebo_interface as youbot_gazebo_interface
 import luh_youbot_controller.module_base_controller.base_controller as base_controller
-
+import luh_youbot_driver_api.youbot_interface as youbot_interface
 class controller_node():
     
     def __init__(self, robot_id):
         self.base_frequency = rospy.get_param('luh_youbot_controller/base_controller_frequency', 50.0)
         self.arm_frequency = rospy.get_param('luh_youbot_controller/arm_controller_frequency', 200.0)
-        self.is_using_robot = rospy.get_param('arcl_youbot_controller/use_youbot', False)
-        self.is_using_gazebo = rospy.get_param('arcl_youbot_controller/use_gazebo', True)
+        self.is_using_robot = rospy.get_param('arcl_youbot_controller/use_youbot', True)
+        self.is_using_gazebo = rospy.get_param('arcl_youbot_controller/use_gazebo', False)
         self.robot_id = robot_id
 
 
-        rospy.Timer(rospy.Duration(1.0 / self.base_frequency), self.base_timer_callback)
-        rospy.Timer(rospy.Duration(1.0 / self.arm_frequency), self.arm_timer_callback)
+        
         
         if self.is_using_robot == True:
             self.youbot_ = youbot_interface.YoubotInterface(self.robot_id)
@@ -24,7 +23,8 @@ class controller_node():
             self.youbot_ = youbot_gazebo_interface.YoubotGazeboInterface(self.robot_id) 
 
         self.base_controller_module = base_controller.BaseController(self.youbot_)
-
+        rospy.Timer(rospy.Duration(1.0 / self.base_frequency), self.base_timer_callback)
+        rospy.Timer(rospy.Duration(1.0 / self.arm_frequency), self.arm_timer_callback)
 
 
     def base_timer_callback(self, event=None):
