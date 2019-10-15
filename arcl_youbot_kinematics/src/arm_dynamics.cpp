@@ -229,7 +229,7 @@ JointEffort YoubotArmDynamics::getStaticJointEffort(JointPosition pos)
 
     return effort;
 }
-
+    
  // TODO: fix dynamics calculations (inertia dependency on joint 5 is not correct yet)
 
 //########## GET JOINT EFFORT ##########################################################################################
@@ -404,5 +404,4 @@ JointEffort YoubotArmDynamics::getStaticJointEffort(JointPosition pos)
 //{
 //    return getJointEffort(wrench.toCylindric(position_));
 //}
-
 }// namespace luh_youbot_kinematics

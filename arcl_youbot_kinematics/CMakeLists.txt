@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   arcl_youbot_msgs
   roscpp
   tf
+  pybind11_catkin
 )
 
 ## System dependencies are found with CMake's conventions
@@ -82,7 +83,7 @@ catkin_python_setup()
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES arcl_youbot_kinematics arcl_youbot_dynamics
-  CATKIN_DEPENDS arcl_youbot_msgs roscpp tf
+  CATKIN_DEPENDS arcl_youbot_msgs roscpp tf pybind11_catkin
 #  DEPENDS system_lib
 )
 
@@ -110,6 +111,17 @@ add_library(arcl_youbot_dynamics
             src/arm_dynamics.cpp
             include/arcl_youbot_kinematics/arm_dynamics.h
             include/arcl_youbot_kinematics/constants.h
+)
+
+add_library(arcl_wrap
+  src/cartesian_vector.cpp
+  src/cylindric_vector.cpp
+  src/joint_vector.cpp
+  src/generic_vector.cpp
+  src/arm_dynamics.cpp
+  include/arcl_youbot_kinematics/arm_kinematics.h
+  include/arcl_youbot_kinematics/arm_dynamics.h
+  include/arcl_youbot_kinematics/constants.h
 )
 
 ## Declare a cpp executable
@@ -174,3 +186,7 @@ target_link_libraries(arcl_youbot_dynamics
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+## Pybind11_catkin
+pybind_add_module(wrap MODULE src/wrap.cpp)
+target_link_libraries(wrap arcl_wrap ${catkin_LIBRARIES})
