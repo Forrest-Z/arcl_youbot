@@ -98,6 +98,8 @@ void YoubotBaseInterface::cmd_vel_callback(const geometry_msgs::Twist::ConstPtr&
     if (msg->angular.z < -max_angular_vel_)
         velocity_command_.angular.z = -max_angular_vel_;
 
+
+    std::cout<<"received cmd_vel"<<std::endl;
 }
 
 //########## INITIALISE ################################################################################################
@@ -168,16 +170,24 @@ void YoubotBaseInterface::initialise()
         config_->has_base = false;
         delete base_;
         base_ = NULL;
-        return;
+    	return;
     }
 
     // === PUBLISHERS ===
-
+    // 
+    try{
+    ros::Subscriber cmd_sub = config_->node_handle->subscribe("/robot/cmd_vel", 1000, &YoubotBaseInterface::cmd_vel_callback, this);
+    
+    }
+    catch (std::exception& e)
+    {
+        std::string errorMessage = e.what();
+        ROS_WARN("Cannot subscribe to cmdvel topic: \n %s", errorMessage.c_str());
+    }
     odometry_publisher_ = config_->node_handle->advertise<nav_msgs::Odometry>("odom", 1);
     joint_state_publisher_ = config_->node_handle->advertise<sensor_msgs::JointState>("base/joint_states", 1);
     //    joint_current_publisher_ = node.advertise<std_msgs::Float64MultiArray>("base/joint_currents", 1);
     //    joint_torque_publisher_ = node.advertise<std_msgs::Float64MultiArray>("base/joint_torques", 1);
-    config_->node_handle->subscribe("robot/cmd_vel", 1000, &YoubotBaseInterface::cmd_vel_callback, this);
     // === SERVICE SERVERS ===
     switch_off_server_ = config_->node_handle->advertiseService(
                 "base/switchOffMotors", &YoubotBaseInterface::switchOffBaseMotorsCallback, this);

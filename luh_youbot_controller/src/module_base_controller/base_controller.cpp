@@ -80,7 +80,7 @@ void ModuleBaseController::init()
 
     // === SUBSCRIBERS ===
 //    laser_listener_ = node_->subscribe("/scan", 10, &ModuleBaseController::laserCallback, this);
-    velocity_subscriber_ = node_->subscribe("/cmd_vel", 10, &ModuleBaseController::velocityCallback, this);
+    velocity_subscriber_ = node_->subscribe("/robot/cmd_vel", 10, &ModuleBaseController::velocityCallback, this);
     if(!align_topic_.empty())
         pose_subscriber_ = node_->subscribe(align_topic_, 1, &ModuleBaseController::poseCallback, this);
     else
@@ -484,7 +484,7 @@ void ModuleBaseController::velocityCallback(const geometry_msgs::Twist::ConstPtr
     velocity_command_.angular.z = std::max(velocity_command_.angular.z, -max_velocity_theta_);
 
     last_update_time_ = ros::Time::now();
-
+    std::cout<<"get vel cmd"<<std::endl;
     mode_ = VELOCITY;
 }
 

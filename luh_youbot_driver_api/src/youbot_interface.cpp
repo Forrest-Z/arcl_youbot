@@ -125,8 +125,8 @@ void YoubotInterface::initialise(bool use_standard_gripper, bool use_luh_gripper
 
     for(uint i=0; i<arms_.size(); i++)
     {
-        arms_[i]->initialise(use_standard_gripper,use_luh_gripper_v3);
-        ROS_ASSERT(arms_[i]->isInitialised());
+       // arms_[i]->initialise(use_standard_gripper,use_luh_gripper_v3);
+       // ROS_ASSERT(arms_[i]->isInitialised());
     }
 
     base_timer_ = config_.node_handle->createTimer(ros::Duration(1.0/base_frequency_),
@@ -252,11 +252,11 @@ YoubotBaseInterface* YoubotInterface::base()
 
 
 int main(int argc, char** argv){
-    ros::init(argc, argv, "base_interface_node");
+    ros::init(argc, argv, "youbot_interface_node");
 
     ros::NodeHandle node_handle;
     YoubotInterface node(node_handle); 
-    node.initialise(true, false);
+    node.initialise(false, true);
     ROS_INFO_STREAM("youbot_interface_node namespace:"<< ros::this_node::getNamespace());
     ROS_INFO("youbot_interface_node is spinning...");
     ros::AsyncSpinner spinner(4);
