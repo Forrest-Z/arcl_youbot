@@ -20,27 +20,33 @@ class baseInterface():
         self.velocity_command_.angular.y = 0
         self.velocity_command_.angular.z = 0
     
-    def odom_callback(data):
+    def odom_callback(self, data):
         self.odom_msg_ = data
 
-    def init(): 
+    def init(self): 
         self.cmd_vel_pub_ = rospy.Publisher("robot/cmd_vel", geometry_msgs.msg.Twist, queue_size=10)
-        rospy.Subscriber("odom_" + str(self.robot_id), nav_msgs.msg.Odometry, odom_callback)
+        rospy.Subscriber("odom_" + str(self.robot_id), nav_msgs.msg.Odometry, self.odom_callback)
 
-    def read_state():
+    def read_state(self):
         self.pose2d = geometry_msgs.msg.Pose2D()
         self.pose2d.x = self.odom_msg_.pose.pose.position.x
         self.pose2d.y = self.odom_msg_.pose.pose.position.y
-        (roll, pitch, yaw) = euler_from_quaternion(self.odom_msg_.pose.pose.orientation)
+        q = (self.odom_msg_.pose.pose.orientation.x,
+             self.odom_msg_.pose.pose.orientation.y,
+             self.odom_msg_.pose.pose.orientation.z,
+             self.odom_msg_.pose.pose.orientation.w)
+        (roll, pitch, yaw) = euler_from_quaternion(q)
         if yaw > math.pi:
             yaw -= 2 * math.pi
         elif yaw < - math.pi:
             yaw += 2 * math.pi
         self.pose2d.theta = yaw
-        
-    def write_command():
-        self.cmd_vel_pub_.publish(velocity_command_)
 
-    def set_velocity(vel):
-        velocity_command_ = vel
+    def write_command(self):
+        self.cmd_vel_pub_.publish(self.velocity_command_)
 
+    def set_velocity(self, vel):
+        self.velocity_command_ = vel
+
+    def publish_message(self):
+        pass
