@@ -24,7 +24,7 @@ class baseInterface():
         self.odom_msg_ = data
 
     def init(self): 
-        self.cmd_vel_pub_ = rospy.Publisher("robot/cmd_vel", geometry_msgs.msg.Twist, queue_size=10)
+        self.cmd_vel_pub_ = rospy.Publisher("/robot/cmd_vel", geometry_msgs.msg.Twist, queue_size=10)
         rospy.Subscriber("odom_" + str(self.robot_id), nav_msgs.msg.Odometry, self.odom_callback)
 
     def read_state(self):

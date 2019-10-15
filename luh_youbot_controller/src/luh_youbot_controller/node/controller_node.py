@@ -49,7 +49,7 @@ class controller_node():
 
 
 if __name__ == "__main__":
-    rospy.init_node('controller_node')
+    rospy.init_node('py_controller_node')
     node = controller_node(0)
     #node_1 = controller_node(1)
     rospy.spin()
