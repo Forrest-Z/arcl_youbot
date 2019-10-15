@@ -12,7 +12,7 @@ Command:
 3, rostopic pub -r 50 /cmd_vel geometry_msgs/Twist  '{linear:  {x: 0.1, y: 0.0, z: 0.0}, angular: {x: 0.0,y: 0.0,z: 0.0}}'
 
 
-# Tweaks
+# Tweaks for Luh-youbot-os
 ## YouBot - Robot - Lubuntu 18.04
 ### catkin_make
 1. put CATKIN_IGNORE `under luh_youbot_vrep_api/`
