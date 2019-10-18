@@ -37,3 +37,8 @@ Command:
 2. `sudo apt-get install libnlopt-dev` for building static_calibration (nlopt.hpp)
 
 3. change gksudo to sudo under `luh_youbot_controller/CMakeLists.txt`
+
+# Install dependency
+## Pybin11
+`apt install ros-melodic-pybin11-catkin`
+

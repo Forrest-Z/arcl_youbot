@@ -60,7 +60,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://luh_youbot_description/meshes/youbot_base/base_convex_small.dae"/>
+        <mesh filename="package://luh_youbot_description/meshes/youbot_base/base_convex.dae"/>
       </geometry>
     </collision>
   </link>

@@ -18,8 +18,8 @@ int main(int argc, char** argv)
     arm.waitForCurrentAction();
 
     // Move arm back to HOME pose
-    //arm.moveToPose("DUMP_4_ABOVE");
-    //arm.waitForCurrentAction();
+    arm.moveToPose("DUMP_4_ABOVE");
+    arm.waitForCurrentAction();
 
     return 0;
 }

@@ -125,9 +125,9 @@ namespace gazebo
         
         if(cmd_mode_ == CMD_POSITION)
         {
-            if (command_recived_)
-            {
-            //ROS_INFO("Im in CMD_POSITION");
+            //if (command_recived_)
+            //{
+            ROS_INFO("Im in CMD_POSITION");
 //           arm_joints_[0]->SetAngle(0, math::Angle(cmd_.q1));
 //           arm_joints_[1]->SetAngle(0, math::Angle(cmd_.q2));
 //           arm_joints_[2]->SetAngle(0, math::Angle(cmd_.q3));
@@ -140,7 +140,7 @@ namespace gazebo
             arm_joints_[4]->SetPosition(0, cmd_.q5, true);
             
             command_recived_ = false;
-            }
+            //}
         }
         else if(cmd_mode_ == CMD_VELOCITY)
         {

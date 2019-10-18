@@ -39,11 +39,11 @@ const double MAX_JNT_VELOCITIES[] = {2.6, 2.6, 2.6, 2.6, 1.3};
 /// joint angle offsets (difference between desired and actual zero positions)
 const double JOINT_OFFSETS[] =
 {
-    -2.949606436,
-    -1.1344673701987218,
-     2.5481772172532176,
-    -1.7889600250839740,
-    -3.0019466477485340
+   -2.9395372288,
+    -1.124398163,
+    2.532469254,
+    -1.7668361332,
+    -2.8913271881
 };
 
 /// maximum joint positions (in relation to desired zero positions)

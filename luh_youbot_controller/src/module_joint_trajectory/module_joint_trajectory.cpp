@@ -63,10 +63,10 @@ void ModuleJointTrajectory::init()
     default_path_tolerance_.assign(ykin::N_JOINTS, 5.0);
     ros::param::get("module_joint_trajectory/path_tolerance", default_path_tolerance_);
     default_path_tolerance_ *= M_PI/180.0;
-    default_goal_tolerance_.assign(ykin::N_JOINTS, 0.1);
+    default_goal_tolerance_.assign(ykin::N_JOINTS, 0.2);
     ros::param::get("module_joint_trajectory/goal_tolerance", default_goal_tolerance_);
-    default_goal_tolerance_ *= M_PI / 180.0;
-    node_->param("module_joint_trajectory/goal_time_tolerance", goal_time_tolerance_, 1.0);
+    default_goal_tolerance_ *= M_PI / 45.0;
+    node_->param("module_joint_trajectory/goal_time_tolerance", goal_time_tolerance_, 10.0);
 
     ROS_INFO("MJT: Joint Trajectory Module initialised.");
 }
