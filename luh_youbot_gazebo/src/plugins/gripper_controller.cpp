@@ -58,11 +58,11 @@ void YoubotGripperController::Load(physics::ModelPtr parent,
 //    rosnode_->setCallbackQueue(&queue_);
 
     // === ACTION SERVER ===
-    grip_object_server_ = new GripObjectServer(*rosnode_, "arm_1/grip_object", false);
+    grip_object_server_ = new GripObjectServer(*rosnode_, "gazebo/arm_1/grip_object", false);
     grip_object_server_->registerGoalCallback(boost::bind(&YoubotGripperController::gripObjectCallback, this));
     grip_object_server_->start();
 
-    set_gripper_server_ = new SetGripperServer(*rosnode_, "arm_1/set_gripper", false);
+    set_gripper_server_ = new SetGripperServer(*rosnode_, "gazebo/arm_1/set_gripper", false);
     set_gripper_server_->registerGoalCallback(boost::bind(&YoubotGripperController::setGripperCallback, this));
     set_gripper_server_->start();
 
@@ -80,7 +80,7 @@ void YoubotGripperController::Load(physics::ModelPtr parent,
 
     // initialise command (start with zero velocity)
     pos_cmd_ = 0;
-    force_ = 10;
+    force_ = 25;
     left_is_opening_ = false;
     right_is_opening_ = false;
     left_pos_reached_ = false;
@@ -116,12 +116,8 @@ void YoubotGripperController::UpdateChild()
         }
         else
         {
-            if(command_recived_)
-            {
             //left_joint_->SetAngle(0, math::Angle(0.5 * pos_cmd_));
             left_joint_->SetPosition(0, 0.5 * pos_cmd_);
-            command_recived_ = false;
-            }
         }
     }
 
@@ -140,8 +136,8 @@ void YoubotGripperController::UpdateChild()
         }
         else
         {
-            //right_joint_->SetAngle(0, math::Angle(0.5 * pos_cmd_));
-            right_joint_->SetPosition(0, 0.5);
+            //left_joint_->SetAngle(0, math::Angle(0.5 * pos_cmd_));
+            right_joint_->SetPosition(0, 0.5 * pos_cmd_);
         }
     }
     }
@@ -218,6 +214,7 @@ void YoubotGripperController::setGripperCallback()
     }
     else
     {
+        std::cout<<"get gazebo gripper command:"<<goal->gripper_width<<std::endl;
         setCmd(goal->gripper_width);
     }
 }

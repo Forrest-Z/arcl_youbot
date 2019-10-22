@@ -85,7 +85,7 @@ def AStarSearch(start, end, graph):
             print("find the solution")
             print(path)
             print(len(path))
-            print(cameFrom)
+            #print(cameFrom)
             return path, F[end] #Done!
 
         openVertices.remove(current)
@@ -93,8 +93,8 @@ def AStarSearch(start, end, graph):
 
 		#Update scores for vertices near the current position
         for neighbour in graph.get_vertex_neighbours(current):
-            print(current)
-            print(neighbour)
+            #print(current)
+            #print(neighbour)
             if neighbour in closedVertices: 
 				continue #We have already processed this node exhaustively
             candidateG = G[current] + graph.move_cost(current, neighbour)
@@ -109,10 +109,10 @@ def AStarSearch(start, end, graph):
             G[neighbour] = candidateG
             H = graph.heuristic(neighbour, end)
             F[neighbour] = G[neighbour] + H
-    print("G:")
-    print(G)
-    print("F")
-    print(F)
-    print(cameFrom)
+    #print("G:")
+    #print(G)
+    #print("F")
+    #print(F)
+    #print(cameFrom)
     raise RuntimeError("A* failed to find a solution")
     

@@ -49,37 +49,27 @@ void ModuleBaseController::init()
     // === PARAMETERS ===
     activated_ = true;
     mode_ = IDLE;
+    node_->param("module_base_controller/max_velocity_x", max_velocity_x_, 0.2);
+    node_->param("module_base_controller/max_velocity_y", max_velocity_y_, 0.2);
+    node_->param("module_base_controller/max_velocity_theta", max_velocity_theta_, 0.4);
 
-	has_last_diff_ = false;
-
-    node_->param("module_base_controller/max_velocity_x", max_velocity_x_, 0.1);
-    node_->param("module_base_controller/max_velocity_y", max_velocity_y_, 0.1);
-    node_->param("module_base_controller/max_velocity_theta", max_velocity_theta_, 0.1);
+    node_->param("module_base_controller/max_velocity_x_approach", max_velocity_x_approach_, 0.2);
+    node_->param("module_base_controller/max_velocity_y_approach", max_velocity_y_approach_, 0.2);
+    node_->param("module_base_controller/max_velocity_theta_approach", max_velocity_theta_approach_, 0.4);
 
     node_->param("module_base_controller/velocity_p_factor_x", velocity_p_factor_x_, 2.0);
     node_->param("module_base_controller/velocity_p_factor_y", velocity_p_factor_y_, 2.0);
     node_->param("module_base_controller/velocity_p_factor_theta", velocity_p_factor_theta_, 0.7);
-
     node_->param("module_base_controller/velocity_i_factor_x", velocity_i_factor_x_, 0.1);
     node_->param("module_base_controller/velocity_i_factor_y", velocity_i_factor_y_, 0.1);
     node_->param("module_base_controller/velocity_i_factor_theta", velocity_i_factor_theta_, 0.1);
-
     node_->param("module_base_controller/velocity_d_factor_x", velocity_d_factor_x_, 0.1);
     node_->param("module_base_controller/velocity_d_factor_y", velocity_d_factor_y_, 0.1);
     node_->param("module_base_controller/velocity_d_factor_theta", velocity_d_factor_theta_, 0.1);
-
     node_->param("module_base_controller/position_tolerance_x", position_tolerance_x_, 0.01);
     node_->param("module_base_controller/position_tolerance_y", position_tolerance_y_, 0.01);
-    node_->param("module_base_controller/position_tolerance_theta", position_tolerance_theta_, 0.01);
-
-    node_->param("module_base_controller/move_lookahead", move_lookahead_, 0.5);
-
-
-    fast_mode_ = false;
-    node_->param("module_base_controller/goal_reached_threshold_x", goal_reached_threshold_x_, 0.01);
-    node_->param("module_base_controller/goal_reached_threshold_y", goal_reached_threshold_y_, 0.01);
-    node_->param("module_base_controller/goal_reached_threshold_theta", goal_reached_threshold_theta_, 0.01);
-
+    node_->param("module_base_controller/position_tolerance_theta", position_tolerance_theta_, 5.0);
+    position_tolerance_theta_ *= M_PI / 180;
 //    node_->param("module_base_controller/min_dist_x", min_dist_x_, 0.061);
 //    node_->param("module_base_controller/min_dist_y", min_dist_y_, 0.185);
     node_->param("module_base_controller/velocity_command_timeout", velocity_command_timeout_, 1.0);
@@ -88,13 +78,9 @@ void ModuleBaseController::init()
     node_->param("module_base_controller/align_fail_timeout", align_fail_timeout_, 1.0);
     node_->param("module_base_controller/align_topic", align_topic_, std::string(""));
 
-	ROS_WARN("Velocity threshods: [%f, %f, %f]", max_velocity_x_, max_velocity_y_, max_velocity_theta_);
-	ROS_WARN("Position tolerances: [%f, %f, %f]", position_tolerance_x_, position_tolerance_y_, position_tolerance_theta_);
-
-
     // === SUBSCRIBERS ===
 //    laser_listener_ = node_->subscribe("/scan", 10, &ModuleBaseController::laserCallback, this);
-    velocity_subscriber_ = node_->subscribe("robot/cmd_vel", 10, &ModuleBaseController::velocityCallback, this);
+    velocity_subscriber_ = node_->subscribe("/robot/cmd_vel", 10, &ModuleBaseController::velocityCallback, this);
     if(!align_topic_.empty())
         pose_subscriber_ = node_->subscribe(align_topic_, 1, &ModuleBaseController::poseCallback, this);
     else
@@ -151,7 +137,6 @@ void ModuleBaseController::update()
 
     // publish velocity
     youbot_->base()->setVelocity(velocity_command_);
-    
 }
 
 //########## UPDATE MOVED DISTANCE #####################################################################################
@@ -163,94 +148,28 @@ void ModuleBaseController::updateMovedDistance()
     current_pose_.theta = base_pose.theta;
 
     // get difference between current pose and goal pose
-    double diff_x = current_pose_.x;// - start_pose_.x;
-    double diff_y = current_pose_.y;// - start_pose_.y;
-    double diff_theta = current_pose_.theta;// - start_pose_.theta;
+    double diff_x = current_pose_.x - start_pose_.x;
+    double diff_y = current_pose_.y - start_pose_.y;
+    double diff_theta = current_pose_.theta - start_pose_.theta;
     if(diff_theta > M_PI)
         diff_theta -= 2*M_PI;
     else if(diff_theta < -M_PI)
         diff_theta += 2*M_PI;
 
-    //double diff_x_t = diff_x * cos(base_pose.theta) + diff_y * sin(base_pose.theta + start_pose_.theta);
-    //double diff_y_t = diff_y * cos(base_pose.theta + start_pose_.theta) - diff_x * sin(base_pose.theta + start_pose_.theta);
+    double diff_x_t = diff_x * cos(base_pose.theta) + diff_y * sin(base_pose.theta);
+    double diff_y_t = diff_y * cos(base_pose.theta) - diff_x * sin(base_pose.theta);
 
-    moved_distance_.x = diff_x;
-    moved_distance_.y = diff_y;
+    moved_distance_.x = diff_x_t;
+    moved_distance_.y = diff_y_t;
     moved_distance_.theta = diff_theta;
-
-    //ROS_INFO_STREAM("diff:   "<<diff_x<<"|||"<<diff_y<<"|||"<<diff_theta);
-    
-    //ROS_INFO_STREAM("current_pose_"<<current_pose_.x<<"|||"<<current_pose_.y<<"|||"<<current_pose_.theta);
-
-}
-
-double ModuleBaseController::poseDistance(BasePose &pose1, BasePose &pose2){
-	return sqrt((pose1.x - pose2.x)*(pose1.x - pose2.x) + (pose1.y - pose2.y)*(pose1.y - pose2.y));
 }
 
 //########## UPDATE POSITION MODE ######################################################################################
 void ModuleBaseController::updatePositionMode()
 {
-
-	/* Check distance to goal and update current temporary goal as needed  */
-	double curX, curY, curTheta;
-
-    geometry_msgs::Pose2D base_pose = youbot_->base()->getPose();
-    current_pose_.x = base_pose.x;
-    current_pose_.y = base_pose.y;
-    current_pose_.theta = base_pose.theta;
-
-	// Check how far from goal and temp goal
-	double distanceToGoal = poseDistance(current_pose_, goal_pose_);
-	double distanceToCurrentGoal = poseDistance(current_pose_, current_goal_pose_);
-
-	// ROS_INFO("Entering position update routine... ");
-
-	// If we are far away from goal, may need to update current goal
- 	if(distanceToGoal > move_lookahead_ + 0.025){
-		// We update if current pose is not far enough from current goal
-		// ROS_INFO("Distance to current goal: %f", distanceToGoal);
-		if(distanceToCurrentGoal < move_lookahead_){
-			// Move current goal pose by a bit 
-			// ROS_INFO("Distance to current goal: %f", distanceToCurrentGoal);
-			while(poseDistance(current_pose_, current_goal_pose_) <  move_lookahead_){
-				current_goal_pose_.x +=  goal_cos_angle_ * 0.01;
-				current_goal_pose_.y +=  goal_sin_angle_ * 0.01;
-				double distanceFromStart = poseDistance(current_goal_pose_, start_pose_);
-				double totalDistance = poseDistance(start_pose_, goal_pose_);
-
-				current_goal_pose_.x = start_pose_.x + 
-					(goal_pose_.x - start_pose_.x)*distanceFromStart/totalDistance;
-				current_goal_pose_.y = start_pose_.y + 
-					(goal_pose_.y - start_pose_.y)*distanceFromStart/totalDistance;
-				current_goal_pose_.theta = start_pose_.theta + 
-					(goal_pose_.theta - start_pose_.theta)*distanceFromStart/totalDistance;
-
-//				ROS_INFO("Current pose: [%f, %f, %f]", current_pose_.x, current_pose_.y, current_pose_.theta);
-//				ROS_INFO("Current goal: [%f, %f, %f]", current_goal_pose_.x, current_goal_pose_.y, current_goal_pose_.theta);
-//				ROS_INFO("Distance to current goal: %f, threshold: %f", 
-//						poseDistance(current_pose_, current_goal_pose_), move_lookahead_);
-
-			}
-		}
-	}
-	else{
-		current_goal_pose_ = goal_pose_;
-	}
-
-
-	// Compute differences in x, y, and theta 
-
-    double diff_x_t = (current_goal_pose_.x - current_pose_.x) * cos(current_pose_.theta) 
-					  + (current_goal_pose_.y - current_pose_.y) * sin(current_pose_.theta);
-    double diff_y_t = - (current_goal_pose_.x - current_pose_.x) * (sin(current_pose_.theta)) 
-					  + (current_goal_pose_.y - current_pose_.y) * cos(current_pose_.theta);
-    double diff_theta = current_goal_pose_.theta - current_pose_.theta;
-
-//	ROS_INFO("Current pose: [%f, %f, %f]", current_pose_.x, current_pose_.y, current_pose_.theta);
-//	ROS_INFO("Current goal: [%f, %f, %f]", current_goal_pose_.x, current_goal_pose_.y, current_goal_pose_.theta);
-//	ROS_INFO("Relative move: [%f, %f, %f]", diff_x_t, diff_y_t, diff_theta);
-
+    double diff_x_t = goal_pose_.x - moved_distance_.x;
+    double diff_y_t = goal_pose_.y - moved_distance_.y;
+    double diff_theta = goal_pose_.theta - moved_distance_.theta;
 
     if(diff_theta > M_PI)
         diff_theta -= 2*M_PI;
@@ -259,94 +178,54 @@ void ModuleBaseController::updatePositionMode()
 
     bool goal_reached = true;
 
-	double diff_x_dt = diff_x_t - last_diff_x_;
-	double diff_y_dt = diff_y_t - last_diff_y_; 
-	double diff_theta_dt = diff_theta - last_diff_theta_;
-    ros::Time current_time = ros::Time::now();
-    double delta_t = (current_time - last_update_time_).toSec();
-    last_update_time_ = current_time;
-
-	if(has_last_diff_ == false)
-	{
-		diff_x_dt = 0;
-		diff_y_dt = 0; 
-		diff_theta_dt = 0;
-	}	
-
-    // check x 
-	if(std::fabs(diff_x_t) > position_tolerance_x_)
+    // check x
+    if(std::fabs(diff_x_t) > position_tolerance_x_)
     {
         goal_reached = false;
-        velocity_command_.linear.x = diff_x_t * velocity_p_factor_x_ + diff_x_dt * velocity_d_factor_x_ / delta_t;
+        velocity_command_.linear.x = diff_x_t * velocity_p_factor_x_;
 
-        velocity_command_.linear.x = std::min(velocity_command_.linear.x, max_velocity_x_);
-        velocity_command_.linear.x = std::max(velocity_command_.linear.x, -max_velocity_x_);
+        velocity_command_.linear.x = std::min(velocity_command_.linear.x, max_velocity_x_approach_);
+        velocity_command_.linear.x = std::max(velocity_command_.linear.x, -max_velocity_x_approach_);
     }
     else
         velocity_command_.linear.x = 0;
 
     // check y
-	if(std::fabs(diff_y_t) > position_tolerance_y_)
+    if(std::fabs(diff_y_t) > position_tolerance_y_)
     {
         goal_reached = false;
-        velocity_command_.linear.y = diff_y_t * velocity_p_factor_y_ + diff_y_dt * velocity_d_factor_y_ / delta_t;
+        velocity_command_.linear.y = diff_y_t * velocity_p_factor_y_;
 
-        velocity_command_.linear.y = std::min(velocity_command_.linear.y, max_velocity_y_);
-        velocity_command_.linear.y = std::max(velocity_command_.linear.y, -max_velocity_y_);
-
+        velocity_command_.linear.y = std::min(velocity_command_.linear.y, max_velocity_y_approach_);
+        velocity_command_.linear.y = std::max(velocity_command_.linear.y, -max_velocity_y_approach_);
     }
     else
         velocity_command_.linear.y = 0;
 
     // check theta
-	if(std::fabs(diff_theta)  > position_tolerance_theta_){
+    if(std::fabs(diff_theta) > position_tolerance_theta_)
+    {
         goal_reached = false;
-        velocity_command_.angular.z = diff_theta * velocity_p_factor_theta_ 
-				+ diff_theta_dt * velocity_d_factor_theta_ / delta_t;
+        velocity_command_.angular.z = diff_theta * velocity_p_factor_theta_;
 
-        velocity_command_.angular.z = std::min(velocity_command_.angular.z, max_velocity_theta_);
-        velocity_command_.angular.z = std::max(velocity_command_.angular.z, -max_velocity_theta_);
-
+        velocity_command_.angular.z = std::min(velocity_command_.angular.z, max_velocity_theta_approach_);
+        velocity_command_.angular.z = std::max(velocity_command_.angular.z, -max_velocity_theta_approach_);
     }
     else
         velocity_command_.angular.z = 0;
 
-	last_diff_x_ = diff_x_t;
-	last_diff_y_ = diff_y_t;
-	last_diff_theta_ = diff_theta;
-	has_last_diff_ = true;
-	
-	
-  //  std::cout<<"velocity angular:"<<velocity_command_.angular.z<<endl;
-    // In fast mode, if we close enough, call it 
-    if(fast_mode_ == true)
-    {
-        if(std::fabs(diff_x_t) < goal_reached_threshold_x_ && 
-            std::fabs(diff_y_t) < goal_reached_threshold_y_ && 
-            std::fabs(diff_theta) < goal_reached_threshold_theta_)
-            goal_reached = true;
-    }
 
     // if goal is reached: action succeeded
     if(goal_reached)
     {
         mode_ = IDLE;
         base_is_busy_ = false;
+        velocity_command_.linear.x = 0;
+        velocity_command_.linear.y = 0;
+        velocity_command_.angular.z = 0;
 
-        if(!fast_mode_)
-        {
-            velocity_command_.linear.x = 0;
-            velocity_command_.linear.y = 0;
-            velocity_command_.angular.z = 0;
-        }
-
-        ROS_WARN("Base movement finished.");
+        ROS_INFO("Base movement finished.");
         move_base_server_->setSucceeded(moved_distance_);
-
-		has_last_diff_ = false;
-		last_diff_x_ = 0;
-		last_diff_y_ = 0;
-		last_diff_theta_ = 0;
     }
 }
 
@@ -426,14 +305,16 @@ void ModuleBaseController::updateApproachMode()
 
     // bool goal_reached = true;
 
+    // ROS_INFO("Aproching with max_vel: %f", max_velocity_x_approach_);
+
     // // check x
     // if(std::fabs(diff_x_t) > position_tolerance_x_)
     // {
     //     goal_reached = false;
     //     velocity_command_.linear.x = diff_x_t * velocity_p_factor_x_;
 
-    //     velocity_command_.linear.x = std::min(velocity_command_.linear.x, max_velocity_x_);
-    //     velocity_command_.linear.x = std::max(velocity_command_.linear.x, -max_velocity_x_);
+    //     velocity_command_.linear.x = std::min(velocity_command_.linear.x, max_velocity_x_approach_);
+    //     velocity_command_.linear.x = std::max(velocity_command_.linear.x, -max_velocity_x_approach_);
     // }
     // else
     //     velocity_command_.linear.x = 0;
@@ -444,8 +325,8 @@ void ModuleBaseController::updateApproachMode()
     //     goal_reached = false;
     //     velocity_command_.linear.y = diff_y_t * velocity_p_factor_y_;
 
-    //     velocity_command_.linear.y = std::min(velocity_command_.linear.y, max_velocity_y_);
-    //     velocity_command_.linear.y = std::max(velocity_command_.linear.y, -max_velocity_y_);
+    //     velocity_command_.linear.y = std::min(velocity_command_.linear.y, max_velocity_y_approach_);
+    //     velocity_command_.linear.y = std::max(velocity_command_.linear.y, -max_velocity_y_approach_);
     // }
     // else
     //     velocity_command_.linear.y = 0;
@@ -456,8 +337,8 @@ void ModuleBaseController::updateApproachMode()
     //     goal_reached = false;
     //     velocity_command_.angular.z = diff_theta * velocity_p_factor_theta_;
 
-    //     velocity_command_.angular.z = std::min(velocity_command_.angular.z, max_velocity_theta_);
-    //     velocity_command_.angular.z = std::max(velocity_command_.angular.z, -max_velocity_theta_);
+    //     velocity_command_.angular.z = std::min(velocity_command_.angular.z, max_velocity_theta_approach_);
+    //     velocity_command_.angular.z = std::max(velocity_command_.angular.z, -max_velocity_theta_approach_);
     // }
     // else
     //     velocity_command_.angular.z = 0;
@@ -475,9 +356,7 @@ void ModuleBaseController::updateApproachMode()
     //     res.moved_distance.theta = moved_distance_.theta;
     //     res.moved_distance.x = moved_distance_.x;
     //     res.moved_distance.y = moved_distance_.y;
-    //     mode_ = IDLE;
     //     approach_server_->setSucceeded(res);
-
     // }
 }
 
@@ -510,7 +389,7 @@ void ModuleBaseController::emergencyStop()
     youbot_->base()->setVelocity(velocity_command_);
 
     if(move_base_server_->isActive())
-        //move_base_server_->setAborted(moved_distance_);
+        move_base_server_->setAborted(moved_distance_);
     if(align_base_server_->isActive())
     {
         arcl_youbot_msgs::AlignBaseToPoseResult res;
@@ -542,7 +421,7 @@ void ModuleBaseController::preempt()
     velocity_command_.linear.x = 0;
     velocity_command_.linear.y = 0;
     velocity_command_.angular.z = 0;
-    ROS_WARN_STREAM("------------------------------------controler_0:Current action aborted-------------------------------");
+
     if(mode_ == POSITION || mode_ == ALIGN || mode_ == APPROACH)
         base_is_busy_ = false;
 
@@ -605,7 +484,7 @@ void ModuleBaseController::velocityCallback(const geometry_msgs::Twist::ConstPtr
     velocity_command_.angular.z = std::max(velocity_command_.angular.z, -max_velocity_theta_);
 
     last_update_time_ = ros::Time::now();
-
+    std::cout<<"get vel cmd"<<std::endl;
     mode_ = VELOCITY;
 }
 
@@ -614,9 +493,7 @@ void ModuleBaseController::moveBaseCallback()
 {    
     boost::mutex::scoped_lock lock(base_mutex_);
 
-    ROS_WARN("==== Module Base Controller new goal comming in====");
-    ROS_WARN("==== Module Base Controller new goal comming in====");
-    ROS_WARN("==== Module Base Controller new goal comming in====");
+    ROS_INFO("==== Module Base Controller ====");
 
     if(mode_ == POSITION || mode_ == ALIGN || mode_ == APPROACH)
     {
@@ -625,6 +502,9 @@ void ModuleBaseController::moveBaseCallback()
     }
 
     goal_pose_ = *(move_base_server_->acceptNewGoal());
+
+    print_counter_ = 0;
+    ROS_INFO("Request to move x=%f; y=%f; theta=%f.", goal_pose_.x, goal_pose_.y, goal_pose_.theta);
 
     if(!activated_ || base_is_busy_)
     {
@@ -637,65 +517,20 @@ void ModuleBaseController::moveBaseCallback()
         return;
     }
 
+    ROS_INFO("Moving base...");
+
     geometry_msgs::Pose2D base_pose = youbot_->base()->getPose();
     current_pose_.x = base_pose.x;
     current_pose_.y = base_pose.y;
     current_pose_.theta = base_pose.theta;
 
-	// Check whether we need to adjust from relative to absolute
-	if(goal_pose_.theta > 10*M_PI)
-	{
-		goal_pose_.theta -= 20*M_PI;
-		// Adjust to absolute x, y, theta
-	    ROS_INFO("Adjusting from relative pose: [%f, %f, %f]", 
-				goal_pose_.x, goal_pose_.y, goal_pose_.theta);
-		
-		goal_pose_.theta += current_pose_.theta;
-		double tempx = current_pose_.x 
-				+ goal_pose_.x * cos(current_pose_.theta)
-				- goal_pose_.y * sin(current_pose_.theta);
-		double tempy = current_pose_.y 
-				+ goal_pose_.x *sin(current_pose_.theta)
-				+ goal_pose_.y *cos(current_pose_.theta);
-		goal_pose_.x = tempx;
-		goal_pose_.y = tempy;
-		
-	}
-    else if(goal_pose_.theta < -10*M_PI)
-    {
-        // Fast move
-		goal_pose_.theta += 20*M_PI;
-        node_->param("module_base_controller/position_tolerance_x_fast", position_tolerance_x_, 0.01);
-        node_->param("module_base_controller/position_tolerance_y_fast", position_tolerance_y_, 0.01);
-        node_->param("module_base_controller/position_tolerance_theta_fast", position_tolerance_theta_, 0.01);
-        fast_mode_ = true;
-    }
-    else
-    {
-        node_->param("module_base_controller/position_tolerance_x", position_tolerance_x_, 0.01);
-        node_->param("module_base_controller/position_tolerance_y", position_tolerance_y_, 0.01);
-        node_->param("module_base_controller/position_tolerance_theta", position_tolerance_theta_, 0.01);
-        fast_mode_ = false;
-    }
+    moved_distance_.x = 0;
+    moved_distance_.y = 0;
+    moved_distance_.theta = 0;
 
-
-    ROS_INFO("Starting pose: [%f, %f, %f]", current_pose_.x, current_pose_.y, current_pose_.theta);
-    ROS_INFO("Request to move to pose: [%f, %f, %f]", goal_pose_.x, goal_pose_.y, goal_pose_.theta);
-
-    start_pose_ = current_goal_pose_ = current_pose_;
-
-	goal_distance_ = poseDistance(start_pose_, goal_pose_);
-	goal_sin_angle_ = (goal_pose_.y - start_pose_.y) / goal_distance_;
-	goal_cos_angle_ = (goal_pose_.x - start_pose_.x) / goal_distance_;
-
+    start_pose_ = current_pose_;
     mode_ = POSITION;
     base_is_busy_ = true;
-
-	has_last_diff_ = false;
-	last_diff_x_ = 0;
-	last_diff_y_ = 0;
-	last_diff_theta_ = 0;
-
 }
 
 //###################### CALLBACK: ALIGN BASE ##########################################################################
@@ -758,6 +593,7 @@ void ModuleBaseController::alignBaseCallback()
     current_pose_.x = base_pose.x;
     current_pose_.y = base_pose.y;
     current_pose_.theta = base_pose.theta;
+
     moved_distance_.x = 0;
     moved_distance_.y = 0;
     moved_distance_.theta = 0;
@@ -942,7 +778,7 @@ bool ModuleBaseController::stopCallback(std_srvs::Empty::Request &req, std_srvs:
     return true;
 }
 
-// //###################### CALLBACK: LASER WATCHDOG ######################################################################
+//###################### CALLBACK: LASER WATCHDOG ######################################################################
 // void ModuleBaseController::laserCallback(const luh_laser_watchdog::Distances::ConstPtr &distances)
 // {
 //     boost::mutex::scoped_lock lock(base_mutex_);
@@ -954,52 +790,52 @@ bool ModuleBaseController::stopCallback(std_srvs::Empty::Request &req, std_srvs:
 //###################### CALLBACK: APPROACH ACTION #####################################################################
 void ModuleBaseController::approachCallback()
 {
-    // boost::mutex::scoped_lock lock(base_mutex_);
+    boost::mutex::scoped_lock lock(base_mutex_);
 
-    // ROS_INFO("==== Module Base Controller ====");
-    // ROS_INFO("Approach goal received.");
+    ROS_INFO("==== Module Base Controller ====");
+    ROS_INFO("Approach goal received.");
 
-    // if(mode_ == POSITION || mode_ == ALIGN || mode_ == APPROACH)
-    // {
-    //     ROS_WARN("Received approach goal. Preempting current action.");
-    //     preempt();
-    // }
+    if(mode_ == POSITION || mode_ == ALIGN || mode_ == APPROACH)
+    {
+        ROS_WARN("Received approach goal. Preempting current action.");
+        preempt();
+    }
 
-    // approach_goal_ = *(approach_server_->acceptNewGoal());
+    approach_goal_ = *(approach_server_->acceptNewGoal());
 
-    // if(!activated_ || base_is_busy_ || laser_subscriber_.getNumPublishers() == 0)
-    // {
-    //     if(base_is_busy_)
-    //         ROS_ERROR("Base is busy. Can't accept new goals.");
-    //     else if(!activated_)
-    //         ROS_ERROR("Module is deactivated. Can't accept new goals.");
-    //     else
-    //         ROS_ERROR("No laser scanner data available. Can't accept new goals.");
+    if(!activated_ || base_is_busy_ || laser_subscriber_.getNumPublishers() == 0)
+    {
+        if(base_is_busy_)
+            ROS_ERROR("Base is busy. Can't accept new goals.");
+        else if(!activated_)
+            ROS_ERROR("Module is deactivated. Can't accept new goals.");
+        else
+            ROS_ERROR("No laser scanner data available. Can't accept new goals.");
 
-    //     approach_server_->setAborted();
-    //     return;
-    // }
+        approach_server_->setAborted();
+        return;
+    }
 
-    // // eliminate conflicting goals
-    // if(approach_goal_.back > 0 && approach_goal_.front > 0)
-    //     approach_goal_.back = 0;
-    // if(approach_goal_.right > 0 && approach_goal_.left > 0)
-    //     approach_goal_.left = 0;
+    // eliminate conflicting goals
+    if(approach_goal_.back > 0 && approach_goal_.front > 0)
+        approach_goal_.back = 0;
+    if(approach_goal_.right > 0 && approach_goal_.left > 0)
+        approach_goal_.left = 0;
 
-    // ROS_INFO("Approaching...");
+    ROS_INFO("Approaching...");
 
-    // geometry_msgs::Pose2D base_pose = youbot_->base()->getPose();
-    // current_pose_.x = base_pose.x;
-    // current_pose_.y = base_pose.y;
-    // current_pose_.theta = base_pose.theta;
+    geometry_msgs::Pose2D base_pose = youbot_->base()->getPose();
+    current_pose_.x = base_pose.x;
+    current_pose_.y = base_pose.y;
+    current_pose_.theta = base_pose.theta;
 
-    // moved_distance_.x = 0;
-    // moved_distance_.y = 0;
-    // moved_distance_.theta = 0;
+    moved_distance_.x = 0;
+    moved_distance_.y = 0;
+    moved_distance_.theta = 0;
 
-    // start_pose_ = current_pose_;
-    // mode_ = APPROACH;
-    // base_is_busy_ = true;
+    start_pose_ = current_pose_;
+    mode_ = APPROACH;
+    base_is_busy_ = true;
 }
 
 //###################### CALLBACK: GET BASE POSE #######################################################################

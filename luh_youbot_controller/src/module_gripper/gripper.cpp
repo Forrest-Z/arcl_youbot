@@ -59,7 +59,7 @@ void ModuleGripper::init()
     if(!loadObjectWidth())
             ROS_ERROR("Could not load file 'object_width.yaml'.");
     node_->param("module_gripper/min_gripper_width", min_gripper_width_, 0.0);
-    node_->param("module_gripper/max_gripper_width", max_gripper_width_, 0.06);
+    node_->param("module_gripper/max_gripper_width", max_gripper_width_, 0.07);
     node_->param("module_gripper/gripper_velocity", gripper_velocity_, 0.02);
     node_->param("module_gripper/static_grip_force", static_grip_force_, 7.0);
     goal_width_ = HUGE_VAL; // huge val means unknown

@@ -105,7 +105,7 @@ ControllerNode::ControllerNode(ros::NodeHandle &node):
         arm_modules_.push_back(new ModuleJointTrajectory());
         //arm_modules_.push_back(new ModuleGravityCompensation());
 
-        if(use_standard_gripper_ || use_luh_gripper_v3_)
+       // if(use_standard_gripper_ || use_luh_gripper_v3_)
             arm_modules_.push_back(new ModuleGripper());
 
         // other modules can be added here

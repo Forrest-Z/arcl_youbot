@@ -2,9 +2,9 @@
 <robot  xmlns:xacro="http://ros.org/wiki/xacro">
 
     <!-- sensors -->
-    <xacro:include filename="$(find luh_youbot_description)/urdf/sensors/hokuyo_urg04_laser.urdf.xacro"/>
+    <!-- <xacro:include filename="$(find luh_youbot_description)/urdf/sensors/hokuyo_urg04_laser.urdf.xacro"/> -->
   <xacro:include filename="$(find luh_youbot_description)/urdf/youbot_base/base.gazebo.xacro" />
-  <xacro:include filename="$(find luh_youbot_description)/urdf/youbot_base/bumper.gazebo.xacro" />
+  <!-- <xacro:include filename="$(find luh_youbot_description)/urdf/youbot_base/bumper.gazebo.xacro" /> -->
         
      <!-- simplified box collision geometry for base -->
       <property name="base_size_x" value="0.570" />
@@ -69,21 +69,21 @@
                   <collision>
                     <origin xyz="0 0 0" rpy="0 0 0" />
                     <geometry>
-                    <mesh filename="package://luh_youbot_description/meshes/youbot_base/base_convex.dae"/>   
+                    <mesh filename="package://luh_youbot_description/meshes/youbot_base/base_convex_small.dae"/>   
                        </geometry>
                   </collision>
             </link>
                
         <!-- base laser front -->
-            <xacro:hokuyo_urg04_laser name="${name}_laser_front" parent="${name}" ros_topic="scan" update_rate="10" min_angle="-1.57" max_angle="1.57" >
+            <!-- <xacro:hokuyo_urg04_laser name="${name}_laser_front" parent="${name}" ros_topic="scan" update_rate="10" min_angle="-1.57" max_angle="1.57" >
                   <origin xyz="0.309 0 -0.03" rpy="0 0 0" />
-            </xacro:hokuyo_urg04_laser>
+            </xacro:hokuyo_urg04_laser> -->
 
         <!-- base laser back -->
-            <xacro:hokuyo_urg04_laser  name="${name}_laser_back" parent="${name}" ros_topic="scan_back" update_rate="10" min_angle="1.57" max_angle="-1.57" >
+            <!-- <xacro:hokuyo_urg04_laser  name="${name}_laser_back" parent="${name}" ros_topic="scan_back" update_rate="10" min_angle="1.57" max_angle="-1.57" >
                   <origin xyz="-0.309 0 -0.03" rpy="0 0 ${M_PI}" />
             </xacro:hokuyo_urg04_laser>
-        
+         -->
 
             <!-- front left wheel -->        
         <joint name="wheel_joint_fl" type="continuous">
@@ -217,7 +217,7 @@
             </link>
     
         <xacro:youbot_base_controller namespace="gazebo"/>
-        <xacro:youbot_base_bumper namespace="${namespace}"/>
+        <!-- <xacro:youbot_base_bumper namespace="${namespace}"/> -->
 
     </xacro:macro>
 

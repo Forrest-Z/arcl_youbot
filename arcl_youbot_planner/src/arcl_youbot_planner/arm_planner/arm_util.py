@@ -8,7 +8,7 @@ import actionlib
 from trajectory_msgs.msg import JointTrajectoryPoint
 from control_msgs.msg import FollowJointTrajectoryAction, FollowJointTrajectoryGoal
 from sensor_msgs.msg import JointState
-
+from arcl_youbot_msgs.msg import SetGripperAction, SetGripperGoal
 
 JOINT_1_INDEX = 8
 JOINT_2_INDEX = 9
@@ -61,6 +61,16 @@ def find_nearest_neighbor(query, joint_mat, neighbor_num):
         index += 1
     dist_index = np.argpartition(dist_arr, neighbor_num)
     return dist_index[:neighbor_num]
+
+def set_gripper_width(youbot_name, width):
+    client = actionlib.SimpleActionClient("gazebo/arm_1/set_gripper" , SetGripperAction)
+    client.wait_for_server()
+    goal = SetGripperGoal()
+    
+    goal.gripper_width = width
+    goal.is_relative = False
+    client.send_goal_and_wait(goal, rospy.Duration.from_sec(10.0), rospy.Duration.from_sec(10.0))
+    # client.wait_for_result(rospy.Duration.from_sec(10.0))
 
 def execute_path(final_path, joint_action_name):
     client = actionlib.SimpleActionClient(joint_action_name, FollowJointTrajectoryAction)

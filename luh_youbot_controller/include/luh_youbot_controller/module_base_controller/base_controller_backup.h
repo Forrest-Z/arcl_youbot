@@ -63,14 +63,9 @@ protected:
 
     ros::Publisher error_publisher_;
 
-	BasePose start_pose_;
+    BasePose start_pose_;
     BasePose goal_pose_;
-    BasePose final_pose_;
     BasePose current_pose_;
-	BasePose current_goal_pose_;
-	double goal_distance_;
-	double goal_sin_angle_;
-	double goal_cos_angle_;
 
     ros::Time last_update_time_;
 
@@ -82,7 +77,7 @@ protected:
     BasePose accumulated_error_;
 
     ApproachGoal approach_goal_;
-    //luh_laser_watchdog::Distances distances_;
+    // luh_laser_watchdog::Distances distances_;
 
     geometry_msgs::Twist velocity_command_;
     arcl_youbot_msgs::MoveBaseResult moved_distance_;
@@ -93,16 +88,6 @@ protected:
     double max_velocity_x_approach_;
     double max_velocity_y_approach_;
     double max_velocity_theta_approach_;
-
-	double last_diff_x_;
-	double last_diff_y_;
-	double last_diff_theta_;
-	bool has_last_diff_;
-
-    bool fast_mode_;
-    double goal_reached_threshold_x_;
-    double goal_reached_threshold_y_;
-    double goal_reached_threshold_theta_;
 
     double velocity_p_factor_x_;
     double velocity_p_factor_y_;
@@ -116,7 +101,6 @@ protected:
     double position_tolerance_x_;
     double position_tolerance_y_;
     double position_tolerance_theta_;
-    double move_lookahead_;
     double velocity_command_timeout_;
     int memory_size_;
     double align_stop_timeout_;
@@ -150,7 +134,6 @@ protected:
     void preempt();
 
     void updateVelocityMode();
-	double poseDistance(BasePose &pose1, BasePose &pose2);
     void updatePositionMode();
     void updateAlignMode();
     void updateApproachMode();
@@ -161,7 +144,7 @@ protected:
     void alignBaseCallback();
     void poseCallback(const geometry_msgs::PoseStamped::ConstPtr &pose_msg);
     void velocityCallback(const geometry_msgs::Twist::ConstPtr &velocity_msg);
-    //void laserCallback(const luh_laser_watchdog::Distances::ConstPtr &distances);
+    // void laserCallback(const luh_laser_watchdog::Distances::ConstPtr &distances);
     void preemptCallback();
     bool stopCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
     bool getPoseCallback(arcl_youbot_msgs::GetBasePose::Request &req, arcl_youbot_msgs::GetBasePose::Response &res);

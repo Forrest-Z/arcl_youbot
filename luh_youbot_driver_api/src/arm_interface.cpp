@@ -652,7 +652,7 @@ void YoubotArmInterface::setGripperPosition(double width)
     {
         gripper_command_[LEFT_FINGER_INDEX] = width / 2;
         gripper_command_[RIGHT_FINGER_INDEX] = width / 2;
-
+        ROS_WARN_STREAM("gripper_command:"<<width);
         has_new_gripper_command_ = true;
     }
 

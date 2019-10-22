@@ -148,7 +148,7 @@ void ManipulationServer::GenerateSamplesForArmConf(geometry_msgs::Pose gripper_p
     
     
     if(theta - M_PI < 0.1 && theta - M_PI > -0.1){
-        min_cylin_r = 0.24*sin(theta) + 0.033 + 0.1;
+        min_cylin_r = 0.24*sin(theta) + 0.033 + 0.2;
     }else{
         min_cylin_r = 0.24*sin(theta) + 0.033 + 0.14; //+ sqrt(pow(normal_x,2)+pow(normal_y,2));
     }

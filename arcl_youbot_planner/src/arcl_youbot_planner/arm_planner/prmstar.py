@@ -67,6 +67,12 @@ class PRMStarPlanner():
         np.save('prm_roadmap_dict.npy', joint_dict)
 
 
+    def direct_path(self, start, goal):
+        path = []
+        path.append(start)
+        path.append(goal)
+        return path, 0
+
     def path_plan(self, start, goal):
         start_arr = np.asarray(start)
         goal_arr = np.asarray(goal)
