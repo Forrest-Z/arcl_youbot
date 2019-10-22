@@ -522,13 +522,14 @@ void ManipulationServer::goalCB()
                     if(planInAdvance(base_pose, test_joint_values, nh_)){ 
                         cylin_test.setZ(cylin_test.z()+0.07*normal_z);
                         cylin_test.setR(cylin_test.r()-0.07*sqrt(pow(normal_x,2)+pow(normal_y, 2)));
-                        joint_test = cylin_test.toJointspace();
-                        joint_test.subtractOffset();
+                        pre_joint_test = cylin_test.toJointspace();
+                        //pre_joint_test.subtractOffset();
                         test_joint_values = {joint_test[0], joint_test[1], joint_test[2], joint_test[3], joint_test[4]};
                         
                         if(planInAdvance(base_pose, test_joint_values, nh_)){ 
                             cylin_test.setZ(cylin_test.z()-0.07*normal_z);
                             cylin_test.setR(cylin_test.r()+0.07*sqrt(pow(normal_x,2)+pow(normal_y, 2)));
+
                             is_base_q1_ok = true;
                             is_base_r_ok = true;
                             break;    
@@ -568,6 +569,14 @@ void ManipulationServer::goalCB()
         	result_.q1 = cylin_test.q1();
         	result_.q5 = cylin_test.q5();
         	result_.theta = cylin_test.theta();
+            result_.q2 = joint_test[1];
+            result_.q3 = joint_test[2];
+            result_.q4 = joint_test[3];
+            result_.q1_pre = pre_joint_test[0];
+            result_.q2_pre = pre_joint_test[1];
+            result_.q3_pre = pre_joint_test[2];
+            result_.q4_pre = pre_joint_test[3];
+            result_.q5_pre = pre_joint_test[4];
         	result_.normal_x = normal_x;
         	result_.normal_y = normal_y;
         	result_.normal_z = normal_z;

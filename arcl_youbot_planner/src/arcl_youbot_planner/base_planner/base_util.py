@@ -15,18 +15,22 @@ from tf.transformations import euler_from_quaternion
 def get_youbot_base_pose(youbot_name):
     data = rospy.wait_for_message('gazebo/model_states', ModelStates)
     current_pose = [0,0,0]
-    for name in data.name:
+    youbot_index = 0
+    for name, data_index in zip(data.name, range(len(data.name))):
         if name == youbot_name:
-            current_pose[0] = data.pose.position.x
-            current_pose[1] = data.pose.position.y
-            q = (data.pose.orientation.x,
-             data.pose.orientation.y,
-             data.pose.orientation.z,
-             data.pose.orientation.w)
-            (roll, pitch, yaw) = euler_from_quaternion(q)
-            current_pose[2] = yaw
+            youbot_index = data_index
+
+
+    current_pose[0] = data.pose[youbot_index].position.x
+    current_pose[1] = data.pose[youbot_index].position.y
+    q = (data.pose[youbot_index].orientation.x,
+             data.pose[youbot_index].orientation.y,
+             data.pose[youbot_index].orientation.z,
+             data.pose[youbot_index].orientation.w)
+    (roll, pitch, yaw) = euler_from_quaternion(q)
+    current_pose[2] = yaw
     return current_pose
-    
+
 # base_action_name:   "youbot_base/move"
 def execute_path(final_path, base_action_name):
     client = actionlib.SimpleActionClient(base_action_name, MoveBaseAction)

@@ -7,6 +7,7 @@ import numpy as np
 import actionlib
 from trajectory_msgs.msg import JointTrajectoryPoint
 from control_msgs.msg import FollowJointTrajectoryAction, FollowJointTrajectoryGoal
+from sensor_msgs.msg import JointState
 
 
 JOINT_1_INDEX = 8
@@ -88,3 +89,16 @@ def execute_path(final_path, joint_action_name):
     print(goal)
     client.send_goal(goal)
     client.wait_for_result(rospy.Duration.from_sec(10.0))
+
+
+#return the joint position in the actual range (0,0,-5,0,0) to (5,5,0, 5, 5)
+def get_current_joint_pos():
+    data = rospy.wait_for_message('gazebo/joint_states', JointState)
+    
+    current_joint_pos = []
+    current_joint_pos.append(data.position[0])
+    current_joint_pos.append(data.position[1])
+    current_joint_pos.append(data.position[2])
+    current_joint_pos.append(data.position[3])
+    current_joint_pos.append(data.position[4])
+    return current_joint_pos

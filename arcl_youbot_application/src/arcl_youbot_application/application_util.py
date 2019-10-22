@@ -6,6 +6,7 @@ import time
 import numpy as np
 import pybullet_data
 import arcl_youbot_planner.arm_planner.arm_util as arm_util
+import arcl_youbot_planner.base_planner.base_util as base_util
 # import control_msgs.msg.FollowJointTrajectoryActionGoal
 from geometry_msgs.msg import Twist 
 from gazebo_msgs.srv import SpawnModel
@@ -22,6 +23,7 @@ import StringIO
 from arcl_youbot_application.msg import ManipulationAction, ManipulationGoal
 from arcl_youbot_application.msg import PlanningSceneMsg
 from arcl_youbot_application.msg import SceneObjectMsg
+import arcl_youbot_planner.base_planner.visgraph as vg
 
 
 GAZEBO_COLORS = [ 
@@ -178,12 +180,60 @@ class YoubotEnvironment():
 
             self.planning_scene_msg.scene_object_list.append(scene_object)
 
-    def move_to_target(self):
-        pass
+    def move_to_target(self, youbot_name, target_pose):
+        current_pos_2d = base_util.get_youbot_base_pose(youbot_name)
+        target_pos_2d = [0, 0, 0]
+        target_pos_2d[0] = target_pose.position.x
+        target_pos_2d[1] = target_pose.position.x
+        q = (target_pose.orientation.x,
+             target_pose.orientation.y,
+             target_pose.orientation.z,
+             target_pose.orientation.w)
+        (roll, pitch, yaw) = euler_from_quaternion(q)
+        target_pos_2d[2] = yaw
+        
+        start_pos = (current_pos_2d[0], current_pos_2d[1])
+        goal_pos = (target_pos_2d[0], target_pos_2d[1])
+        obstacles = self.object_list
+        path, g = vg.vg_youbot_path.vg_find_path(start_pos, goal_pos, obstacles)
+
+        start_heading = current_pos_2d[2]
+        goal_heading = target_pos_2d[2]
+        path_with_heading = vg.vg_youbot_path.add_orientation(path, start_heading, goal_heading)
+
+
+
+        base_util.execute_path(path_with_heading, youbot_name + "_base/move")
         # call base planner
         # execute_path
 
-        
+    def pick_object(self, youbot_name, pick_joint_value, pre_pick_joint_value):
+        physicsClient = p.connect(p.DIRECT)#or p.DIRECT for non-graphical version
+        p.setAdditionalSearchPath(pybullet_data.getDataPath()) #optionally
+        p.setGravity(0,0,-10)
+        prmstar = prmstar.PRMStarPlanner(p, "/home/wei/catkin_youbot_ws/src/luh_youbot_description/robots/youbot_0.urdf")
+        #prmstar.build_roadmap()
+
+        start = arm_util.get_current_joint_pos()
+        #for jnt in range(ARM_JOINT_NUM):
+        # arm_util.set_arm_joint_pos(joint_mat[:, sample_index], p, self.robot_id)
+        #   start[jnt] = np.random.uniform(MIN_JOINT_POS[jnt] - JOINT_OFFSET[jnt] ,MAX_JOINT_POS[jnt] - JOINT_OFFSET[jnt])
+        for value, joint_index in zip(pick_joint_value, range(arm_util.ARM_JOINT_NUM)):
+            value -= arm_util.JOINT_OFFSET[joint_index]
+
+        for value, joint_index in zip(pre_pick_joint_value, range(arm_util.ARM_JOINT_NUM)):
+            value -= arm_util.JOINT_OFFSET[joint_index]
+
+        [final_path, final_cost] = prmstar.path_plan(tuple(start), tuple(pre_pick_joint_value))
+        arm_util.execute_path(final_path, '/arm_1/follow_joint_trajectory')
+
+        start = arm_util.get_current_joint_pos()
+        [final_path, final_cost] = prmstar.path_plan(tuple(start), tuple(pick_joint_value))
+        arm_util.execute_path(final_path, '/arm_1/follow_joint_trajectory')
+
+        start = arm_util.get_current_joint_pos()
+        [final_path, final_cost] = prmstar.path_plan(tuple(start), tuple(pre_pick_joint_value))
+        arm_util.execute_path(final_path, '/arm_1/follow_joint_trajectory')
 
 def spawnCuboid(size, position, quaternion, color, object_name):
     rospy.wait_for_service('/gazebo/spawn_urdf_model')

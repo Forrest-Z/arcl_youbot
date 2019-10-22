@@ -12,6 +12,14 @@ float32 z
 float32 q1
 float32 q5
 float32 theta
+float32 q2
+float32 q3
+float32 q4
+float32 q1_pre
+float32 q2_pre
+float32 q3_pre
+float32 q4_pre
+float32 q5_pre
 float32 normal_x
 float32 normal_y
 float32 normal_z
