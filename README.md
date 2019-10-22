@@ -14,6 +14,10 @@ Command:
 Test base_controller in gazebo
 3, rostopic pub -r 50 /cmd_vel geometry_msgs/Twist  '{linear:  {x: 0.1, y: 0.0, z: 0.0}, angular: {x: 0.0,y: 0.0,z: 0.0}}'
 
+## Dependency:
+### Base Planner:
+`pip install shapley`
+
 
 # Tweaks for Luh-youbot-os
 ## YouBot - Robot - Lubuntu 18.04

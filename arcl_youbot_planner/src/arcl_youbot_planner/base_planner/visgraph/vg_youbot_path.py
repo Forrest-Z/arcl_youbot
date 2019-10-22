@@ -1,3 +1,5 @@
+# TODO remove this file
+
 import arcl_youbot_planner.base_planner.visgraph as vg
 from arcl_youbot_planner.base_planner.visgraph.visible_vertices import edge_distance
 import commands
@@ -5,7 +7,7 @@ from shapely.geometry import Polygon, LinearRing
 from shapely.ops import unary_union
 import math
 
-YOUBOT_RADIUS = 0.3  # in meters
+YOUBOT_RADIUS = 0.35  # in meters
 TEST = False
 
 def vg_find_path(start_pos, goal_pos, obstacles):
@@ -106,8 +108,8 @@ def plot_edge(ax, x, y, color='gray', zorder=1, linewidth=1, alpha=1):
 
 
 if __name__ == "__main__":
-    start_pos = (11, 2)
-    goal_pos = (4, 8)
+    start_pos = (11, 11)
+    goal_pos = (1.6, 2)
     obstacles = [[(1, 1), (2, 1), (2, 4), (1, 4)],
                  [(1.5, 5), (2.5, 5), (2.5, 6), (1.5, 6)],
                  [(3, 8), (5, 9), (4.5, 9.5), (2.8, 8.2)],
