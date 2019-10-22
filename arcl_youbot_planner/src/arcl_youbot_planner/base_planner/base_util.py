@@ -11,6 +11,22 @@ from arcl_youbot_msgs.msg import MoveBaseAction, MoveBaseGoal
 from gazebo_msgs.msg import ModelStates
 from tf.transformations import euler_from_quaternion
 
+
+
+import arcl_youbot_planner.base_planner.visgraph as vg
+from arcl_youbot_planner.base_planner.visgraph.visible_vertices import edge_distance
+import commands
+from shapely.geometry import Polygon, LinearRing
+from shapely.ops import unary_union
+import math
+
+YOUBOT_RADIUS = 0.32  # in meters
+TEST = False
+
+
+
+
+
 #youbot_name: youbot
 def get_youbot_base_pose(youbot_name):
     data = rospy.wait_for_message('gazebo/model_states', ModelStates)
@@ -41,18 +57,24 @@ def execute_path(final_path, base_action_name):
         goal.x = final_path[pt_index][0]
         goal.y = final_path[pt_index][1]
         goal.theta = final_path[pt_index][2]
-        client.send_goal(goal)
-        client.wait_for_result(rospy.Duration.from_sec(10.0)) 
+        client.send_goal_and_wait(goal, rospy.Duration.from_sec(10.0), rospy.Duration.from_sec(10.0))
+        # client.wait_for_result(rospy.Duration.from_sec(10.0)) 
         
-# ========== visibility graph ==========
-import arcl_youbot_planner.base_planner.visgraph as vg
-from arcl_youbot_planner.base_planner.visgraph.visible_vertices import edge_distance
-import commands
-from shapely.geometry import Polygon, LinearRing
-from shapely.ops import unary_union
+        
 
-YOUBOT_RADIUS = 0.35  # in meters
-TEST = False
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 def vg_find_path(start_pos, goal_pos, obstacles):
     """
@@ -149,27 +171,7 @@ def plot_line(ax, ob, color='#BDC3C7', zorder=1, linewidth=5, alpha=1):
     
 def plot_edge(ax, x, y, color='gray', zorder=1, linewidth=1, alpha=1):
     ax.plot(x, y, color=color, linewidth=linewidth, solid_capstyle='round', zorder=zorder, alpha=alpha)
-# ========== visibility graph ==========
 
 
-if __name__ == "__main__":
-    # ========== visibility graph ==========
-    start_pos = (11, 11)
-    goal_pos = (1.6, 2)
-    obstacles = [[(1, 1), (2, 1), (2, 4), (1, 4)],
-                 [(1.5, 5), (2.5, 5), (2.5, 6), (1.5, 6)],
-                 [(3, 8), (5, 9), (4.5, 9.5), (2.8, 8.2)],
-                 [(5, 3), (6, 3), (6, 4), (6, 5)],
-                 [(7, 4), (8, 4), (8, 10), (7, 10)],
-                 [(10, 5), (12, 5), (12, 7), (10, 7)]]
-    path, g = vg_find_path(start_pos, goal_pos, obstacles)
 
-    start_heading = 0
-    goal_heading = math.pi / 2
-    path_with_heading = add_orientation(path, start_heading, goal_heading)
-
-    plot_vg_path(obstacles, path_with_heading, g)
-
-    print("Path:")
-    print(path_with_heading)
-    # ========== visibility graph ==========
+       
