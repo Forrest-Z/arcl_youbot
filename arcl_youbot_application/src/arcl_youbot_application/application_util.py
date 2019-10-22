@@ -272,7 +272,7 @@ class YoubotEnvironment():
         start = arm_util.get_current_joint_pos()
         [final_path, final_cost] = prmstar_planner.direct_path(tuple(start), tuple(pick_joint_value))
         arm_util.execute_path(final_path, '/arm_1/follow_joint_trajectory')
-        arm_util.set_gripper_width("youbot", 0.0)
+        arm_util.set_gripper_width("youbot", 0.01)
         rospy.sleep(rospy.Duration.from_sec(3.0))
         start = arm_util.get_current_joint_pos()
         [final_path, final_cost] = prmstar_planner.direct_path(tuple(start), tuple(pre_pick_joint_value))
