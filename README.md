@@ -1,14 +1,17 @@
 # arcl_youbot
 
-Test base_controller in gazebo
+Test youbot_pick_demo in gazebo
 
 Command: 
 
 1, roslaunch luh_youbot_gazebo youbot.launch  
 
-2, cd catkin_youbot_ws/src/luh_youbot_controller/src/luh_youbot_controller/node  
-   python controller_node.py  
-   
+2, rosrun youbot_asp youbot_grasp_planning_service 
+3, rosrun arcl_youbot_application manipulation_server
+4, cd catkin_youbot_ws/src/arcl_youbot_application/scripts/
+   python single_youbot_pick_demo.py   
+ 
+Test base_controller in gazebo
 3, rostopic pub -r 50 /cmd_vel geometry_msgs/Twist  '{linear:  {x: 0.1, y: 0.0, z: 0.0}, angular: {x: 0.0,y: 0.0,z: 0.0}}'
 
 
