@@ -127,7 +127,6 @@ namespace gazebo
         {
             //if (command_recived_)
             //{
-            ROS_INFO("Im in CMD_POSITION");
 //           arm_joints_[0]->SetAngle(0, math::Angle(cmd_.q1));
 //           arm_joints_[1]->SetAngle(0, math::Angle(cmd_.q2));
 //           arm_joints_[2]->SetAngle(0, math::Angle(cmd_.q3));

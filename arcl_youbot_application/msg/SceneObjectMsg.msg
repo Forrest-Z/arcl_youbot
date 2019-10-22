@@ -1,0 +1,10 @@
+Header header
+std_msgs/String  object_type
+std_msgs/UInt8  object_state
+geometry_msgs/Pose object_pose
+geometry_msgs/Pose2D object_se2_pose
+std_msgs/String object_name
+std_msgs/String mesh_filename
+float32 dx
+float32 dy
+float32 dz

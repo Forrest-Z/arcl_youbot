@@ -1,0 +1,18 @@
+arcl_youbot_application/PlanningSceneMsg planning_scene
+std_msgs/String target_object_type
+std_msgs/String target_object_name
+std_msgs/String last_target_object_name
+geometry_msgs/Pose target_object_pose
+std_msgs/Bool is_synchronize
+geometry_msgs/Pose rest_base_pose
+---
+geometry_msgs/Pose final_base_pose
+float32 r
+float32 z 
+float32 q1
+float32 q5
+float32 theta
+float32 normal_x
+float32 normal_y
+float32 normal_z
+---

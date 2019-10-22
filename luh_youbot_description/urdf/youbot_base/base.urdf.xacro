@@ -15,8 +15,10 @@
     <property name="wheel_offset_x" value="0.228"  />  
       <property name="wheel_offset_y" value="0.158"  />  
       <property name="wheel_offset_z" value="-0.034" />
-    <property name="wheel_mass" value="0.4" />
-
+    <!-- <property name="wheel_mass" value="0.4" /> -->
+    <!-- DEBUG-->
+    <property name="wheel_mass" value="4" />
+    <!--END DEBUG-->
     <property name="wheel_radius" value="0.05" />
     <property name="wheel_length" value="0.07" />
 

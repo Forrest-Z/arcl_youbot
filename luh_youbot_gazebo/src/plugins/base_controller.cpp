@@ -207,16 +207,15 @@ namespace gazebo
     double xt = x_ * cosf(yaw) - y_ * sinf(yaw);
     double yt = y_ * cosf(yaw) + x_ * sinf(yaw);
     double vel_factor = 1.0;
-
     base_link_->SetAngularVel(ignition::math::Vector3d(0.0, 0.0, rot_));
     base_link_->SetLinearVel(ignition::math::Vector3d(xt, yt, -0.0));
 
     // set wheel velocity
-    /*
+    
     wheel_joints_[0]->SetVelocity(0, base_kin_inv_[0] * x_ + base_kin_inv_[1]  * y_ + base_kin_inv_[2]  * rot_);
     wheel_joints_[1]->SetVelocity(0, base_kin_inv_[3] * x_ + base_kin_inv_[4]  * y_ + base_kin_inv_[5]  * rot_);
     wheel_joints_[2]->SetVelocity(0, base_kin_inv_[6] * x_ + base_kin_inv_[7]  * y_ + base_kin_inv_[8]  * rot_);
-    wheel_joints_[3]->SetVelocity(0, base_kin_inv_[9] * x_ + base_kin_inv_[10] * y_ + base_kin_inv_[11] * rot_);*/
+    wheel_joints_[3]->SetVelocity(0, base_kin_inv_[9] * x_ + base_kin_inv_[10] * y_ + base_kin_inv_[11] * rot_);
 
     // publish odometry
     if (odometry_rate_ > 0.0) {

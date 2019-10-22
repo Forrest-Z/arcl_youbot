@@ -13,23 +13,6 @@ import scipy.spatial
 
 SAMPLE_NUM = 500
 
-MIN_JOINT_POS = [-2.9395372288,
-    -1.124398163,
-    -2.4783710285,
-    -1.7668361332,
-    -2.8913271881]
-MAX_JOINT_POS = [2.8905337534,
-    1.4835265078,
-    2.532469254,
-    1.6402432236,
-    2.6396457936]
-JOINT_OFFSET = [ -2.949606436,
-    -1.1344673701987218,
-     2.5481772172532176,
-    -1.7889600250839740,
-    -3.0019466477485340]
-ARM_JOINT_NUM = 5
-
 
 class PRMStarPlanner():
     def __init__(self, p_client, urdf_path):
@@ -37,7 +20,7 @@ class PRMStarPlanner():
         self.p_client = p_client
         self.urdf_path = urdf_path
         self.robot_id = self.p_client.loadURDF(self.urdf_path, flags=self.p_client.URDF_USE_SELF_COLLISION)
-        self.ARM_JOINT_NUM = ARM_JOINT_NUM
+        self.ARM_JOINT_NUM = arm_util.ARM_JOINT_NUM
         self.tree = None
         self.joint_dict = None
         self.joint_neighbor = None
@@ -50,7 +33,7 @@ class PRMStarPlanner():
         while sample_index < self.sample_num:
             jnt_vector = []
             for jnt in range(self.ARM_JOINT_NUM):
-                joint_mat[jnt, sample_index] = np.random.uniform(MIN_JOINT_POS[jnt] - JOINT_OFFSET[jnt] ,MAX_JOINT_POS[jnt] - JOINT_OFFSET[jnt])
+                joint_mat[jnt, sample_index] = np.random.uniform(arm_util.MIN_JOINT_POS[jnt] - arm_util.JOINT_OFFSET[jnt] ,arm_util.MAX_JOINT_POS[jnt] - arm_util.JOINT_OFFSET[jnt])
             arm_util.set_arm_joint_pos(joint_mat[:, sample_index], self.p_client, self.robot_id)
             self.p_client.stepSimulation()
             collision_list = self.p_client.getContactPoints(self.robot_id)
@@ -70,7 +53,7 @@ class PRMStarPlanner():
 
         self.tree = scipy.spatial.cKDTree(joint_mat.T)
         joint_neighbor = np.zeros([self.sample_num, self.sample_num])
-        neighbor_num = int(math.ceil(math.log(self.sample_num) * 2.7 * (1 + 1.0 / ARM_JOINT_NUM)))
+        neighbor_num = int(math.ceil(math.log(self.sample_num) * 2.7 * (1 + 1.0 / self.ARM_JOINT_NUM)))
         sample_index = 0
         print self.tree.m
         print self.tree.n
@@ -91,7 +74,7 @@ class PRMStarPlanner():
         self.joint_neighbor = np.load('/home/wei/catkin_youbot_ws/src/arcl_youbot_planner/src/arcl_youbot_planner/arm_planner/prm_roadmap_neighbor.npy')
         joint_dict_object = np.load('/home/wei/catkin_youbot_ws/src/arcl_youbot_planner/src/arcl_youbot_planner/arm_planner/prm_roadmap_dict.npy', allow_pickle=True)
         self.joint_dict = joint_dict_object.item()
-        neighbor_num = int(math.ceil(math.log(self.sample_num) * 2.7 * (1 + 1.0 / ARM_JOINT_NUM)))
+        neighbor_num = int(math.ceil(math.log(self.sample_num) * 2.7 * (1 + 1.0 / self.ARM_JOINT_NUM)))
 
 
         temp_joint_mat = self.joint_mat
@@ -129,12 +112,12 @@ if __name__ == "__main__":
     p.setGravity(0,0,-10)
     prmstar = PRMStarPlanner(p, "/home/wei/catkin_youbot_ws/src/luh_youbot_description/robots/youbot_0.urdf")
     #prmstar.build_roadmap()
-    start = np.zeros(ARM_JOINT_NUM)
-    for jnt in range(ARM_JOINT_NUM):
-        start[jnt] = np.random.uniform(MIN_JOINT_POS[jnt] - JOINT_OFFSET[jnt] ,MAX_JOINT_POS[jnt] - JOINT_OFFSET[jnt])
-    goal = np.zeros(ARM_JOINT_NUM)
-    for jnt in range(ARM_JOINT_NUM):
-        goal[jnt] = np.random.uniform(MIN_JOINT_POS[jnt] - JOINT_OFFSET[jnt] ,MAX_JOINT_POS[jnt] - JOINT_OFFSET[jnt])
+    start = np.zeros(arm_util.ARM_JOINT_NUM)
+    for jnt in range(arm_util.ARM_JOINT_NUM):
+        start[jnt] = np.random.uniform(arm_util.MIN_JOINT_POS[jnt] - arm_util.JOINT_OFFSET[jnt] ,arm_util.MAX_JOINT_POS[jnt] - arm_util.JOINT_OFFSET[jnt])
+    goal = np.zeros(arm_util.ARM_JOINT_NUM)
+    for jnt in range(arm_util.ARM_JOINT_NUM):
+        goal[jnt] = np.random.uniform(arm_util.MIN_JOINT_POS[jnt] - arm_util.JOINT_OFFSET[jnt] ,arm_util.MAX_JOINT_POS[jnt] - arm_util.JOINT_OFFSET[jnt])
         
     prmstar.path_plan(tuple(start), tuple(goal))
     rospy.spin()

@@ -99,11 +99,11 @@ ControllerNode::ControllerNode(ros::NodeHandle &node):
     // === INIT ARM ===
     if(youbot_->hasArms())
     {
-        arm_modules_.push_back(new ModuleInterpolation());
-        arm_modules_.push_back(new ModuleMotionPlanner());        
-        arm_modules_.push_back(new ModuleDirectControl());
+        //arm_modules_.push_back(new ModuleInterpolation());
+        //arm_modules_.push_back(new ModuleMotionPlanner());        
+        //arm_modules_.push_back(new ModuleDirectControl());
         arm_modules_.push_back(new ModuleJointTrajectory());
-        arm_modules_.push_back(new ModuleGravityCompensation());
+        //arm_modules_.push_back(new ModuleGravityCompensation());
 
         if(use_standard_gripper_ || use_luh_gripper_v3_)
             arm_modules_.push_back(new ModuleGripper());

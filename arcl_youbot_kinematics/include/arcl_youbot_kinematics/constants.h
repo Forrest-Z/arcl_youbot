@@ -7,7 +7,7 @@ namespace arcl_youbot_kinematics
 // constants
 /// number of joints
 const unsigned int N_JOINTS = 5;
-
+const double H2 = 0.252;
 /// height of joint 2 (in relation to arm_link_0)
 const double L0 = 0.115;
 
@@ -26,6 +26,7 @@ const double L4 = 0.220;
 /// distance between arm_link_0 origin and axis of joint 1
 const double ARM_LINK_0_X_OFFSET = 0.024;
 
+const double JOINT_1_TO_BASE = 0.165;
 /// maximum joint accelerations
 //const double MAX_JNT_ACCELERATIONS[] = {0.7, 0.7, 0.7, 0.7, 0.7};
 //const double MAX_JNT_ACCELERATIONS[] = {1.34, 1.34, 2.09, 2.94, 2.94};
@@ -65,6 +66,36 @@ const double MIN_JNT_POSITIONS[] =
     -1.7668361332,
     -2.8913271881
 };
+
+// const double JOINT_OFFSETS[] =
+// {
+//      -2.949606436,
+//     -1.1344673701987218,
+//      2.5481772172532176,
+//     -1.7889600250839740,
+//     -3.0019466477485340
+// };
+
+// /// maximum joint positions (in relation to desired zero positions)
+// const double MAX_JNT_POSITIONS[] =
+// {
+//     5.89921287174,
+//     2.7035265078,
+//     0.003,
+//     3.5402432236,
+//     5.84685299418
+// };
+
+// /// minimum joint positions (in relation to desired zero positions)
+// const double MIN_JNT_POSITIONS[] = 
+// {
+//     -0.01,
+//     -0.001,
+//     -5.18,
+//     -0.003,
+//     -0.001
+// };
+
 
 }
 #endif // LUH_YOUBOT_KINEMATICS_CONSTANTS_H
