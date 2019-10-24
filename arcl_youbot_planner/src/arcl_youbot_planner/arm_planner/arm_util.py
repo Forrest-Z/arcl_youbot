@@ -40,8 +40,16 @@ JOINT_OFFSET = [
 ARM_JOINT_NUM = 5
 
 
+#change youbot arm joint value from MIN-MAX range to actual joint limit range
+def subtract_offset(joint_value):
+    if len(joint_value) != ARM_JOINT_NUM:
+        raise Exception('arm_util.subtract_offset: input joint_value length not equal to ARM_JOINT_NUM')
 
-
+    for jnt_index in range(len(joint_value)):
+        if joint_value[jnt_index] >= MIN_JOINT_POS[jnt_index] and joint_value[jnt_index] <= MAX_JOINT_POS[jnt_index]:
+            joint_value[jnt_index] -= JOINT_OFFSET[jnt_index]
+        else:
+            raise Exception('arm_util.subtract_offset: input joint_value exceeds limit, input: {}'.format(joint_value))
 
 def set_arm_joint_pos(joint_vector, pybullet_client, youbot_id):
     pybullet_client.resetJointState(youbot_id, JOINT_1_INDEX, joint_vector[0])

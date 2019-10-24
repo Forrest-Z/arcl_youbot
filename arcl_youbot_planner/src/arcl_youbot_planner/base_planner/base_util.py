@@ -28,7 +28,7 @@ TEST = False
 
 
 #youbot_name: youbot
-def get_youbot_base_pose(youbot_name):
+def get_youbot_base_pose2d(youbot_name):
     data = rospy.wait_for_message('gazebo/model_states', ModelStates)
     current_pose = [0,0,0]
     youbot_index = 0
@@ -46,6 +46,26 @@ def get_youbot_base_pose(youbot_name):
     (roll, pitch, yaw) = euler_from_quaternion(q)
     current_pose[2] = yaw
     return current_pose
+
+#youbot_name: youbot
+def get_youbot_base_pose(youbot_name):
+    data = rospy.wait_for_message('gazebo/model_states', ModelStates)
+    current_position = [0,0,0]
+    current_orientation = [0,0,0,1]
+    youbot_index = 0
+    for name, data_index in zip(data.name, range(len(data.name))):
+        if name == youbot_name:
+            youbot_index = data_index
+
+
+    current_position[0] = data.pose[youbot_index].position.x
+    current_position[1] = data.pose[youbot_index].position.y
+    current_position[2] = data.pose[youbot_index].position.z
+    current_orientation[0] = data.pose[youbot_index].orientation.x
+    current_orientation[1] = data.pose[youbot_index].orientation.y
+    current_orientation[2] = data.pose[youbot_index].orientation.z
+    current_orientation[3] = data.pose[youbot_index].orientation.w    
+    return current_position, current_orientation
 
 # base_action_name:   "youbot_base/move"
 def execute_path(final_path, base_action_name):

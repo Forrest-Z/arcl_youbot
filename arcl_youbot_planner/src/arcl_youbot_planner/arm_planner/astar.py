@@ -86,7 +86,10 @@ def AStarSearch(start, end, graph):
             print(path)
             print(len(path))
             #print(cameFrom)
-            return path, F[end] #Done!
+            path_vertex_index = []
+            for vertex in path:
+                path_vertex_index.append(graph.graph_dict[vertex])
+            return path, path_vertex_index, F[end] #Done!
 
         openVertices.remove(current)
         closedVertices.add(current)
