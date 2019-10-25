@@ -24,7 +24,7 @@ from arcl_youbot_application.msg import ManipulationAction, ManipulationGoal
 from arcl_youbot_application.msg import PlanningSceneMsg
 from arcl_youbot_application.msg import SceneObjectMsg
 import arcl_youbot_planner.base_planner.visgraph as vg
-import arcl_youbot_planner.arm_planner.prmstar as prmstar
+# import arcl_youbot_planner.arm_planner.prmstar as prmstar
 
 
 class Object():

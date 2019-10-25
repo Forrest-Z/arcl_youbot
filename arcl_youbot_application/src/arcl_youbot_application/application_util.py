@@ -182,7 +182,7 @@ class YoubotEnvironment():
             self.planning_scene_msg.scene_object_list.append(scene_object)
 
     def move_to_target(self, youbot_name, target_pose):
-        current_pos_2d = base_util.get_youbot_base_pose(youbot_name)
+        current_pos_2d = base_util.get_youbot_base_pose2d(youbot_name)
         print("current_pos_2d")
         print(current_pos_2d)
         target_pos_2d = [0, 0, 0]
@@ -203,12 +203,13 @@ class YoubotEnvironment():
         print(start_pos)
         print("goal:")
         print(goal_pos)
-        path, g = base_util.vg_find_path(start_pos, goal_pos, obstacles)
-        print(path)
         start_heading = current_pos_2d[2]
         goal_heading = target_pos_2d[2]
+        path_with_heading, g = base_util.vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles)
+        print(path_with_heading)
+        
         # path_with_heading = vg.vg_youbot_path.add_orientation(path, start_heading, goal_heading)
-        path_with_heading = base_util.add_orientation(path, start_heading, goal_heading)
+        # path_with_heading = base_util.add_orientation(path, start_heading, goal_heading)
 
         base_util.plot_vg_path(obstacles, path_with_heading, g)
 
@@ -217,7 +218,7 @@ class YoubotEnvironment():
         # execute_path
 
     def move_to_target_2d(self, youbot_name, target_pos_2d):
-        current_pos_2d = base_util.get_youbot_base_pose(youbot_name)
+        current_pos_2d = base_util.get_youbot_base_pose2d(youbot_name)
         print("current_pos_2d")
         print(current_pos_2d)
         
