@@ -12,6 +12,7 @@ import arcl_youbot_application.common_util as common_util
 from geometry_msgs.msg import Twist 
 import arcl_youbot_planner.arm_planner.astar 
 import scipy.spatial
+import os.path
 
 SAMPLE_NUM = 500
 ROBOT_COLLISION_CHECK_RADIUS = 0.7
@@ -25,9 +26,10 @@ class PRMStarPlanner():
         self.urdf_path = urdf_path
         self.robot_id = self.p_client.loadURDF(self.urdf_path, flags=self.p_client.URDF_USE_SELF_COLLISION)
         self.ARM_JOINT_NUM = arm_util.ARM_JOINT_NUM
-        self.joint_mat = np.load('/home/wei/catkin_youbot_ws/src/arcl_youbot_planner/src/arcl_youbot_planner/arm_planner/prm_roadmap/prm_roadmap.npy')
-        self.joint_neighbor = np.load('/home/wei/catkin_youbot_ws/src/arcl_youbot_planner/src/arcl_youbot_planner/arm_planner/prm_roadmap/prm_roadmap_neighbor.npy')
-        joint_dict_object = np.load('/home/wei/catkin_youbot_ws/src/arcl_youbot_planner/src/arcl_youbot_planner/arm_planner/prm_roadmap/prm_roadmap_dict.npy', allow_pickle=True)
+        my_path = os.path.abspath(os.path.dirname(__file__))
+        self.joint_mat = np.load(os.path.join(my_path, "prm_roadmap/prm_roadmap.npy"))
+        self.joint_neighbor = np.load(os.path.join(my_path, 'prm_roadmap/prm_roadmap_neighbor.npy'))
+        joint_dict_object = np.load(os.path.join(my_path, 'prm_roadmap/prm_roadmap_dict.npy'), allow_pickle=True)
         self.joint_dict = joint_dict_object.item()
         self.tree = None
         self.object_list = None
@@ -220,7 +222,8 @@ if __name__ == "__main__":
     physicsClient = p.connect(p.DIRECT)#or p.DIRECT for non-graphical version
     p.setAdditionalSearchPath(pybullet_data.getDataPath()) #optionally
     p.setGravity(0,0,-10)
-    prmstar = PRMStarPlanner(p, "/home/baichuan/ws/src/luh_youbot_description/robots/youbot_0.urdf")
+    my_path = os.path.abspath(os.path.dirname(__file__))
+    prmstar = PRMStarPlanner(p, os.path.join(my_path, "../../../luh_youbot_description/robots/youbot_0.urdf"))
     #prmstar.build_roadmap()
     start = np.zeros(arm_util.ARM_JOINT_NUM)
     for jnt in range(arm_util.ARM_JOINT_NUM):

@@ -292,7 +292,8 @@ def plot_edge(ax, x, y, color='gray', zorder=1, linewidth=1, alpha=1):
 
 
 # ==================== visibility graph ====================
-       
+
+
 
 if __name__ == "__main__":
     start_pos = (10, 2)

@@ -26,6 +26,7 @@ from arcl_youbot_application.msg import SceneObjectMsg
 import arcl_youbot_planner.base_planner.visgraph as vg
 import arcl_youbot_planner.arm_planner.prmstar as prmstar
 import arcl_youbot_application.common_util as common_util
+import os.path
 
 GAZEBO_COLORS = [ 
 "Gazebo/White",
@@ -248,7 +249,10 @@ class YoubotEnvironment():
         p.setAdditionalSearchPath(pybullet_data.getDataPath()) #optionally
         p.setGravity(0,0,-10)
         prmstar_planner = None
-        prmstar_planner = prmstar.PRMStarPlanner(p, "/home/wei/catkin_youbot_ws/src/luh_youbot_description/robots/youbot_0.urdf")
+        my_path = os.path.abspath(os.path.dirname(__file__))
+        my_path = os.path.join(my_path, "../../../luh_youbot_description/robots/youbot_0.urdf")
+        print(my_path)
+        prmstar_planner = prmstar.PRMStarPlanner(p, my_path)
         #prmstar.build_roadmap()
 
         prmstar_planner.import_obstacles(self.object_list)

@@ -1,0 +1,3 @@
+counter_num:0
+average up till now TIME:multi_robot_exhaus:-1.#IND ,multirobot greedy 1:-1.#IND ,exhaus_time:1.#INF   , greedy_time:-1.#IND ,multi greedy time:-1.#IND    ,particle greedy time:-1.#IND  ,mcts time:-1.#IND
+average up till now DIST:multi_robot_exhaus:-1.#IND ,multirobot greedy_1:-1.#IND ,exhaus_dist:-1.#IND   , greedy_dist:-1.#IND ,multi greedy dist:-1.#IND    ,particle greedy dist:-1.#IND  ,mcts dist:-1.#IND
