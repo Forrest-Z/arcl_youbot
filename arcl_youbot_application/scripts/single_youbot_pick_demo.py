@@ -10,7 +10,7 @@ if __name__ == "__main__":
     env = app_util.YoubotEnvironment(-20, 20, -20, 20)
 
     #import object list from file
-    env.import_obj_from_file("/home/wei/Desktop/scatter/10_0.txt")
+    env.import_obj_from_file("/home/baichuan/Downloads/scatter/10_0.txt")
 
     #spawn the objects in gazebo, and generate the planningscene msg 
     env.generate_obj_in_gazebo()
@@ -28,7 +28,7 @@ if __name__ == "__main__":
     # arm_util.set_gripper_width("youbot", 0.0)
     # arm_util.set_gripper_width("youbot", 0.06)
     # arm_util.set_gripper_width("youbot", 0.0)
-    env.send_grasp_action(env.planning_scene_msg, "obj_7", env.planning_scene_msg.scene_object_list[7].object_pose, " ", "cube", rest_base_pose, True)
+    env.send_grasp_action(env.planning_scene_msg, "obj_2", env.planning_scene_msg.scene_object_list[2].object_pose, " ", "cube", rest_base_pose, True)
 
     target_base_pose = env.grasp_plan_result.final_base_pose
     print(target_base_pose)

@@ -6,6 +6,7 @@ import time
 import numpy as np
 import pybullet_data
 import arcl_youbot_planner.arm_planner.arm_util as arm_util
+# import arcl_youbot_application.application_util as app_util
 import arcl_youbot_application.common_util as common_util
 # import control_msgs.msg.FollowJointTrajectoryActionGoal
 from geometry_msgs.msg import Twist 
@@ -196,6 +197,7 @@ class PRMStarPlanner():
 
     def import_obstacles(self, object_list):
         self.object_list = object_list
+        # self.object_position = 
         for obj in self.object_list:
             size, position, quaternion = common_util.get_info_from_cube(obj)
 
@@ -218,7 +220,7 @@ if __name__ == "__main__":
     physicsClient = p.connect(p.DIRECT)#or p.DIRECT for non-graphical version
     p.setAdditionalSearchPath(pybullet_data.getDataPath()) #optionally
     p.setGravity(0,0,-10)
-    prmstar = PRMStarPlanner(p, "/home/wei/catkin_youbot_ws/src/luh_youbot_description/robots/youbot_0.urdf")
+    prmstar = PRMStarPlanner(p, "/home/baichuan/ws/src/luh_youbot_description/robots/youbot_0.urdf")
     #prmstar.build_roadmap()
     start = np.zeros(arm_util.ARM_JOINT_NUM)
     for jnt in range(arm_util.ARM_JOINT_NUM):
