@@ -22,7 +22,7 @@
 
 
   <!-- Now we can start using the macros included above to define the actual youbot -->
-  <xacro:youbot_base name="base" namespace=""/>
+  <xacro:youbot_base name="base" namespace="youbot_0"/>
 
   <xacro:youbot_plate name="plate" parent="base_link">
     <origin xyz="-0.039 0 0.064" rpy="0 0 0" />

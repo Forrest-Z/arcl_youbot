@@ -52,41 +52,36 @@ void ModuleBaseController::init()
 
 	has_last_diff_ = false;
 
-    node_->param("module_base_controller/max_velocity_x", max_velocity_x_, 0.1);
-    node_->param("module_base_controller/max_velocity_y", max_velocity_y_, 0.1);
-    node_->param("module_base_controller/max_velocity_theta", max_velocity_theta_, 0.1);
-
-    node_->param("module_base_controller/velocity_p_factor_x", velocity_p_factor_x_, 2.0);
-    node_->param("module_base_controller/velocity_p_factor_y", velocity_p_factor_y_, 2.0);
-    node_->param("module_base_controller/velocity_p_factor_theta", velocity_p_factor_theta_, 0.7);
-
-    node_->param("module_base_controller/velocity_i_factor_x", velocity_i_factor_x_, 0.1);
-    node_->param("module_base_controller/velocity_i_factor_y", velocity_i_factor_y_, 0.1);
-    node_->param("module_base_controller/velocity_i_factor_theta", velocity_i_factor_theta_, 0.1);
-
-    node_->param("module_base_controller/velocity_d_factor_x", velocity_d_factor_x_, 0.1);
-    node_->param("module_base_controller/velocity_d_factor_y", velocity_d_factor_y_, 0.1);
-    node_->param("module_base_controller/velocity_d_factor_theta", velocity_d_factor_theta_, 0.1);
-
-    node_->param("module_base_controller/position_tolerance_x", position_tolerance_x_, 0.01);
-    node_->param("module_base_controller/position_tolerance_y", position_tolerance_y_, 0.01);
-    node_->param("module_base_controller/position_tolerance_theta", position_tolerance_theta_, 0.01);
-
-    node_->param("module_base_controller/move_lookahead", move_lookahead_, 0.5);
+    ros::param::param("module_base_controller/max_velocity_x", max_velocity_x_, 0.1);
+    ros::param::param("module_base_controller/max_velocity_y", max_velocity_y_, 0.1);
+    ros::param::param("module_base_controller/max_velocity_theta", max_velocity_theta_, 0.1);
+    ros::param::param("module_base_controller/velocity_p_factor_x", velocity_p_factor_x_, 2.0);
+    ros::param::param("module_base_controller/velocity_p_factor_y", velocity_p_factor_y_, 2.0);
+    ros::param::param("module_base_controller/velocity_p_factor_theta", velocity_p_factor_theta_, 0.7);
+    ros::param::param("module_base_controller/velocity_i_factor_x", velocity_i_factor_x_, 0.1);
+    ros::param::param("module_base_controller/velocity_i_factor_y", velocity_i_factor_y_, 0.1);
+    ros::param::param("module_base_controller/velocity_i_factor_theta", velocity_i_factor_theta_, 0.1);
+    ros::param::param("module_base_controller/velocity_d_factor_x", velocity_d_factor_x_, 0.1);
+    ros::param::param("module_base_controller/velocity_d_factor_y", velocity_d_factor_y_, 0.1);
+    ros::param::param("module_base_controller/velocity_d_factor_theta", velocity_d_factor_theta_, 0.1);
+    ros::param::param("module_base_controller/position_tolerance_x", position_tolerance_x_, 0.01);
+    ros::param::param("module_base_controller/position_tolerance_y", position_tolerance_y_, 0.01);
+    ros::param::param("module_base_controller/position_tolerance_theta", position_tolerance_theta_, 0.01);
+    ros::param::param("module_base_controller/move_lookahead", move_lookahead_, 0.5);
 
 
     fast_mode_ = false;
-    node_->param("module_base_controller/goal_reached_threshold_x", goal_reached_threshold_x_, 0.01);
-    node_->param("module_base_controller/goal_reached_threshold_y", goal_reached_threshold_y_, 0.01);
-    node_->param("module_base_controller/goal_reached_threshold_theta", goal_reached_threshold_theta_, 0.01);
+    ros::param::param("module_base_controller/goal_reached_threshold_x", goal_reached_threshold_x_, 0.01);
+    ros::param::param("module_base_controller/goal_reached_threshold_y", goal_reached_threshold_y_, 0.01);
+    ros::param::param("module_base_controller/goal_reached_threshold_theta", goal_reached_threshold_theta_, 0.01);
 
 //    node_->param("module_base_controller/min_dist_x", min_dist_x_, 0.061);
 //    node_->param("module_base_controller/min_dist_y", min_dist_y_, 0.185);
-    node_->param("module_base_controller/velocity_command_timeout", velocity_command_timeout_, 1.0);
-    node_->param("module_base_controller/memory_size", memory_size_, 5);
-    node_->param("module_base_controller/align_stop_timeout", align_stop_timeout_, 1.0);
-    node_->param("module_base_controller/align_fail_timeout", align_fail_timeout_, 1.0);
-    node_->param("module_base_controller/align_topic", align_topic_, std::string(""));
+    ros::param::param("module_base_controller/velocity_command_timeout", velocity_command_timeout_, 1.0);
+    ros::param::param("module_base_controller/memory_size", memory_size_, 5);
+    ros::param::param("module_base_controller/align_stop_timeout", align_stop_timeout_, 1.0);
+    ros::param::param("module_base_controller/align_fail_timeout", align_fail_timeout_, 1.0);
+    ros::param::param("module_base_controller/align_topic", align_topic_, std::string(""));
 
 	ROS_WARN("Velocity threshods: [%f, %f, %f]", max_velocity_x_, max_velocity_y_, max_velocity_theta_);
 	ROS_WARN("Position tolerances: [%f, %f, %f]", position_tolerance_x_, position_tolerance_y_, position_tolerance_theta_);
@@ -665,16 +660,16 @@ void ModuleBaseController::moveBaseCallback()
     {
         // Fast move
 		goal_pose_.theta += 20*M_PI;
-        node_->param("module_base_controller/position_tolerance_x_fast", position_tolerance_x_, 0.01);
-        node_->param("module_base_controller/position_tolerance_y_fast", position_tolerance_y_, 0.01);
-        node_->param("module_base_controller/position_tolerance_theta_fast", position_tolerance_theta_, 0.01);
+        ros::param::param("module_base_controller/position_tolerance_x_fast", position_tolerance_x_, 0.01);
+        ros::param::param("module_base_controller/position_tolerance_y_fast", position_tolerance_y_, 0.01);
+        ros::param::param("module_base_controller/position_tolerance_theta_fast", position_tolerance_theta_, 0.01);
         fast_mode_ = true;
     }
     else
     {
-        node_->param("module_base_controller/position_tolerance_x", position_tolerance_x_, 0.01);
-        node_->param("module_base_controller/position_tolerance_y", position_tolerance_y_, 0.01);
-        node_->param("module_base_controller/position_tolerance_theta", position_tolerance_theta_, 0.01);
+        ros::param::param("module_base_controller/position_tolerance_x", position_tolerance_x_, 0.01);
+        ros::param::param("module_base_controller/position_tolerance_y", position_tolerance_y_, 0.01);
+        ros::param::param("module_base_controller/position_tolerance_theta", position_tolerance_theta_, 0.01);
         fast_mode_ = false;
     }
 

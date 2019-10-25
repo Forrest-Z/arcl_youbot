@@ -13,7 +13,6 @@
 
 //arc_youbot_planner
 #include <arcl_youbot_application/ManipulationAction.h>
-#include <luh_youbot_controller_api/controller_api.h>
 #include <arcl_youbot_kinematics/arm_kinematics.h>
 #include <arcl_youbot_kinematics/constants.h>
 #include <arcl_youbot_application/PlanningSceneMsg.h>
@@ -46,7 +45,6 @@
 #define YOUBOT_BASE_WIDTH  0.46
 #define USE_GAZEBO_
 #define DEBUG_
-using namespace youbot_api;
 
 
 class ManipulationServer

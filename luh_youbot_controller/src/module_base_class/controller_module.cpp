@@ -66,7 +66,7 @@ void ControllerModule::initStatic(ros::NodeHandle *node, tf::TransformListener &
 
     // === READ PREDEFINED POSES ===
     std::string filename;
-    node->param("luh_youbot_controller/poses_file", filename, filename);
+    ros::param::param("luh_youbot_controller/poses_file", filename, filename);
 
     ROS_INFO("Loading poses from %s", filename.c_str());
     predefined_poses_ = youbot_poses::read(filename);

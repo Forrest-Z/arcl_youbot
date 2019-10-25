@@ -78,8 +78,8 @@ YoubotBaseGazeboInterface::~YoubotBaseGazeboInterface()
 //########## INITIALISE ################################################################################################
 void YoubotBaseGazeboInterface::initialise()
 {
-    config_->node_handle->param("youbot_oodl_driver/maxLinearVel", this->max_linear_vel_, 0.7);
-    config_->node_handle->param("youbot_oodl_driver/maxAngularVel", this->max_angular_vel_, 0.7);
+    ros::param::param("youbot_oodl_driver/maxLinearVel", this->max_linear_vel_, 0.7);
+    ros::param::param("youbot_oodl_driver/maxAngularVel", this->max_angular_vel_, 0.7);
 
     // === PUBLISHERS ===
     //odometry_publisher_ = config_->node_handle->advertise<nav_msgs::Odometry>("odom", 1);

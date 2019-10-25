@@ -6,7 +6,7 @@ import time
 import numpy as np
 import pybullet_data
 import arcl_youbot_planner.arm_planner.arm_util as arm_util
-import arcl_youbot_application.application_util as app_util
+import arcl_youbot_application.common_util as common_util
 # import control_msgs.msg.FollowJointTrajectoryActionGoal
 from geometry_msgs.msg import Twist 
 import arcl_youbot_planner.arm_planner.astar 
@@ -146,7 +146,7 @@ class PRMStarPlanner():
             else:
                 # get collision free path
                 break
-            
+
             path_plan_trying_times += 1
             if path_plan_trying_times > PATH_PLAN_TRYING_MAX:
                 print("PRMSTAR: path planning failed after " + PATH_PLAN_TRYING_MAX + " times")
@@ -196,9 +196,8 @@ class PRMStarPlanner():
 
     def import_obstacles(self, object_list):
         self.object_list = object_list
-        self.object_position = 
         for obj in self.object_list:
-            size, position, quaternion = app_util.get_info_from_cube(obj)
+            size, position, quaternion = common_util.get_info_from_cube(obj)
 
             obj_collision_id = self.p_client.createCollisionShape(shapeType=p.GEOM_BOX, halfExtents=size)
             obj_pybullet_id = self.p_client.createMultiBody(baseCollisionShapeIndex=obj_collision_id, basePosition=position, baseOrientation=quaternion)

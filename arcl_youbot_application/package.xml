@@ -49,7 +49,6 @@
   <!-- Use doc_depend for packages you need only for building documentation: -->
   <!--   <doc_depend>doxygen</doc_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
-  <build_depend>luh_youbot_controller_api</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>rospy</build_depend>
   <build_depend>gazebo</build_depend>
@@ -57,10 +56,8 @@
   <build_depend>luh_youbot_controller</build_depend>
   <build_depend>arcl_youbot_planner</build_depend>
   <build_depend>arcl_youbot_kinematics</build_depend>
-  <build_export_depend>luh_youbot_controller_api</build_export_depend>
   <build_export_depend>roscpp</build_export_depend>
   <build_export_depend>gazebo</build_export_depend>
-  <exec_depend>luh_youbot_controller_api</exec_depend>
   <exec_depend>luh_youbot_controller</exec_depend>
   <exec_depend>arcl_youbot_planner</exec_depend>
   <exec_depend>arcl_youbot_kinematics</exec_depend>

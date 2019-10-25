@@ -37,12 +37,21 @@ ControllerNode::ControllerNode(ros::NodeHandle &node):
     node_(&node)
 {
     // === PARAMETERS ===
-    node_->param("luh_youbot_controller/arm_controller_frequency", arm_frequency_, 200.0);
-    node_->param("luh_youbot_controller/base_controller_frequency", base_frequency_, 50.0);
-    node_->param("luh_youbot_controller/use_standard_gripper", use_standard_gripper_, true);
-    node_->param("luh_youbot_controller/use_vrep_simulation", use_vrep_simulation_, false);
-    node_->param("luh_youbot_controller/use_gazebo_simulation", use_gazebo_simulation_, false);
-    node_->param("luh_youbot_controller/use_luh_gripper_v3", use_luh_gripper_v3_, false);
+    ros::param::param("luh_youbot_controller/arm_controller_frequency", arm_frequency_, 200.0);
+    ros::param::param("luh_youbot_controller/base_controller_frequency", base_frequency_, 50.0);
+    ros::param::param("luh_youbot_controller/use_standard_gripper", use_standard_gripper_, true);
+    ros::param::param("luh_youbot_controller/use_vrep_simulation", use_vrep_simulation_, false);
+    ros::param::param("luh_youbot_controller/use_gazebo_simulation", use_gazebo_simulation_, true);
+    ros::param::param("luh_youbot_controller/use_luh_gripper_v3", use_luh_gripper_v3_, false);
+
+    // node_->param("luh_youbot_controller/arm_controller_frequency", arm_frequency_, 200.0);
+    // node_->param("luh_youbot_controller/base_controller_frequency", base_frequency_, 50.0);
+    // node_->param("luh_youbot_controller/use_standard_gripper", use_standard_gripper_, true);
+    // node_->param("luh_youbot_controller/use_vrep_simulation", use_vrep_simulation_, false);
+    // node_->param("luh_youbot_controller/use_gazebo_simulation", use_gazebo_simulation_, true);
+    // node_->param("luh_youbot_controller/use_luh_gripper_v3", use_luh_gripper_v3_, false);
+
+    
 
     if(use_standard_gripper_)
         ROS_INFO("Using standard gripper.");
@@ -63,9 +72,10 @@ ControllerNode::ControllerNode(ros::NodeHandle &node):
         ROS_WARN("Running in VREP simulation mode.");
        // youbot_ = new YoubotVrepInterface(node);
     }    
-    else
+    else{ 
+        ROS_WARN("Running in real robot mode");
         youbot_ = new YoubotInterface(node);
-
+    }
     youbot_->initialise(use_standard_gripper_,use_luh_gripper_v3_);
 
     // === TIMER ===
