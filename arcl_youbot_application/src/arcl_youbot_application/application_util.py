@@ -199,14 +199,16 @@ class YoubotEnvironment():
         start_pos = (current_pos_2d[0], current_pos_2d[1])
         goal_pos = (target_pos_2d[0], target_pos_2d[1])
         obstacles = self.object_list
-        # path, g = vg.vg_youbot_path.vg_find_path(start_pos, goal_pos, obstacles)
-        print("start:")
-        print(start_pos)
-        print("goal:")
-        print(goal_pos)
         start_heading = current_pos_2d[2]
         goal_heading = target_pos_2d[2]
+        # TODO: delete the next line
+        start_pos = (0.0, 0.2)
+        print("start:")
+        print(start_pos, start_heading)
+        print("goal:")
+        print(goal_pos, goal_heading)
         path_with_heading, g = base_util.vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles)
+        print("path:")
         print(path_with_heading)
         
         # path_with_heading = vg.vg_youbot_path.add_orientation(path, start_heading, goal_heading)
@@ -214,6 +216,8 @@ class YoubotEnvironment():
 
         base_util.plot_vg_path(obstacles, path_with_heading, g)
 
+        # base_util.position_to_velocity(path_with_heading)
+    
         base_util.execute_path(path_with_heading, youbot_name + "_base/move")
         # call base planner
         # execute_path
