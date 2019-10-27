@@ -639,6 +639,7 @@ void ModuleBaseController::moveBaseCallback()
     current_pose_.theta = base_pose.theta;
 
 	// Check whether we need to adjust from relative to absolute
+    // TODO: 10*M_PI ?
 	if(goal_pose_.theta > 10*M_PI)
 	{
 		goal_pose_.theta -= 20*M_PI;
@@ -674,6 +675,16 @@ void ModuleBaseController::moveBaseCallback()
         fast_mode_ = false;
     }
 
+    // default is fast mode
+    if (goal_pose_.next_x == -111.0 && goal_pose_.next_y == -111.0 && goal_pose_.next_theta == 0.0)
+    {
+        fast_mode_ = false;
+        ROS_INFO("Last pose, fast_mode = false");
+    }
+    else
+    {
+        fast_mode_ = true;
+    }
 
     ROS_INFO("Starting pose: [%f, %f, %f]", current_pose_.x, current_pose_.y, current_pose_.theta);
     ROS_INFO("Request to move to pose: [%f, %f, %f]", goal_pose_.x, goal_pose_.y, goal_pose_.theta);

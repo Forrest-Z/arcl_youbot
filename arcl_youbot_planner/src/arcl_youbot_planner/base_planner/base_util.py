@@ -58,13 +58,18 @@ def execute_path(youbot_name, final_path, base_action_name):
     client.wait_for_server()
     goal = MoveBaseGoal()
     begin_time = 0
-    for pt_index in range(len(final_path)):
-        goal.x = final_path[pt_index][0]
-        goal.y = final_path[pt_index][1]
-        goal.theta = final_path[pt_index][2]
+    path = final_path[:]
+    path.append((-111.0, -111.0, 0.0))
+    for pt_index in range(len(path) - 1):
+        goal.x = path[pt_index][0]
+        goal.y = path[pt_index][1]
+        goal.theta = path[pt_index][2]
+        goal.next_x = path[pt_index+1][0]
+        goal.next_y = path[pt_index+1][1]
+        goal.next_theta = path[pt_index+1][2]
         print('Path', pt_index)
-        print(goal.x, goal.y, goal.theta)
-        client.send_goal_and_wait(goal, rospy.Duration.from_sec(10.0), rospy.Duration.from_sec(10.0))
+        print(goal.x, goal.y, goal.theta, goal.next_x, goal.next_y, goal.next_theta)
+        client.send_goal_and_wait(goal, rospy.Duration.from_sec(10.0), rospy.Duration.from_sec(12.0))
         # client.wait_for_result(rospy.Duration.from_sec(10.0)) 
         
 
@@ -77,7 +82,7 @@ from shapely.ops import unary_union
 
 YOUBOT_SHORT_RADIUS = 0.2  # in meters
 YOUBOT_LONG_RADIUS = 0.32  # in meters
-OFFSET_COEFFICIENT = 10   # in meters
+OFFSET = 0.1
 
 TEST = False
 
@@ -113,8 +118,6 @@ def vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles):
     path = g.shortest_path(vg.Point(start_pos[0], start_pos[1]), vg.Point(goal_pos[0], goal_pos[1]))
 
     # ===== change orientation of youbot so it can fit in this graph =====
-    # offset = YOUBOT_LONG_RADIUS - YOUBOT_SHORT_RADIUS
-    offset = 0.1
     current_heading = start_heading
     path_with_heading = []
     for i in range(len(path) - 1):
@@ -140,7 +143,7 @@ def vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles):
             else:
                 vector_norm = math.sqrt(vector[0]**2 + vector[1]**2)
                 norm_vector = (vector[0] / vector_norm, vector[1] / vector_norm)
-                offset_vecotr = (norm_vector[0] * offset, norm_vector[1] * offset)
+                offset_vecotr = (norm_vector[0] * OFFSET, norm_vector[1] * OFFSET)
                 intersection_vector = (intersection[0] - path[i].x, intersection[1] - path[i].y)
                 offset_intersection = (intersection[0] - offset_vecotr[0], intersection[1] - offset_vecotr[1])
                 if abs(intersection_vector[0]) + abs(intersection_vector[1]) > abs(offset_vecotr[0]) + abs(offset_vecotr[1]):
@@ -148,59 +151,17 @@ def vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles):
                 else:
                     path_with_heading.append((path[i].x, path[i].y, current_heading))
 
-        # # generate left and right lines
-        # line = LineString([(path[i].x, path[i].y), (path[i+1].x, path[i+1].y)])
-        # vector = (path[i+1].x - path[i].x, path[i+1].y - path[i].y)
-        # vector_norm = math.sqrt(vector[0]**2 + vector[1]**2)
-        # norm_vector = (vector[0] / vector_norm, vector[1] / vector_norm)
-        # offset_left = tuple(line.parallel_offset(offset, 'left', join_style=2).coords)
-        # offset_right = tuple(line.parallel_offset(offset, 'right', join_style=2).coords)
-        # offset_right = (offset_right[1], offset_right[0])  # shapely return left and right oppositely
-        # offset_left = LineString([(offset_left[0][0], offset_left[0][1]), 
-        #                           (offset_left[1][0] + norm_vector[0] * OFFSET_COEFFICIENT, offset_left[1][1] + norm_vector[1] * OFFSET_COEFFICIENT)])
-        # offset_right = LineString([(offset_right[0][0], offset_right[0][1]), 
-        #                           (offset_right[1][0] + norm_vector[0] * OFFSET_COEFFICIENT, offset_right[1][1] + norm_vector[1] * OFFSET_COEFFICIENT)])
+    # back up 0.1 meters
+    if abs(goal_heading - current_heading) > math.pi / 4:
+        goal_pos_back_x = path[-1].x - math.cos(goal_heading) * OFFSET
+        goal_pos_back_y = path[-1].y - math.sin(goal_heading) * OFFSET
 
-        # # find intersections
-        # vector_intersection = None
-        # intersection_left = offset_left.intersection(union_dilated_obstacles)
-        # intersection_right = offset_right.intersection(union_dilated_obstacles)
-        # if not intersection_left.is_empty:
-        #     if not isinstance(intersection_left, LineString):
-        #         intersection_left_first = intersection_left[0].coords[0]
-        #     else:
-        #         intersection_left_first = intersection_left.coords[0]
-        #     offset_left_origin = offset_left.coords[0]
-        #     vector_left = (intersection_left_first[0] - offset_left_origin[0], intersection_left_first[1] - offset_left_origin[1])
-        #     vector_intersection = vector_left
-        # if not intersection_right.is_empty:
-        #     if not isinstance(intersection_right, LineString):
-        #         intersection_right_first = intersection_right[0].coords[0]
-        #     else:
-        #         intersection_right_first = intersection_right.coords[0]
-        #     offset_right_origin = offset_right.coords[0]
-        #     vector_right = (intersection_right_first[0] - offset_right_origin[0], intersection_right_first[1] - offset_right_origin[1])
-        #     if vector_intersection is None:
-        #         vector_intersection = vector_right
-        #     elif abs(vector_right[0]) + abs(vector_right[1]) < abs(vector_left[0]) + abs(vector_left[1]):
-        #         vector_intersection = vector_right
-        # if vector_intersection is not None and abs(vector_intersection[0]) + abs(vector_intersection[1]) > abs(vector[0]) + abs(vector[1]):
-        #     vector_intersection = None
-
-        # # adjust orientation
-        # path_with_heading.append((path[i].x, path[i].y, current_heading))
-        # if vector_intersection is not None:
-        #     # if the vector starts inside a polygon (shapely returns vector_intersection = (0,0))
-        #     if vector_intersection == (0.0, 0.0):
-        #         current_heading = math.atan2(vector[1], vector[0])
-        #         path_with_heading.append((path[i].x, path[i].y, current_heading))
-        #     # if the intersection comes before next path
-        #     else:
-        #         current_heading = math.atan2(vector_intersection[1], vector_intersection[0])
-        #         intersection = (path[i].x + vector_intersection[0], path[i].y + vector_intersection[1], current_heading)
-        #         path_with_heading.append(intersection)
-
-    path_with_heading.append((path[-1].x, path[-1].y, goal_heading))
+        path_with_heading.append((path[-1].x, path[-1].y, current_heading))
+        path_with_heading.append((goal_pos_back_x, goal_pos_back_y, goal_heading))
+        path_with_heading.append((path[-1].x, path[-1].y, goal_heading))
+    else:
+        path_with_heading.append((path[-1].x, path[-1].y, current_heading))
+        path_with_heading.append((path[-1].x, path[-1].y, goal_heading))
 
     return path_with_heading, g
 
@@ -292,7 +253,57 @@ def plot_edge(ax, x, y, color='gray', zorder=1, linewidth=1, alpha=1):
 
 
 # ==================== visibility graph ====================
-       
+
+
+
+# import sys, signal
+# def signal_handler(signal, frame):
+#     print("\nprogram exiting gracefully")
+#     sys.exit(0)
+
+# signal.signal(signal.SIGINT, signal_handler)
+
+# from geometry_msgs.msg import Twist
+# from pid import PID
+
+# def position_to_velocity(path_with_heading):
+#     print("From position to velocity:")
+
+#     pid_x = PID(Kp=4.0, Ki=0.0, Kd=-0.1, output_limits=(-0.1, 0.1))
+#     pid_y = PID(Kp=4.0, Ki=0.0, Kd=-0.1, output_limits=(-0.1, 0.1))
+#     pid_theta = PID(Kp=2.0, Ki=0.0, Kd=-0.05, output_limits=(-0.1, 0.1))
+#     vel_pub = rospy.Publisher('robot/cmd_vel', Twist, queue_size=1)
+#     loop_rate = rospy.Rate(100)
+
+#     i = 0
+#     while i < len(path_with_heading):
+#         # TODO: filter error
+#         current_pos = get_youbot_base_pose2d("youbot")
+#         target_pos = path_with_heading[i]
+#         error_x = target_pos[0] - current_pos[0]
+#         error_y = target_pos[1] - current_pos[1]
+#         error_yaw = target_pos[2] - current_pos[2]
+#         msg = Twist()
+#         msg.linear.x = pid_x(error_x)
+#         msg.linear.y = pid_y(error_y)
+#         msg.angular.z = pid_theta(error_yaw)
+#         vel_pub.publish(msg)
+#         print(i, "current:",
+#                  "{:.2f}".format(current_pos[0]), 
+#                  "{:.2f}".format(current_pos[1]),
+#                  "{:.2f}".format(current_pos[2]),
+#                  "target:",
+#                  "{:.2f}".format(target_pos[0]),
+#                  "{:.2f}".format(target_pos[1]),
+#                  "{:.2f}".format(target_pos[2]))
+#         print(msg.linear.x, msg.linear.y, msg.angular.z)
+        
+#         if abs(error_x) + abs(error_y) < 0.1 and abs(error_yaw) < 0.174533:
+#             i += 1
+#         loop_rate.sleep()
+
+
+
 
 if __name__ == "__main__":
     start_pos = (10, 2)
@@ -311,3 +322,8 @@ if __name__ == "__main__":
 
     print("Path:")
     print(path_with_heading)
+
+    rospy.init_node('robot_cmd_vel_publisher')
+    position_to_velocity(path_with_heading)
+    
+    
