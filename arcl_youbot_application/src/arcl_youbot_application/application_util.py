@@ -216,13 +216,7 @@ class YoubotEnvironment():
 
         base_util.plot_vg_path(obstacles, path_with_heading, g)
 
-<<<<<<< HEAD
         base_util.execute_path(youbot_name, path_with_heading, "/youbot_base/move")
-=======
-        # base_util.position_to_velocity(path_with_heading)
-    
-        base_util.execute_path(path_with_heading, youbot_name + "_base/move")
->>>>>>> 1c10199c47d327b89b473c1277259f94bd0e604f
         # call base planner
         # execute_path
 

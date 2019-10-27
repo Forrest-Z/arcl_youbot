@@ -12,12 +12,8 @@ if __name__ == "__main__":
     env = app_util.YoubotEnvironment(-20, 20, -20, 20)
 
     #import object list from file
-<<<<<<< HEAD
-    env.import_obj_from_file("/home/wei/Desktop/scatter/10_0.txt")
-=======
     my_path = os.path.abspath(os.path.dirname(__file__))
     env.import_obj_from_file(os.path.join(my_path, "scatter/10_0.txt"))
->>>>>>> 1c10199c47d327b89b473c1277259f94bd0e604f
 
     #spawn the objects in gazebo, and generate the planningscene msg 
     env.generate_obj_in_gazebo()
