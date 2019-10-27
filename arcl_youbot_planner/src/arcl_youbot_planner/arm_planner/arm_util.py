@@ -80,8 +80,8 @@ def set_gripper_width(youbot_name, width):
     client.send_goal_and_wait(goal, rospy.Duration.from_sec(10.0), rospy.Duration.from_sec(10.0))
     # client.wait_for_result(rospy.Duration.from_sec(10.0))
 
-def execute_path(final_path, joint_action_name):
-    client = actionlib.SimpleActionClient(joint_action_name, FollowJointTrajectoryAction)
+def execute_path(youbot_name, final_path):
+    client = actionlib.SimpleActionClient(youbot_name + '/arm_1/follow_joint_trajectory', FollowJointTrajectoryAction)
     client.wait_for_server()
     goal = FollowJointTrajectoryGoal()
     begin_time = 0
@@ -110,8 +110,8 @@ def execute_path(final_path, joint_action_name):
 
 
 #return the joint position in the actual range (0,0,-5,0,0) to (5,5,0, 5, 5)
-def get_current_joint_pos():
-    data = rospy.wait_for_message('gazebo/joint_states', JointState)
+def get_current_joint_pos(youbot_name):
+    data = rospy.wait_for_message(youbot_name + '/gazebo/joint_states', JointState)
     
     current_joint_pos = []
     current_joint_pos.append(data.position[0])

@@ -242,9 +242,9 @@ void ModuleBaseController::updatePositionMode()
 					  + (current_goal_pose_.y - current_pose_.y) * cos(current_pose_.theta);
     double diff_theta = current_goal_pose_.theta - current_pose_.theta;
 
-//	ROS_INFO("Current pose: [%f, %f, %f]", current_pose_.x, current_pose_.y, current_pose_.theta);
-//	ROS_INFO("Current goal: [%f, %f, %f]", current_goal_pose_.x, current_goal_pose_.y, current_goal_pose_.theta);
-//	ROS_INFO("Relative move: [%f, %f, %f]", diff_x_t, diff_y_t, diff_theta);
+	ROS_INFO("Current pose: [%f, %f, %f]", current_pose_.x, current_pose_.y, current_pose_.theta);
+	ROS_INFO("Current goal: [%f, %f, %f]", current_goal_pose_.x, current_goal_pose_.y, current_goal_pose_.theta);
+	ROS_INFO("Relative move: [%f, %f, %f]", diff_x_t, diff_y_t, diff_theta);
 
 
     if(diff_theta > M_PI)
@@ -267,7 +267,7 @@ void ModuleBaseController::updatePositionMode()
 		diff_y_dt = 0; 
 		diff_theta_dt = 0;
 	}	
-
+    ROS_WARN_STREAM("diff_theta:"<<diff_theta<<", position_tol_theta:"<<position_tolerance_theta_);
     // check x 
 	if(std::fabs(diff_x_t) > position_tolerance_x_)
     {
@@ -298,7 +298,7 @@ void ModuleBaseController::updatePositionMode()
         goal_reached = false;
         velocity_command_.angular.z = diff_theta * velocity_p_factor_theta_ 
 				+ diff_theta_dt * velocity_d_factor_theta_ / delta_t;
-
+        ROS_WARN_STREAM("diff_theta:"<<diff_theta<<", diff_theta_dt:"<<diff_theta_dt);
         velocity_command_.angular.z = std::min(velocity_command_.angular.z, max_velocity_theta_);
         velocity_command_.angular.z = std::max(velocity_command_.angular.z, -max_velocity_theta_);
 
@@ -306,6 +306,7 @@ void ModuleBaseController::updatePositionMode()
     else
         velocity_command_.angular.z = 0;
 
+    ROS_WARN_STREAM("velocity cmd angular_z:"<<velocity_command_.angular.z);
 	last_diff_x_ = diff_x_t;
 	last_diff_y_ = diff_y_t;
 	last_diff_theta_ = diff_theta;

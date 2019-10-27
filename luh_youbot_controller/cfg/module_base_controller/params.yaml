@@ -1,26 +1,40 @@
-max_velocity_x: 0.8 # meters/second
-max_velocity_y: 0.8 # meters/second
-max_velocity_theta: 1.6 # radians/second
+#max_velocity_x: 0.8 # meters/second
+#max_velocity_y: 0.8 # meters/second
+#max_velocity_theta: 1.6 # radians/second
+
+max_velocity_x: 0.4 # meters/second
+max_velocity_y: 0.4 # meters/second
+max_velocity_theta: 0.8 # radians/second
 
 max_velocity_x_approach: 0.2 # meters/second
 max_velocity_y_approach: 0.2 # meters/second
 max_velocity_theta_approach: 0.4 # radians/second
 
-velocity_p_factor_x: 2 
-velocity_p_factor_y: 2
-velocity_p_factor_theta: 0.7
+velocity_p_factor_x: 4 
+velocity_p_factor_y: 4
+velocity_p_factor_theta: 2
 
 velocity_i_factor_x: 0.25
 velocity_i_factor_y: 0.25
 velocity_i_factor_theta: 0.25
 
-velocity_d_factor_x: 0.0
-velocity_d_factor_y: 0.0
-velocity_d_factor_theta: 0.0
+velocity_d_factor_x: -0.1
+velocity_d_factor_y: -0.1
+velocity_d_factor_theta: -0.05
 
 position_tolerance_x: 0.01 # meters
 position_tolerance_y: 0.01 # meters
-position_tolerance_theta: 5 # degrees
+position_tolerance_theta: 0.005 # radian
+
+position_tolerance_x_fast: 0.01 # meters
+position_tolerance_y_fast: 0.01 # meters
+position_tolerance_theta_fast: 0.01 # radian
+
+goal_reached_threshold_x: 0.05
+goal_reached_threshold_y: 0.05
+goal_reached_threshold_theta: 0.1
+
+move_lookahead: 0.1 # meters 
 
 velocity_command_timeout: 1.0 #seconds
 

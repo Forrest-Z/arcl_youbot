@@ -88,7 +88,7 @@ void YoubotBaseGazeboInterface::initialise()
     // === GAZEBO STUFF ===
     cmd_vel_publisher_ = config_->node_handle->advertise<geometry_msgs::Twist>("gazebo/cmd_vel",1);
     odom_subscriber_ = config_->node_handle->subscribe<nav_msgs::Odometry>(
-                "odom", 1, &YoubotBaseGazeboInterface::odomCallback, this);
+                "gazebo/odom", 1, &YoubotBaseGazeboInterface::odomCallback, this);
     joint_state_subscriber_ = config_->node_handle->subscribe("gazebo/joint_states", 1,
                                                               &YoubotBaseGazeboInterface::jointStateCallback, this);
 
