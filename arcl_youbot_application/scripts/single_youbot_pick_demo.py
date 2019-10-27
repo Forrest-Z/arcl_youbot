@@ -5,6 +5,7 @@ from geometry_msgs.msg import Pose
 from std_msgs.msg import String
 from std_msgs.msg import UInt8
 import os.path
+from arcl_youbot_planner.base_planner.velocity_controller import VelocityController
 
 if __name__ == "__main__":
     rospy.init_node("single_youbot_pick_demo")
