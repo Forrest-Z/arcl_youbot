@@ -32,14 +32,14 @@ class PRMStarPlanner():
         joint_dict_object = np.load(os.path.join(my_path, 'prm_roadmap/prm_roadmap_dict.npy'), allow_pickle=True)
         self.joint_dict = joint_dict_object.item()
         self.tree = None
-        self.object_list = None
+        self.object_list = []
         self.robot_pose2d = None
         self.robot_position = None
         self.robot_orientation = None
-        self.object_position_list = None
-        self.object_size_list = None
-        self.object_pybullet_id_list = None
-        self.object_orientation_list = None
+        self.object_position_list = []
+        self.object_size_list = []
+        self.object_pybullet_id_list = []
+        self.object_orientation_list = []
         
 
     def build_roadmap(self):
@@ -124,17 +124,20 @@ class PRMStarPlanner():
         path_plan_trying_times = 0
         path = []
         final_cost = -1.0
-        while is_path_in_collision == False:
+        while is_path_in_collision == True:
             astar_graph = arcl_youbot_planner.arm_planner.astar.AStarGraph(temp_joint_mat, temp_joint_neighbor, temp_joint_dict)
             path, path_vertex_list, final_cost = arcl_youbot_planner.arm_planner.astar.AStarSearch(start, goal, astar_graph)
-
+            print("result path:")
+            print(path)
+            print("result path_vertex_list:")
+            print(path_vertex_list)
             close_obj_index_list = []
             for obj_pos, obj_index in zip(self.object_position_list, range(len(self.object_position_list))):
                 if math.sqrt(math.pow(obj_pos[0] - self.robot_position[0], 2) + math.pow(obj_pos[1] - self.robot_position[1], 2)) < ROBOT_COLLISION_CHECK_RADIUS:
                     close_obj_index_list.append(obj_index)
             
             
-            is_path_in_collision, self_collision_edge_list, external_collision_edge_list = check_path_collision(path, path_vertex_list, close_obj_index_list)
+            is_path_in_collision, self_collision_edge_list, external_collision_edge_list = self.check_path_collision(path, path_vertex_list, close_obj_index_list)
             if is_path_in_collision:
                 for self_coll_pair in self_collision_edge_list:
                     if self_coll_pair[0] < SAMPLE_NUM and self_coll_pair[1] < SAMPLE_NUM:
@@ -148,11 +151,12 @@ class PRMStarPlanner():
                     temp_joint_neighbor[external_coll_pair[1], external_coll_pair[0]] = 0
             else:
                 # get collision free path
+                print("get the collision free path")
                 break
-            
+
             path_plan_trying_times += 1
             if path_plan_trying_times > PATH_PLAN_TRYING_MAX:
-                print("PRMSTAR: path planning failed after " + PATH_PLAN_TRYING_MAX + " times")
+                print("PRMSTAR: path planning failed after " + str(PATH_PLAN_TRYING_MAX) + " times")
                 break
         return path, final_cost
 
@@ -164,12 +168,12 @@ class PRMStarPlanner():
         is_collision = False
         for pt_index in range(len(path)):
             if pt_index < (len(path)-1):
-                for interpolate_index in range(PATH_INTERPOLATE_NUM):
+                for interpolate_index in range(arm_util.PATH_INTERPOLATE_NUM):
                     inter_pt = []
                     current_pt = path[pt_index]
                     next_pt = path[pt_index+1]
                     for index, j in  zip(range(self.ARM_JOINT_NUM), current_pt):
-                        inter_pt.append(j + interpolate_index * (next_pt[index] - current_pt[index]) / PATH_INTERPOLATE_NUM)
+                        inter_pt.append(j + interpolate_index * (next_pt[index] - current_pt[index]) / arm_util.PATH_INTERPOLATE_NUM)
 
                     arm_util.set_arm_joint_pos(inter_pt, self.p_client, self.robot_id)
                     self.p_client.stepSimulation()

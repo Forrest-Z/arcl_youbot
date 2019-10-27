@@ -1,3 +1,0 @@
-To give the arduino the fixed device id "arduino" add the following
-rule to /etc/udev/rules.d:
-SUBSYSTEM=="tty", ATTRS{manufacturer}=="Arduino*", SYMLINK+="arduino"

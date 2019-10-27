@@ -6,7 +6,7 @@
     <gazebo>
       <plugin name="base_controller" filename="libyoubot_base_controller.so">
         <commandTopic>${namespace}/cmd_vel</commandTopic>
-        <odometryTopic>odom</odometryTopic>
+        <odometryTopic>${namespace}/odom</odometryTopic>
         <odometryFrame>odom</odometryFrame>
         <odometryRate>20.0</odometryRate>
         <robotBaseFrame>base_footprint</robotBaseFrame>

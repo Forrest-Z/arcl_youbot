@@ -78,13 +78,13 @@ YoubotGazeboInterface::~YoubotGazeboInterface()
 void YoubotGazeboInterface::initialise(bool use_standard_gripper, bool use_luh_gripper_v3_)
 {
     // === GET PARAMETERS ===
-    config_.node_handle->param("youBotHasBase", config_.has_base, true);
+    ros::param::param("youBotHasBase", config_.has_base, true);
     bool youbot_has_arms;
-    config_.node_handle->param("youBotHasArms", youbot_has_arms, true);
+    ros::param::param("youBotHasArms", youbot_has_arms, true);
 //    node.param("youBotDriverCycleFrequencyInHz", config_.frequency, 200.0);
     config_.config_path = ros::package::getPath("youbot_driver");
     config_.config_path.append("/config");
-    config_.node_handle->param<std::string>("youBotConfigurationFilePath", config_.config_path, config_.config_path);
+    ros::param::param("youBotConfigurationFilePath", config_.config_path, config_.config_path);
 
     // === CREATE ARMS ===
     if(youbot_has_arms)
@@ -92,10 +92,10 @@ void YoubotGazeboInterface::initialise(bool use_standard_gripper, bool use_luh_g
         int i = 1;
         std::stringstream ss;
         ss << "youBotArmName" << i; // youBotArmName1 is first checked param... then youBotArmName2, etc.
-        while (config_.node_handle->hasParam(ss.str()))
+        while (ros::param::has(ss.str()))
         {
             std::string arm_name;
-            config_.node_handle->getParam(ss.str(), arm_name);
+            ros::param::get(ss.str(), arm_name);
 
             arms_.push_back(new YoubotArmGazeboInterface(arm_name, config_));
 
@@ -108,7 +108,7 @@ void YoubotGazeboInterface::initialise(bool use_standard_gripper, bool use_luh_g
     if(config_.has_base)
     {
         std::string base_name;
-        config_.node_handle->param<std::string>("youBotBaseName", base_name, "youbot-base");
+        ros::param::param<std::string>("youBotBaseName", base_name, "youbot-base");
         base_ = new YoubotBaseGazeboInterface(base_name, config_);
     }
 

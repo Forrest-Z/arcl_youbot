@@ -53,8 +53,8 @@ def get_youbot_base_pose(youbot_name):
     return current_position, current_orientation
 
 # base_action_name:   "youbot_base/move"
-def execute_path(final_path, base_action_name):
-    client = actionlib.SimpleActionClient(base_action_name, MoveBaseAction)
+def execute_path(youbot_name, final_path, base_action_name):
+    client = actionlib.SimpleActionClient(youbot_name + base_action_name, MoveBaseAction)
     client.wait_for_server()
     goal = MoveBaseGoal()
     begin_time = 0

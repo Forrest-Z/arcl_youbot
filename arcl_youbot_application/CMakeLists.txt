@@ -8,7 +8,6 @@ project(arcl_youbot_application)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  luh_youbot_controller_api
   roscpp
   arcl_youbot_planner
   rospy
@@ -126,7 +125,7 @@ add_message_files(
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES arcl_youbot_application
-  CATKIN_DEPENDS luh_youbot_controller_api roscpp
+  CATKIN_DEPENDS  roscpp
   DEPENDS system_lib
 )
 
@@ -152,11 +151,7 @@ include_directories(
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
 # add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_executable(my_youbot_node src/my_youbot_node.cpp)
 
-target_link_libraries(my_youbot_node
-    ${catkin_LIBRARIES}
-)
 
 add_executable(manipulation_server src/ManipulationServer.cpp src/planningScene.cpp src/planningSceneObject.cpp src/utilities.cpp  src/gazeboUtility.cpp include/arcl_youbot_application/utilities.hpp)
 

@@ -216,9 +216,13 @@ class YoubotEnvironment():
 
         base_util.plot_vg_path(obstacles, path_with_heading, g)
 
+<<<<<<< HEAD
+        base_util.execute_path(youbot_name, path_with_heading, "/youbot_base/move")
+=======
         # base_util.position_to_velocity(path_with_heading)
     
         base_util.execute_path(path_with_heading, youbot_name + "_base/move")
+>>>>>>> 1c10199c47d327b89b473c1277259f94bd0e604f
         # call base planner
         # execute_path
 
@@ -244,7 +248,7 @@ class YoubotEnvironment():
 
         base_util.plot_vg_path(obstacles, path_with_heading, g)
 
-        base_util.execute_path(path_with_heading, youbot_name + "_base/move")
+        base_util.execute_path(youbot_name, path_with_heading, "youbot_base/move")
         # call base planner
         # execute_path
 
@@ -260,9 +264,10 @@ class YoubotEnvironment():
         #prmstar.build_roadmap()
 
         prmstar_planner.import_obstacles(self.object_list)
-        prmstar_planner.set_robot_pose(base_util.get_youbot_base_pose(youbot_name))
+        robot_position, robot_orientation = base_util.get_youbot_base_pose(youbot_name)
+        prmstar_planner.set_robot_pose(robot_position, robot_orientation)
 
-        start = arm_util.get_current_joint_pos()
+        start = arm_util.get_current_joint_pos(youbot_name)
 
         pick_joint_value[4] = -pick_joint_value[4]
         pre_pick_joint_value[4] = -pre_pick_joint_value[4]
@@ -272,19 +277,19 @@ class YoubotEnvironment():
         #plan and move arm to pre_pick_pos
         [final_path, final_cost] = prmstar_planner.path_plan(tuple(start), tuple(pre_pick_joint_value))
 
-        arm_util.execute_path(final_path, '/arm_1/follow_joint_trajectory')
+        arm_util.execute_path(youbot_name, final_path)
 
         arm_util.set_gripper_width("youbot", 0.068)
 
         #directly move arm to pick_pos
-        start = arm_util.get_current_joint_pos()
+        start = arm_util.get_current_joint_pos(youbot_name)
         [final_path, final_cost] = prmstar_planner.direct_path(tuple(start), tuple(pick_joint_value))
-        arm_util.execute_path(final_path, '/arm_1/follow_joint_trajectory')
+        arm_util.execute_path(youbot_name, final_path)
 
         arm_util.set_gripper_width("youbot", 0.01)
         rospy.sleep(rospy.Duration.from_sec(3.0))
 
         #directly retract arm to pre_pick_pos
-        start = arm_util.get_current_joint_pos()
+        start = arm_util.get_current_joint_pos(youbot_name)
         [final_path, final_cost] = prmstar_planner.direct_path(tuple(start), tuple(pre_pick_joint_value))
-        arm_util.execute_path(final_path, '/arm_1/follow_joint_trajectory')
+        arm_util.execute_path(youbot_name, final_path)

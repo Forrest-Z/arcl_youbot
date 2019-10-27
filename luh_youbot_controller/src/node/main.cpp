@@ -25,7 +25,7 @@ int main(int argc, char** argv)
 {
     ros::init(argc, argv, "controller_node");
 
-    ros::NodeHandle node_handle;
+    ros::NodeHandle node_handle(argv[1]);
     ControllerNode node(node_handle);
 
     ROS_INFO("Controller Node is spinning...");

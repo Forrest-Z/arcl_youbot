@@ -12,7 +12,6 @@ find_package(catkin REQUIRED COMPONENTS
   arcl_youbot_kinematics
   luh_youbot_driver_api
   gazebo_ros
-  luh_youbot_gripper
   rospy
 )
 

@@ -216,7 +216,7 @@
                   </collision>
             </link>
     
-        <xacro:youbot_base_controller namespace="gazebo"/>
+        <xacro:youbot_base_controller namespace="${namespace}/gazebo"/>
         <!-- <xacro:youbot_base_bumper namespace="${namespace}"/> -->
 
     </xacro:macro>
