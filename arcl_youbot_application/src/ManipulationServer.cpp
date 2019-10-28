@@ -126,21 +126,13 @@ void ManipulationServer::GenerateSamplesForArmConf(geometry_msgs::Pose gripper_p
     //get cylin_z
     double tip_z;
    // 0.067 is the length of the gripper finger
-    #ifdef USE_VREP_
-    if(theta - M_PI < 0.1 && theta - M_PI > -0.1){
-        tip_z = gripper_pose.position.z - normal_z*0.12;
-    }else{
-        tip_z = gripper_pose.position.z - normal_z*0.02;
-    }
-    #else 
-        tip_z = gripper_pose.position.z - normal_z*0.02;
-    #endif
+    
+    tip_z = gripper_pose.position.z - normal_z*0.02;
 
     cylin_z = tip_z - ykin::H2 + ykin::L0; // relative to arm_link_0
     
     std::cout<<"cylin_z:"<<cylin_z<<std::endl;
     int space;
-    //std::cin>>space;
     //generate the range for cylin_r(min_cylin_r and max_cylin_r)  
     double axis4_to_axis2_z = tip_z - ykin::H2 - ykin::L4 * cos(theta);
     double axis4_axis2_max_dist = ykin::L2 + ykin::L3;
@@ -203,7 +195,6 @@ void ManipulationServer::goalCB()
     #ifdef DEBUG_
     ROS_WARN("before move_group being called");
     #endif
-    //moveit::planning_interface::MoveGroup group("youbot_arm");
     
     drop_cylin_pose.setQ1(0);
     drop_cylin_pose.setR(0.263);

@@ -36,8 +36,4 @@ align_fail_timeout: 3.0 # return failed after x seconds with no signal
 
 #watchdog
 #min_dist_x: 0.02
-<<<<<<< HEAD
 #min_dist_y: 0.185
-=======
-#min_dist_y: 0.185
->>>>>>> 1c10199c47d327b89b473c1277259f94bd0e604f
