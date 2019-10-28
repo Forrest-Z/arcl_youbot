@@ -23,21 +23,17 @@ class AStarGraph(object):
     def get_vertex_neighbours(self, pos):
         if pos in self.graph_dict:
             index = self.graph_dict[pos]
-            print("current index:"+ str(index))
+            # print("current index:"+ str(index))
         else:
             print("not in the graph dict")
             return 
         neighbor_array = self.graph_neighbor[:, index]
         neighbor_index = np.where(neighbor_array == 1)
         neighbor_index = np.asarray(neighbor_index)
-        print(neighbor_index)
-        print(neighbor_index.shape)
-        print(self.graph_vertex.shape)
         neighbor_index = neighbor_index.reshape([neighbor_index.shape[1]])
         neighbors_numpy_array = self.graph_vertex[:, neighbor_index]
         neighbors = []
         i = 0
-        print(neighbors_numpy_array.shape)
         while i < neighbors_numpy_array.shape[1]:
             neighbors.append(tuple(neighbors_numpy_array[:,i]))
             i += 1
@@ -71,11 +67,8 @@ def AStarSearch(start, end, graph):
             if current is None or F[pos] < currentFscore:
 				currentFscore = F[pos]
 				current = pos
-        print(openVertices)
         #Check if we have reached the goal
         if current == end:
-            print(current)
-            print(end)
         	#Retrace our route backward
             path = [current]
             while current in cameFrom:

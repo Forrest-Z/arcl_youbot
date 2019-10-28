@@ -590,17 +590,20 @@ class YoubotEnvironment():
 
         arm_util.execute_path(youbot_name, final_path)
 
-        arm_util.set_gripper_width("youbot", 0.068)
-
+        arm_util.set_gripper_width("youbot_0", 0.068)
+        print("moved to the pre_pick pose")
         #directly move arm to pick_pos
         start = arm_util.get_current_joint_pos(youbot_name)
         [final_path, final_cost] = prmstar_planner.direct_path(tuple(start), tuple(pick_joint_value))
+        
         arm_util.execute_path(youbot_name, final_path)
+        print("moved to the pick pose")
 
-        arm_util.set_gripper_width("youbot", 0.01)
+        arm_util.set_gripper_width("youbot_0", 0.01)
         rospy.sleep(rospy.Duration.from_sec(3.0))
 
         #directly retract arm to pre_pick_pos
         start = arm_util.get_current_joint_pos(youbot_name)
         [final_path, final_cost] = prmstar_planner.direct_path(tuple(start), tuple(pre_pick_joint_value))
         arm_util.execute_path(youbot_name, final_path)
+        print("moved back to the pre_pick pose")

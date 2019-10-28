@@ -109,8 +109,8 @@ class PRMStarPlanner():
         temp_joint_neighbor[goal_neighbor_index,self.sample_num+1] = 1
 
         temp_joint_dict = self.joint_dict
-        print(temp_joint_mat.shape)
-        print(start_arr.shape)
+        # print(temp_joint_mat.shape)
+        # print(start_arr.shape)
         start_arr = start_arr.reshape(self.ARM_JOINT_NUM, 1)
         goal_arr = goal_arr.reshape(self.ARM_JOINT_NUM, 1)
         temp_joint_mat = np.hstack((temp_joint_mat, start_arr))
@@ -127,10 +127,10 @@ class PRMStarPlanner():
         while is_path_in_collision == True:
             astar_graph = arcl_youbot_planner.arm_planner.astar.AStarGraph(temp_joint_mat, temp_joint_neighbor, temp_joint_dict)
             path, path_vertex_list, final_cost = arcl_youbot_planner.arm_planner.astar.AStarSearch(start, goal, astar_graph)
-            print("result path:")
-            print(path)
-            print("result path_vertex_list:")
-            print(path_vertex_list)
+            # print("result path:")
+            # print(path)
+            # print("result path_vertex_list:")
+            # print(path_vertex_list)
             close_obj_index_list = []
             for obj_pos, obj_index in zip(self.object_position_list, range(len(self.object_position_list))):
                 if math.sqrt(math.pow(obj_pos[0] - self.robot_position[0], 2) + math.pow(obj_pos[1] - self.robot_position[1], 2)) < ROBOT_COLLISION_CHECK_RADIUS:

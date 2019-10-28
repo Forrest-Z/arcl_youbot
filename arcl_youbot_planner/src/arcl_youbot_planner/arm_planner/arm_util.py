@@ -17,7 +17,7 @@ JOINT_4_INDEX = 11
 JOINT_5_INDEX = 12
 
 SAMPLE_NUM = 500
-PATH_INTERPOLATE_NUM=10
+PATH_INTERPOLATE_NUM=3
 MIN_JOINT_POS = [
     -2.9395372288,
     -1.124398163,
@@ -71,7 +71,7 @@ def find_nearest_neighbor(query, joint_mat, neighbor_num):
     return dist_index[:neighbor_num]
 
 def set_gripper_width(youbot_name, width):
-    client = actionlib.SimpleActionClient("gazebo/arm_1/set_gripper" , SetGripperAction)
+    client = actionlib.SimpleActionClient(youbot_name + "/gazebo/arm_1/set_gripper" , SetGripperAction)
     client.wait_for_server()
     goal = SetGripperGoal()
     
@@ -105,8 +105,8 @@ def execute_path(youbot_name, final_path):
             goal.trajectory.points.append(traj_pt)
     goal.goal_time_tolerance = rospy.Duration.from_sec(10)
     print(goal)
-    client.send_goal(goal)
-    client.wait_for_result(rospy.Duration.from_sec(10.0))
+    client.send_goal_and_wait(goal)
+    print("finished current path")
 
 
 #return the joint position in the actual range (0,0,-5,0,0) to (5,5,0, 5, 5)
