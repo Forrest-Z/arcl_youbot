@@ -53,6 +53,7 @@ def get_youbot_base_pose(youbot_name):
     return current_position, current_orientation
 
 # base_action_name:   "youbot_base/move"
+# work with base_controller.cpp updatePositionMode()
 def execute_path(youbot_name, final_path, base_action_name):
     client = actionlib.SimpleActionClient(youbot_name + base_action_name, MoveBaseAction)
     client.wait_for_server()
@@ -71,7 +72,26 @@ def execute_path(youbot_name, final_path, base_action_name):
         print(goal.x, goal.y, goal.theta, goal.next_x, goal.next_y, goal.next_theta)
         client.send_goal_and_wait(goal, rospy.Duration.from_sec(10.0), rospy.Duration.from_sec(12.0))
         # client.wait_for_result(rospy.Duration.from_sec(10.0)) 
-        
+
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+from velocity_controller import VelocityController
+from geometry_msgs.msg import Twist
+
+# work with velocity_controller.py
+def execute_path_vel_pub(youbot_name, final_path):
+    vel_pub = rospy.Publisher('/' + youbot_name + '/robot/cmd_vel', Twist, queue_size=1)
+    vc = VelocityController(youbot_name)
+    vc.set_path(final_path)
+    loop_rate = rospy.Rate(100)
+    path_completed = False
+    
+    while not rospy.is_shutdown() and not path_completed: 
+        msg = vc.get_velocity()  
+        vel_pub.publish(msg)
+        if msg.linear.x == 0.0 and msg.linear.y == 0.0 and msg.angular.z == 0.0:
+            path_completed = True
+        loop_rate.sleep()
+# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 # ==================== visibility graph ====================
 import arcl_youbot_planner.base_planner.visgraph as vg
@@ -324,6 +344,6 @@ if __name__ == "__main__":
     print(path_with_heading)
 
     rospy.init_node('robot_cmd_vel_publisher')
-    position_to_velocity(path_with_heading)
+    # position_to_velocity(path_with_heading)
     
     
