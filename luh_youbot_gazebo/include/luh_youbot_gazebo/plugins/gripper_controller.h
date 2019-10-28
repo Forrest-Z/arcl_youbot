@@ -39,7 +39,7 @@
 
 #include <arcl_youbot_msgs/GripObjectAction.h>
 #include <arcl_youbot_msgs/SetGripperAction.h>
-#include <luh_youbot_gripper/GripCheck.h>
+// #include <luh_youbot_gripper/GripCheck.h>
 #include <std_msgs/Float32.h>
 #include <actionlib/server/simple_action_server.h>
 
@@ -91,7 +91,7 @@ namespace gazebo {
       boost::shared_ptr<ros::AsyncSpinner> spinner_;
 
       void gripperCommandCallback(const std_msgs::Float32::ConstPtr &msg);
-      bool gripCheckCallback(luh_youbot_gripper::GripCheck::Request &req, luh_youbot_gripper::GripCheck::Response &res);
+      //bool gripCheckCallback(luh_youbot_gripper::GripCheck::Request &req, luh_youbot_gripper::GripCheck::Response &res);
 
       void setCmd(double cmd);
       void gripObjectCallback();
