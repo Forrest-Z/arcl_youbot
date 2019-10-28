@@ -14,9 +14,9 @@ velocity_p_factor_x: 2
 velocity_p_factor_y: 2
 velocity_p_factor_theta: 1.5
 
-velocity_i_factor_x: 0.25
-velocity_i_factor_y: 0.25
-velocity_i_factor_theta: 0.25
+velocity_i_factor_x: 0.0 # was 0.25 never used
+velocity_i_factor_y: 0.0 # was 0.25 never used
+velocity_i_factor_theta: 0.0 # was 0.25 never used
 
 velocity_d_factor_x: 0.1
 velocity_d_factor_y: 0.1
@@ -30,9 +30,13 @@ position_tolerance_x_fast: 0.01 # meters
 position_tolerance_y_fast: 0.01 # meters
 position_tolerance_theta_fast: 0.174533 # radian
 
-goal_reached_threshold_x: 0.2
-goal_reached_threshold_y: 0.2
-goal_reached_threshold_theta: 0.174533
+step_reached_threshold_x: 0.15
+step_reached_threshold_y: 0.15
+step_reached_threshold_theta: 0.174533
+
+goal_reached_threshold_x: 0.05
+goal_reached_threshold_y: 0.05
+goal_reached_threshold_theta: 0.085
 
 move_lookahead: 10.0 # meters 
 

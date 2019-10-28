@@ -13,14 +13,15 @@ def _clamp(value, limits):
     return value
 
 
-try:
-    # get monotonic time to ensure that time deltas are always positive
-    _current_time = time.monotonic
-except AttributeError:
-    # time.monotonic() not available (using python < 3.3), fallback to time.time()
-    _current_time = time.time
-    warnings.warn('time.monotonic() not available in python < 3.3, using time.time() as fallback')
+# try:
+#     # get monotonic time to ensure that time deltas are always positive
+#     _current_time = time.monotonic
+# except AttributeError:
+#     # time.monotonic() not available (using python < 3.3), fallback to time.time()
+#     _current_time = time.time
+#     warnings.warn('time.monotonic() not available in python < 3.3, using time.time() as fallback')
 
+_current_time = time.time
 
 class PID(object):
     """
@@ -85,7 +86,7 @@ class PID(object):
             return self._last_output
 
         # compute error terms
-        error = self.setpoint - input_
+        error = input_ - self.setpoint
         d_input = input_ - (self._last_input if self._last_input is not None else input_)
 
         # compute the proportional term
@@ -100,7 +101,7 @@ class PID(object):
         self._integral += self.Ki * error * dt
         self._integral = _clamp(self._integral, self.output_limits)  # avoid integral windup
 
-        self._derivative = -self.Kd * d_input / dt
+        self._derivative = self.Kd * d_input / dt
 
         # compute final output
         output = self._proportional + self._integral + self._derivative

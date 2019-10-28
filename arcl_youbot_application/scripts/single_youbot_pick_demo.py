@@ -5,7 +5,6 @@ from geometry_msgs.msg import Pose
 from std_msgs.msg import String
 from std_msgs.msg import UInt8
 import os.path
-from arcl_youbot_planner.base_planner.velocity_controller import VelocityController
 
 if __name__ == "__main__":
     rospy.init_node("single_youbot_pick_demo")
@@ -31,8 +30,7 @@ if __name__ == "__main__":
     # arm_util.set_gripper_width("youbot", 0.0)
     # arm_util.set_gripper_width("youbot", 0.06)
     # arm_util.set_gripper_width("youbot", 0.0)
-    env.send_grasp_action(env.planning_scene_msg, "obj_7", env.planning_scene_msg.scene_object_list[7].object_pose, " ", "cube", rest_base_pose, True)
-
+    env.send_grasp_action(env.planning_scene_msg, "obj_2", env.planning_scene_msg.scene_object_list[2].object_pose, " ", "cube", rest_base_pose, True)
     target_base_pose = env.grasp_plan_result.final_base_pose
     print(target_base_pose)
     env.move_to_target("youbot_0", target_base_pose)
