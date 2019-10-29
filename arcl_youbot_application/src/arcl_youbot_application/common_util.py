@@ -185,11 +185,30 @@ def add_near_poly(same_cluster_objs, created_objs, x_min, x_max, y_min, y_max, b
     union_multi_polygon = MultiPolygon(same_cluster_objs)
     convex_hull_poly = union_multi_polygon.convex_hull
     close_pt = convex_hull_poly.centroid
-    direction = random.random() * 3.14159
-    far_pt = (2500 * math.cos(direction) + close_pt.x, 2500 * math.sin(direction) + close_pt.y)
-    cross_line = LineString([close_pt, far_pt])
-    center_pt = convex_hull_poly.intersect
-
+    is_valid = False
+    new_poly = None
+    while not is_valid:
+        is_valid = True
+        direction = random.random() * 3.14159
+        far_pt = (2500 * math.cos(direction) + close_pt.x, 2500 * math.sin(direction) + close_pt.y)
+        cross_line = LineString([close_pt, far_pt])
+        center_pt = convex_hull_poly.intersection(cross_line)
+        center_pt.x += boundary_padding * math.cos(direction)
+        center_pt.y += boundary_padding * math.sin(direction)
+        yaw = random.random() * 3.14159
+        length = random.random() * (OBJECT_LENGTH_MAX - OBJECT_LENGTH_MIN) + OBJECT_LENGTH_MIN
+        width = OBJECT_WIDTH
+        tp = generate_poly(center_pt.x, center_pt.y, yaw, length, width)
+        for existing_obj in created_objs:
+            if tp.intersects(existing_obj):
+                is_valid = False
+                break
+        
+        if not is_valid:
+            continue
+        
+        new_poly = tp
+    return new_poly 
 # def 
 
 

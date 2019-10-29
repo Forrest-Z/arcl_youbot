@@ -128,8 +128,10 @@ class YoubotEnvironment():
                 same_cluster_objs.append(new_poly)
                 for j in range(cluster_obj_num_list[i]-1):
                     tp = common_util.add_near_poly(same_cluster_objs, created_objs, x_min, x_max, y_min, y_max, boundary_padding) 
-
-
+                    same_cluster_objs.append(tp)
+                    created_objs.append(tp)
+    
+        return created_objs
 # 		bool isValid = false;
 # 		while (!isValid) {
 # 			Polygon_2 tp;
@@ -205,31 +207,6 @@ class YoubotEnvironment():
 
 
 
-        while len(created_objs) < object_number:
-            is_valid = False
-            random.seed()
-            while not is_valid:  
-                is_valid = True
-                center_x = random.random() * (x_max - x_min) + x_min
-                center_y = random.random() * (y_max - y_min) + y_min
-                yaw = random.random() * 3.14159
-
-                length = random.random() * (common_util.OBJECT_LENGTH_MAX - common_util.OBJECT_LENGTH_MIN) + common_util.OBJECT_LENGTH_MIN
-                width = common_util.OBJECT_WIDTH
-                new_poly = common_util.generate_poly(center_x, center_y, yaw, length, width)
-
-                for exist_obj in created_objs:
-                    if not exist_obj.equals(new_poly):
-                        if exist_obj.intersects(new_poly):
-                            is_valid = False
-                            break
-                
-                if not is_valid:
-                    continue
-
-                created_objs.append(new_poly)
-
-        return created_objs
 
 
 
