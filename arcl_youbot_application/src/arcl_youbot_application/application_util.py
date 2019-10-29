@@ -3,6 +3,7 @@ import rospy
 import math
 import pybullet as p
 import time
+import random
 import numpy as np
 import pybullet_data
 import arcl_youbot_planner.arm_planner.arm_util as arm_util
@@ -85,6 +86,164 @@ class YoubotEnvironment():
     def import_obj_from_list(self, object_list):
         self.object_list = object_list
     
+    def create_scene(self, object_number, cluster_number):
+        boundary_padding = 0.3
+        x_min = self.x_min + boundary_padding
+        x_max = self.x_max - boundary_padding
+        y_min = self.y_min + boundary_padding
+        y_max = self.y_max - boundary_padding
+
+        created_objs = []
+        each_cluster_obj_num = 0
+        each_cluster_obj_num = math.ceil(object_number / cluster_number)
+        cluster_obj_num_list = []
+        for i in range(cluster_number-1):
+            cluster_obj_num_list.append(each_cluster_obj_num)
+        cluster_obj_num_list.append(object_number - (cluster_number-1)*each_cluster_obj_num)
+
+        for i in range(cluster_number):
+            is_valid = False
+            random.seed()
+            while not is_valid:  
+                is_valid = True
+                center_x = random.random() * (x_max - x_min) + x_min
+                center_y = random.random() * (y_max - y_min) + y_min
+                yaw = random.random() * 3.14159
+
+                length = random.random() * (common_util.OBJECT_LENGTH_MAX - common_util.OBJECT_LENGTH_MIN) + common_util.OBJECT_LENGTH_MIN
+                width = common_util.OBJECT_WIDTH
+                new_poly = common_util.generate_poly(center_x, center_y, yaw, length, width)
+
+                for exist_obj in created_objs:
+                    if not exist_obj.equals(new_poly):
+                        if exist_obj.intersects(new_poly):
+                            is_valid = False
+                            break
+                
+                if not is_valid:
+                    continue
+
+                created_objs.append(new_poly)
+                same_cluster_objs = []
+                same_cluster_objs.append(new_poly)
+                for j in range(cluster_obj_num_list[i]-1):
+                    tp = common_util.add_near_poly(same_cluster_objs, created_objs, x_min, x_max, y_min, y_max, boundary_padding) 
+
+
+# 		bool isValid = false;
+# 		while (!isValid) {
+# 			Polygon_2 tp;
+# 			isValid = true;
+
+# 			std::cout << "cluster " << i << std::endl;
+# 			center_x = distribution(engine) / 10000.*(x_max - x_min) + x_min;
+# 			center_y = distribution(engine) / 10000.*(y_max - y_min) + y_min;
+# #ifdef ALL_FLAT
+# 			yaw = 0;
+# #else
+# 			if (distribution(engine) / 10000. < 0.5) {
+# 				yaw = 1.57;
+# 			}
+# 			else {
+# 				yaw = 0;
+# 			}
+# #endif
+# #ifdef NOT_AXIS_ALIGNED
+# 			yaw = distribution(engine) / 10000. * 3.14;
+# #endif
+# #ifdef DIFFERENT_SIZE
+# 			double different_length = (distribution(engine) / 10000. * 2.5 + 1) * OBJ_LENGTH;
+# 			double different_width = OBJ_WIDTH;
+# 			generatePoly(tp, center_x, center_y, yaw, different_length, different_width);
+			
+# #else
+# #ifdef SPECIAL_STRUCTURE
+# 			generateTetrisBlock(tp, center_x, center_y, yaw, 0);
+# #else
+# 			generatePoly(tp, center_x, center_y, yaw);
+# #endif
+# #endif
+# #ifndef STACK
+# 			for (auto p = created_polys.begin(); p != created_polys.end(); p++) {
+# 				if (bg::intersects(tp, *p)) {
+# 					isValid = false;
+# 					break;
+# 				}
+# 			}
+# #endif
+
+# 			if (!isValid) {
+# 				continue;
+# 			}
+
+# 			created_polys.push_back(tp);
+# 			addIntoEnv(tp, global_index);
+# 			global_index++;
+# 			std::vector<Polygon_2> exist_polys;
+# 			for (int j = 0; j < cluster_num_list[i] - 1; j++) {
+# 				std::cout << "obj num " << j << std::endl;
+# 				exist_polys.push_back(tp);
+# #ifdef SPECIAL_STRUCTURE
+# 				tp = addNewNearTetris(exist_polys, created_polys);
+# 				if (tp.outer().size() == 0) {
+# 					center_x = distribution(engine) / 10000.*(x_max - x_min) + x_min;
+# 					center_y = distribution(engine) / 10000.*(y_max - y_min) + y_min;
+# 					if (distribution(engine) / 10000. < 0.5) {
+# 						yaw = -1.57;
+# 					}
+# 					else {
+# 						yaw = 0;
+# 					}
+# 					generateTetrisBlock(tp, center_x, center_y, yaw, 0);
+# 				}
+# #else
+# 				tp = addNewNearPoly(exist_polys, created_polys);
+# #endif
+# 				std::cout << "poly size:" << tp.outer().size() << std::endl;
+# 				created_polys.push_back(tp);
+
+
+
+
+        while len(created_objs) < object_number:
+            is_valid = False
+            random.seed()
+            while not is_valid:  
+                is_valid = True
+                center_x = random.random() * (x_max - x_min) + x_min
+                center_y = random.random() * (y_max - y_min) + y_min
+                yaw = random.random() * 3.14159
+
+                length = random.random() * (common_util.OBJECT_LENGTH_MAX - common_util.OBJECT_LENGTH_MIN) + common_util.OBJECT_LENGTH_MIN
+                width = common_util.OBJECT_WIDTH
+                new_poly = common_util.generate_poly(center_x, center_y, yaw, length, width)
+
+                for exist_obj in created_objs:
+                    if not exist_obj.equals(new_poly):
+                        if exist_obj.intersects(new_poly):
+                            is_valid = False
+                            break
+                
+                if not is_valid:
+                    continue
+
+                created_objs.append(new_poly)
+
+        return created_objs
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #     def create_scene(self):
 #         #define REPEAT
 # 	int current_case = 0;

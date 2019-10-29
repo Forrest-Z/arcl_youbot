@@ -24,10 +24,18 @@ from arcl_youbot_application.msg import ManipulationAction, ManipulationGoal
 from arcl_youbot_application.msg import PlanningSceneMsg
 from arcl_youbot_application.msg import SceneObjectMsg
 import arcl_youbot_planner.base_planner.visgraph as vg
-from shapely.geometry import Polygon, LinearRing, LineString
+from shapely.geometry import Polygon, LinearRing, LineString, MultiPolygon
 from shapely.ops import unary_union
 
 # import arcl_youbot_planner.arm_planner.prmstar as prmstar
+
+OBJECT_WIDTH = 0.035
+OBJECT_LENGTH_MAX = 0.35
+OBJECT_LENGTH_MIN = 0.15
+
+
+
+
 
 
 class Object():
@@ -149,74 +157,38 @@ def spawnCuboid(size, position, quaternion, color, object_name):
     except rospy.ServiceException, e:
         print "Service call failed: %s"%e
 
+def generate_poly(center_x, center_y, yaw, length, width):
+    x = length
+    y = width
+    p0 = (center_x + math.cos(yaw)*x - math.sin(yaw)*y, center_y - (math.sin(yaw)*x + math.cos(yaw)*y))
+    x = -length
+    y = width
+    p1 = (center_x + math.cos(yaw)*x - math.sin(yaw)*y, center_y - (math.sin(yaw)*x + math.cos(yaw)*y))
+    x = length
+    y = -width
+    p2 = (center_x + math.cos(yaw)*x - math.sin(yaw)*y, center_y - (math.sin(yaw)*x + math.cos(yaw)*y))
+    x = -length
+    y = -width
+    p3 = (center_x + math.cos(yaw)*x - math.sin(yaw)*y, center_y - (math.sin(yaw)*x + math.cos(yaw)*y))
 
-# def generate_polygon():
-#     result.outer().clear();
-# 	Point_2 upper_right, upper_left, down_right, down_left;
-# 	double x, y;
-# 	double length = diff_length / 2.0;  double width = diff_width / 2.0;
-# 	x = length; y = width;
-# 	if (std::abs(yaw - 1.57) < 0.001) {
-# 		/*  
-# 		upper_right.set<0>(center_x + cos(yaw)*x - sin(yaw)*y);
-# 		upper_right.set<1>(center_y + sin(yaw)*x + cos(yaw)*y);
-# 		x = -length; y = width;
-# 		upper_left.set<0>(center_x + cos(yaw)*x - sin(yaw)*y);
-# 		upper_left.set<1>(center_y + sin(yaw)*x + cos(yaw)*y);
-# 		x = length; y = -width;
-# 		down_right.set<0>(center_x + cos(yaw)*x - sin(yaw)*y);
-# 		down_right.set<1>(center_y + sin(yaw)*x + cos(yaw)*y);
-# 		x = -length; y = -width;
-# 		down_left.set<0>(center_x + cos(yaw)*x - sin(yaw)*y);
-# 		down_left.set<1>(center_y + sin(yaw)*x + cos(yaw)*y);
-# 		*/
-# 		upper_right.set<0>(center_x + y);
-# 		upper_right.set<1>(center_y - x);
+    poly = Polygon([p0, p1, p2, p3])
+    return poly
 
-# 		upper_left.set<0>(center_x - y);
-# 		upper_left.set<1>(center_y - x);
 
-# 		down_right.set<0>(center_x + y);
-# 		down_right.set<1>(center_y + x);
 
-# 		down_left.set<0>(center_x - y);
-# 		down_left.set<1>(center_y + x);
-# 	}
-# 	else if (std::abs(yaw - 0) < 0.0001) {
-# 		upper_right.set<0>(center_x + x);
-# 		upper_right.set<1>(center_y - y);
 		
-# 		upper_left.set<0>(center_x - x);
-# 		upper_left.set<1>(center_y - y);
-		
-# 		down_right.set<0>(center_x + x);
-# 		down_right.set<1>(center_y + y);
-
-# 		down_left.set<0>(center_x - x);
-# 		down_left.set<1>(center_y + y);
-# 	}
-# 	else {
-# 		upper_right.set<0>(center_x + cos(yaw)*x - sin(yaw)*y);
-# 		upper_right.set<1>(center_y - (sin(yaw)*x + cos(yaw)*y));
-# 		x = -length; y = width;
-# 		upper_left.set<0>(center_x + cos(yaw)*x - sin(yaw)*y);
-# 		upper_left.set<1>(center_y - (sin(yaw)*x + cos(yaw)*y));
-# 		x = length; y = -width;
-# 		down_right.set<0>(center_x + cos(yaw)*x - sin(yaw)*y);
-# 		down_right.set<1>(center_y - (sin(yaw)*x + cos(yaw)*y));
-# 		x = -length; y = -width;
-# 		down_left.set<0>(center_x + cos(yaw)*x - sin(yaw)*y);
-# 		down_left.set<1>(center_y - (sin(yaw)*x + cos(yaw)*y));
-# 	}
-# 	bg::append(result.outer(), down_left);
-# 	bg::append(result.outer(), upper_left);
-# 	bg::append(result.outer(), upper_right);
-# 	bg::append(result.outer(), down_right);
-	
-# 	bg::correct(result);
-# }
 
 
+
+
+def add_near_poly(same_cluster_objs, created_objs, x_min, x_max, y_min, y_max, boundary_padding):
+    union_multi_polygon = MultiPolygon(same_cluster_objs)
+    convex_hull_poly = union_multi_polygon.convex_hull
+    close_pt = convex_hull_poly.centroid
+    direction = random.random() * 3.14159
+    far_pt = (2500 * math.cos(direction) + close_pt.x, 2500 * math.sin(direction) + close_pt.y)
+    cross_line = LineString([close_pt, far_pt])
+    center_pt = convex_hull_poly.intersect
 
 # def 
 
@@ -571,30 +543,7 @@ def spawnCuboid(size, position, quaternion, color, object_name):
 # 			current_poly.outer().clear();
 # 			getBoundingPoly(exist_polys[k], upper_left, upper_right, down_left, down_right, obj_between_dist);
 
-# 			// upper_left = exist_polys[k].outer()[1];
-# 			// upper_right = exist_polys[k].outer()[2];
-# 			// down_right = exist_polys[k].outer()[3];
-# 			// down_left = exist_polys[k].outer()[0];
-# 			// if (yaw > 0) {
-# 			// 	upper_left.set<0>(upper_left.get<0>() - obj_between_dist - width / 2);
-# 			// 	upper_left.set<1>(upper_left.get<1>() - obj_between_dist - length / 2);
-# 			// 	upper_right.set<0>(upper_right.get<0>() + obj_between_dist + width / 2);
-# 			// 	upper_right.set<1>(upper_right.get<1>() - obj_between_dist - length / 2);
-# 			// 	down_right.set<0>(down_right.get<0>() + obj_between_dist + width / 2);
-# 			// 	down_right.set<1>(down_right.get<1>() + obj_between_dist + length / 2);
-# 			// 	down_left.set<0>(down_left.get<0>() - obj_between_dist - width / 2);
-# 			// 	down_left.set<1>(down_left.get<1>() + obj_between_dist + length / 2);
-# 			// }
-# 			// else if (yaw == 0) {
-# 			// 	upper_left.set<0>(upper_left.get<0>() - obj_between_dist - length / 2);
-# 			// 	upper_left.set<1>(upper_left.get<1>() - obj_between_dist - width / 2);
-# 			// 	upper_right.set<0>(upper_right.get<0>() + obj_between_dist + length / 2);
-# 			// 	upper_right.set<1>(upper_right.get<1>() - obj_between_dist - width / 2);
-# 			// 	down_right.set<0>(down_right.get<0>() + obj_between_dist + length / 2);
-# 			// 	down_right.set<1>(down_right.get<1>() + obj_between_dist + width / 2);
-# 			// 	down_left.set<0>(down_left.get<0>() - obj_between_dist - length / 2);
-# 			// 	down_left.set<1>(down_left.get<1>() + obj_between_dist + width / 2);
-# 			// }
+# 			
 # 			bg::append(current_poly.outer(), upper_left);
 # 			bg::append(current_poly.outer(), upper_right);
 # 			bg::append(current_poly.outer(), down_right);
@@ -634,22 +583,7 @@ def spawnCuboid(size, position, quaternion, color, object_name):
 # 				is_valid = true;
 # 				Point_2 inter_pt = inter_pt_list[k];
 # 				new_poly.outer().clear();
-# 				// if (yaw > 0) {
-# 				// 	bg::append(new_poly.outer(), Point_2(inter_pt.get<0>() - width / 2, inter_pt.get<1>() + length / 2));
-# 				// 	bg::append(new_poly.outer(), Point_2(inter_pt.get<0>() - width / 2, inter_pt.get<1>() - length / 2));
-# 				// 	bg::append(new_poly.outer(), Point_2(inter_pt.get<0>() + width / 2, inter_pt.get<1>() - length / 2));
-# 				// 	bg::append(new_poly.outer(), Point_2(inter_pt.get<0>() + width / 2, inter_pt.get<1>() + length / 2));
-
-# 				// 	bg::correct(new_poly);
-# 				// }
-# 				// else if (yaw == 0) {
-# 				// 	bg::append(new_poly.outer(), Point_2(inter_pt.get<0>() - length / 2, inter_pt.get<1>() + width / 2));
-# 				// 	bg::append(new_poly.outer(), Point_2(inter_pt.get<0>() - length / 2, inter_pt.get<1>() - width / 2));
-# 				// 	bg::append(new_poly.outer(), Point_2(inter_pt.get<0>() + length / 2, inter_pt.get<1>() - width / 2));
-# 				// 	bg::append(new_poly.outer(), Point_2(inter_pt.get<0>() + length / 2, inter_pt.get<1>() + width / 2));
-
-# 				// 	bg::correct(new_poly);
-# 				// }
+# 			
 
 # 				#ifdef DIFFERENT_SIZE
 # 					double different_length = (distribution(engine) / 10000. * 2.5 + 1) * OBJ_LENGTH;

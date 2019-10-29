@@ -140,6 +140,7 @@ def vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles):
     # ===== change orientation of youbot so it can fit in this graph =====
     current_heading = start_heading
     path_with_heading = []
+    is_last_segment_collision = False
     for i in range(len(path) - 1):
         # add path
         path_with_heading.append((path[i].x, path[i].y, current_heading))
@@ -150,6 +151,7 @@ def vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles):
         # find intersections & adjust orientation
         intersections = line.intersection(union_dilated_large_obstacles)
         if not intersections.is_empty:
+            is_last_segment_collision = True
             if not isinstance(intersections, LineString):
                 intersection = intersections[0].coords[0]
             else:
@@ -170,8 +172,12 @@ def vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles):
                     path_with_heading.append((offset_intersection[0], offset_intersection[1], current_heading))
                 else:
                     path_with_heading.append((path[i].x, path[i].y, current_heading))
-
+        else:
+            is_last_segment_collision = False
+            vector = (path[i+1].x - path[i].x, path[i+1].y - path[i].y)
+            current_heading = math.atan2(vector[1], vector[0])
     # back up 0.1 meters
+   
     if abs(goal_heading - current_heading) > math.pi / 4:
         goal_pos_back_x = path[-1].x - math.cos(goal_heading) * OFFSET
         goal_pos_back_y = path[-1].y - math.sin(goal_heading) * OFFSET
@@ -180,7 +186,8 @@ def vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles):
         path_with_heading.append((goal_pos_back_x, goal_pos_back_y, goal_heading))
         path_with_heading.append((path[-1].x, path[-1].y, goal_heading))
     else:
-        path_with_heading.append((path[-1].x, path[-1].y, current_heading))
+        if is_last_segment_collision:
+            path_with_heading.append((path[-1].x, path[-1].y, current_heading))
         path_with_heading.append((path[-1].x, path[-1].y, goal_heading))
 
     return path_with_heading, g
