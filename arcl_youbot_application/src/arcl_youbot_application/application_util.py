@@ -41,7 +41,7 @@ GAZEBO_COLORS = [
 "Gazebo/Gold",
 "Gazebo/FlatBlack"
 ]
-
+BOUNDARY_NUM = 5
 
 SCALE = 400.0
 OFFSET = 2.5
@@ -63,7 +63,6 @@ class YoubotEnvironment():
     # filename: ffabsolute path for the environment file
     def import_obj_from_file(self, filename):
         f = open(filename, 'r')
-        self.robot_radius = float(f.readline())
         self.object_num = int(f.readline())
         for o in range(self.object_num):
             vertex_num = int(f.readline())
@@ -82,6 +81,20 @@ class YoubotEnvironment():
             self.env_boundary.append((point[0], point[1]))
 
         print self.object_list
+
+    # filename: ffabsolute path for the environment file
+    def export_obj_to_file(self, filename):
+        f = open(filename, 'r')
+        f.writelines(self.object_num)
+        for obj in self.object_list:
+            f.writelines(len(obj))
+            for v in obj:
+                f.writelines(str(v[0]) + " " + str(v[1]))
+        f.writelines(BOUNDARY_NUM)
+        
+
+
+
 
     def import_obj_from_list(self, object_list):
         self.object_list = object_list
@@ -134,6 +147,8 @@ class YoubotEnvironment():
         list_created_objs = []
         for obj in created_objs:
             list_created_objs.append(list(obj.exterior.coords))
+
+        self.import_obj_from_list(list_created_objs)
 
         return list_created_objs
 # 		bool isValid = false;
@@ -609,7 +624,7 @@ class YoubotEnvironment():
             size = [short_length, short_length,long_length]
             position = [center_x, center_y, short_length / 2.0]
             quaternion = [qx, qy, qz, qw]
-            color = GAZEBO_COLORS[obj_index]
+            color = GAZEBO_COLORS[obj_index % len(GAZEBO_COLORS)]
             object_name = "obj_" + str(obj_index)
             common_util.spawnCuboid(size, position, quaternion, color, object_name)
 
