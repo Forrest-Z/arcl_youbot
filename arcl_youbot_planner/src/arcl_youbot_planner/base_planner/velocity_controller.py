@@ -6,6 +6,8 @@ from base_util import get_youbot_base_pose2d
 from tf.transformations import euler_from_quaternion
 from gazebo_msgs.msg import ModelStates
 
+ALPHA = 0.2
+
 class VelocityController(object):
     """ Send velocity command to follow a path based on current youbot position. """
 
@@ -20,29 +22,31 @@ class VelocityController(object):
         self.current_pos = (0, 0, 0)
         # x: linear.x; y: linear.y; theta: angular.z
         self.velocity = Twist()
+        # Exponential Moving Average
+        # self.smooth_velocity = [0, 0, 0]
 
         # PID
-        velocity_p_factor_x = rospy.get_param("module_base_controller/velocity_p_factor_x", 2)
-        velocity_p_factor_y = rospy.get_param("module_base_controller/velocity_p_factor_y", 2)
-        velocity_p_factor_theta = rospy.get_param("module_base_controller/velocity_p_factor_theta", 1.5)
-        velocity_i_factor_x = rospy.get_param("module_base_controller/velocity_i_factor_x", 0.0)
-        velocity_i_factor_y = rospy.get_param("module_base_controller/velocity_i_factor_y", 0.0)
-        velocity_i_factor_theta = rospy.get_param("module_base_controller/velocity_i_factor_theta", 0.0)
-        velocity_d_factor_x = rospy.get_param("module_base_controller/velocity_d_factor_x", 0.1)
-        velocity_d_factor_y = rospy.get_param("module_base_controller/velocity_d_factor_y", 0.1)
-        velocity_d_factor_theta = rospy.get_param("module_base_controller/velocity_d_factor_theta", 0.01)
-        velocity_p_factor_x_near = rospy.get_param("module_base_controller/velocity_p_factor_x_near", 2)
-        velocity_p_factor_y_near = rospy.get_param("module_base_controller/velocity_p_factor_y_near", 2)
-        velocity_p_factor_theta_near = rospy.get_param("module_base_controller/velocity_p_factor_theta_near", 1.5)
-        velocity_i_factor_x_near = rospy.get_param("module_base_controller/velocity_i_factor_x_near", 0.0)
-        velocity_i_factor_y_near = rospy.get_param("module_base_controller/velocity_i_factor_y_near", 0.0)
-        velocity_i_factor_theta_near = rospy.get_param("module_base_controller/velocity_i_factor_theta_near", 0.0)
-        velocity_d_factor_x_near = rospy.get_param("module_base_controller/velocity_d_factor_x_near", 0.1)
-        velocity_d_factor_y_near = rospy.get_param("module_base_controller/velocity_d_factor_y_near", 0.1)
-        velocity_d_factor_theta_near = rospy.get_param("module_base_controller/velocity_d_factor_theta_near", 0.01)
-        max_velocity_x = rospy.get_param("module_base_controller/max_velocity_x", 0.8)
-        max_velocity_y = rospy.get_param("module_base_controller/max_velocity_y", 0.8)
-        max_velocity_theta = rospy.get_param("module_base_controller/max_velocity_theta", 1.2)
+        velocity_p_factor_x = rospy.get_param("/module_base_controller/velocity_p_factor_x", 2)
+        velocity_p_factor_y = rospy.get_param("/module_base_controller/velocity_p_factor_y", 2)
+        velocity_p_factor_theta = rospy.get_param("/module_base_controller/velocity_p_factor_theta", 1.5)
+        velocity_i_factor_x = rospy.get_param("/module_base_controller/velocity_i_factor_x", 0.0)
+        velocity_i_factor_y = rospy.get_param("/module_base_controller/velocity_i_factor_y", 0.0)
+        velocity_i_factor_theta = rospy.get_param("/module_base_controller/velocity_i_factor_theta", 0.0)
+        velocity_d_factor_x = rospy.get_param("/module_base_controller/velocity_d_factor_x", 0.1)
+        velocity_d_factor_y = rospy.get_param("/module_base_controller/velocity_d_factor_y", 0.1)
+        velocity_d_factor_theta = rospy.get_param("/module_base_controller/velocity_d_factor_theta", 0.01)
+        velocity_p_factor_x_near = rospy.get_param("/module_base_controller/velocity_p_factor_x_near", 2)
+        velocity_p_factor_y_near = rospy.get_param("/module_base_controller/velocity_p_factor_y_near", 2)
+        velocity_p_factor_theta_near = rospy.get_param("/module_base_controller/velocity_p_factor_theta_near", 1.5)
+        velocity_i_factor_x_near = rospy.get_param("/module_base_controller/velocity_i_factor_x_near", 0.0)
+        velocity_i_factor_y_near = rospy.get_param("/module_base_controller/velocity_i_factor_y_near", 0.0)
+        velocity_i_factor_theta_near = rospy.get_param("/module_base_controller/velocity_i_factor_theta_near", 0.0)
+        velocity_d_factor_x_near = rospy.get_param("/module_base_controller/velocity_d_factor_x_near", 0.1)
+        velocity_d_factor_y_near = rospy.get_param("/module_base_controller/velocity_d_factor_y_near", 0.1)
+        velocity_d_factor_theta_near = rospy.get_param("/module_base_controller/velocity_d_factor_theta_near", 0.01)
+        max_velocity_x = rospy.get_param("/module_base_controller/max_velocity_x", 0.3)
+        max_velocity_y = rospy.get_param("/module_base_controller/max_velocity_y", 0.3)
+        max_velocity_theta = rospy.get_param("/module_base_controller/max_velocity_theta", 0.8)
         self.x_pid = PID(Kp=velocity_p_factor_x, Ki=velocity_i_factor_x, Kd=velocity_d_factor_x, output_limits=(-max_velocity_x, max_velocity_x))
         self.y_pid = PID(Kp=velocity_p_factor_y, Ki=velocity_i_factor_y, Kd=velocity_d_factor_y, output_limits=(-max_velocity_y, max_velocity_y))
         self.theta_pid = PID(Kp=velocity_p_factor_theta, Ki=velocity_i_factor_theta, Kd=velocity_d_factor_theta, output_limits=(-max_velocity_theta, max_velocity_theta))
@@ -50,19 +54,18 @@ class VelocityController(object):
         self.y_pid_near = PID(Kp=velocity_p_factor_y_near, Ki=velocity_i_factor_y_near, Kd=velocity_d_factor_y_near, output_limits=(-max_velocity_y / 2.0, max_velocity_y / 2.0))
         self.theta_pid_near = PID(Kp=velocity_p_factor_theta_near, Ki=velocity_i_factor_theta_near, Kd=velocity_d_factor_theta_near, output_limits=(-max_velocity_theta / 2.0, max_velocity_theta / 2.0))
 
-
         # Parameters for smoothing velocity
-        step_reached_threshold_x = rospy.get_param("module_base_controller/step_reached_threshold_x", 0.15)
-        step_reached_threshold_y = rospy.get_param("module_base_controller/step_reached_threshold_y", 0.15)
-        step_reached_threshold_theta = rospy.get_param("module_base_controller/step_reached_threshold_theta", 0.174533)
+        step_reached_threshold_x = rospy.get_param("/module_base_controller/step_reached_threshold_x", 0.15)
+        step_reached_threshold_y = rospy.get_param("/module_base_controller/step_reached_threshold_y", 0.15)
+        step_reached_threshold_theta = rospy.get_param("/module_base_controller/step_reached_threshold_theta", 0.174533)
         self.step_reached_threshold = (step_reached_threshold_x, step_reached_threshold_y, step_reached_threshold_theta)
-        goal_reached_threshold_x = rospy.get_param("module_base_controller/goal_reached_threshold_x", 0.01)
-        goal_reached_threshold_y = rospy.get_param("module_base_controller/goal_reached_threshold_y", 0.01)
-        goal_reached_threshold_theta = rospy.get_param("module_base_controller/goal_reached_threshold_theta", 0.01)
+        goal_reached_threshold_x = rospy.get_param("/module_base_controller/goal_reached_threshold_x", 0.01)
+        goal_reached_threshold_y = rospy.get_param("/module_base_controller/goal_reached_threshold_y", 0.01)
+        goal_reached_threshold_theta = rospy.get_param("/module_base_controller/goal_reached_threshold_theta", 0.01)
         self.goal_reached_threshold = (goal_reached_threshold_x, goal_reached_threshold_y, goal_reached_threshold_theta)
-        goal_near_threshold_x = rospy.get_param("module_base_controller/goal_near_threshold_x", 0.01)
-        goal_near_threshold_y = rospy.get_param("module_base_controller/goal_near_threshold_y", 0.01)
-        goal_near_threshold_theta = rospy.get_param("module_base_controller/goal_near_threshold_theta", 0.01)
+        goal_near_threshold_x = rospy.get_param("/module_base_controller/goal_near_threshold_x", 0.01)
+        goal_near_threshold_y = rospy.get_param("/module_base_controller/goal_near_threshold_y", 0.01)
+        goal_near_threshold_theta = rospy.get_param("/module_base_controller/goal_near_threshold_theta", 0.01)
         self.goal_near_threshold = (goal_near_threshold_x, goal_near_threshold_y, goal_near_threshold_theta)
         self.use_goal_reached_threshold = False
 
@@ -80,6 +83,7 @@ class VelocityController(object):
         self.velocity.linear.y = 0
         self.velocity.angular.z = 0
         self.use_goal_reached_threshold = False
+        # self.smooth_velocity = [0, 0, 0]
 
     def get_velocity(self):
         """ Output velocity based the current position and next target position from the path """
@@ -98,19 +102,34 @@ class VelocityController(object):
                 else:
                     self.use_goal_reached_threshold = True
 
-            velocity = []
             if self.use_goal_reached_threshold and current_step_near:
                 velocity = self.compute_near_velocity(diff_pos)
             else:
                 velocity = self.compute_velocity(diff_pos)
+
+            # # smoothing
+            # self.smooth_velocity[0] = (1.0 - ALPHA) * self.smooth_velocity[0] + ALPHA * velocity[0]
+            # self.smooth_velocity[1] = (1.0 - ALPHA) * self.smooth_velocity[1] + ALPHA * velocity[1]
+            # self.smooth_velocity[2] = (1.0 - ALPHA) * self.smooth_velocity[2] + ALPHA * velocity[2]
+
+            # normalization, because we limited velocity
+            if velocity[0] != 0 and velocity[1] != 0 and diff_pos[0] != 0 and diff_pos[1] != 0:
+                if abs(abs(velocity[0] / velocity[1]) - abs(diff_pos[0] / diff_pos[1])) > 0.1:
+                    if abs(velocity[0]) > abs(velocity[1]):
+                        velocity[0] = diff_pos[0] / diff_pos[1] * velocity[1]
+                    else:
+                        velocity[1] = velocity[0] / diff_pos[0] * diff_pos[1]
+
+
             self.velocity.linear.x = velocity[0]
             self.velocity.linear.y = velocity[1]
             self.velocity.angular.z = velocity[2]
 
-            print("-----" + str(self.step) + "-----")
-            print(self.current_pos)
-            print(current_step_pos)
-            print(velocity)
+            if self.step <= 4 and self.step > 2:
+                print("-----" + str(self.step) + "-----")
+                print(self.current_pos)
+                print(current_step_pos)
+                print(velocity)
         else:
             self.velocity.linear.x = 0
             self.velocity.linear.y = 0
@@ -161,7 +180,7 @@ class VelocityController(object):
         return theta
 
     def compute_velocity(self, diff_pos):
-        return (self.x_pid(diff_pos[0]), self.y_pid(diff_pos[1]), self.theta_pid(diff_pos[2]))
+        return [self.x_pid(diff_pos[0]), self.y_pid(diff_pos[1]), self.theta_pid(diff_pos[2])]
 
     def compute_near_velocity(self, diff_pos):
-        return (self.x_pid_near(diff_pos[0]), self.y_pid_near(diff_pos[1]), self.theta_pid_near(diff_pos[2]))
+        return [self.x_pid_near(diff_pos[0]), self.y_pid_near(diff_pos[1]), self.theta_pid_near(diff_pos[2])]

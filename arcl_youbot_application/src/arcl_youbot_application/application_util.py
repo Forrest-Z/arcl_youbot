@@ -95,7 +95,7 @@ class YoubotEnvironment():
 
         created_objs = []
         each_cluster_obj_num = 0
-        each_cluster_obj_num = math.ceil(object_number / cluster_number)
+        each_cluster_obj_num = int(math.ceil(object_number / cluster_number))
         cluster_obj_num_list = []
         for i in range(cluster_number-1):
             cluster_obj_num_list.append(each_cluster_obj_num)
@@ -131,7 +131,416 @@ class YoubotEnvironment():
                     same_cluster_objs.append(tp)
                     created_objs.append(tp)
     
-        return created_objs
+        list_created_objs = []
+        for obj in created_objs:
+            list_created_objs.append(list(obj.exterior.coords))
+
+        return list_created_objs
+# 		bool isValid = false;
+# 		while (!isValid) {
+# 			Polygon_2 tp;
+# 			isValid = true;
+
+# 			std::cout << "cluster " << i << std::endl;
+# 			center_x = distribution(engine) / 10000.*(x_max - x_min) + x_min;
+# 			center_y = distribution(engine) / 10000.*(y_max - y_min) + y_min;
+# #ifdef ALL_FLAT
+# 			yaw = 0;
+# #else
+# 			if (distribution(engine) / 10000. < 0.5) {
+# 				yaw = 1.57;
+# 			}
+# 			else {
+# 				yaw = 0;
+# 			}
+# #endif
+# #ifdef NOT_AXIS_ALIGNED
+# 			yaw = distribution(engine) / 10000. * 3.14;
+# #endif
+# #ifdef DIFFERENT_SIZE
+# 			double different_length = (distribution(engine) / 10000. * 2.5 + 1) * OBJ_LENGTH;
+# 			double different_width = OBJ_WIDTH;
+# 			generatePoly(tp, center_x, center_y, yaw, different_length, different_width);
+			
+# #else
+# #ifdef SPECIAL_STRUCTURE
+# 			generateTetrisBlock(tp, center_x, center_y, yaw, 0);
+# #else
+# 			generatePoly(tp, center_x, center_y, yaw);
+# #endif
+# #endif
+# #ifndef STACK
+# 			for (auto p = created_polys.begin(); p != created_polys.end(); p++) {
+# 				if (bg::intersects(tp, *p)) {
+# 					isValid = false;
+# 					break;
+# 				}
+# 			}
+# #endif
+
+# 			if (!isValid) {
+# 				continue;
+# 			}
+
+# 			created_polys.push_back(tp);
+# 			addIntoEnv(tp, global_index);
+# 			global_index++;
+# 			std::vector<Polygon_2> exist_polys;
+# 			for (int j = 0; j < cluster_num_list[i] - 1; j++) {
+# 				std::cout << "obj num " << j << std::endl;
+# 				exist_polys.push_back(tp);
+# #ifdef SPECIAL_STRUCTURE
+# 				tp = addNewNearTetris(exist_polys, created_polys);
+# 				if (tp.outer().size() == 0) {
+# 					center_x = distribution(engine) / 10000.*(x_max - x_min) + x_min;
+# 					center_y = distribution(engine) / 10000.*(y_max - y_min) + y_min;
+# 					if (distribution(engine) / 10000. < 0.5) {
+# 						yaw = -1.57;
+# 					}
+# 					else {
+# 						yaw = 0;
+# 					}
+# 					generateTetrisBlock(tp, center_x, center_y, yaw, 0);
+# 				}
+# #else
+# 				tp = addNewNearPoly(exist_polys, created_polys);
+# #endif
+# 				std::cout << "poly size:" << tp.outer().size() << std::endl;
+# 				created_polys.push_back(tp);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#     def create_scene(self):
+#         #define REPEAT
+# 	int current_case = 0;
+# #ifdef REPEAT  
+# 	while (current_case < 10) {
+# #endif
+# 	m_numRobots = 1;
+# 	// Clean up
+# 	m_scene.clear();
+# 	m_boundingPoly.clear();
+# 	m_boundingPoly2.clear();
+# 	m_envPolyList.clear();
+# 	m_envObsPolyList.clear();
+# 	m_PolyAGIList.clear();
+# 	int global_index = 0;
+# 	std::uniform_int_distribution<int> distribution(0, 10000);
+# 	std::random_device rd;
+# 	std::mt19937 engine(rd());
+# 	// Reading in the environment, first the raidus of the (disc) robot
+# 	//std::ifstream ifs(qPrintable(m_fileNameq));
+# 	double radius = 30;
+# 	//ifs >> radius;
+# 	int numberOfPolygons = m_pLineEdit->text().toInt();
+# 	double spacing = m_pMinDistLineEdit->text().toDouble();
+# 	// Then the number of obstacle polygons
+
+
+# 	// Then read in all obstacle polygons and compute the configuration space for a single disc
+# 	double center_x, center_y, yaw;
+# 	double x_max, x_min, y_max, y_min, yaw_max, yaw_min;
+# 	yaw_max = 1.57;
+# 	yaw_min = -1.57;
+# #ifdef BIG_ENV
+# 	if (numberOfPolygons == 5) {
+# 		x_min = 500;
+# 		x_max = 1500;
+# 		y_min = 500;
+# 		y_max = 1500;
+# 	}
+# 	else if (numberOfPolygons == 10) {
+# 		x_min = 800;
+# 		x_max = 1200;
+# 		y_min = 800;
+# 		y_max = 1200;
+# 	}
+# 	else if (numberOfPolygons == 15) {
+# 		x_min = 700;
+# 		x_max = 1300;
+# 		y_min = 700;
+# 		y_max = 1300;
+# 	}
+# 	else if (numberOfPolygons == 20) {
+# 		x_min = 700;
+# 		x_max = 1300;
+# 		y_min = 700;
+# 		y_max = 1300;
+# 	}
+# 	else if (numberOfPolygons == 25) {
+# 		x_min = 200;
+# 		x_max = 1800;
+# 		y_min = 500;
+# 		y_max = 1900;
+# 	}
+# 	else if (numberOfPolygons == 30) {
+# 		x_min = 300;
+# 		x_max = 2200;
+# 		y_min = 300;
+# 		y_max = 2200;
+# 	}
+# 	else if (numberOfPolygons == 35) {
+# 		x_min = 200;
+# 		x_max = 2300;
+# 		y_min = 200;
+# 		y_max = 2300;
+# 	}
+# 	else if (numberOfPolygons == 40) {
+# 		x_min = 200;
+# 		x_max = 2300;
+# 		y_min = 200;
+# 		y_max = 2300;
+# 	}
+# 	else if (numberOfPolygons == 45) {
+# 		x_min = 100;
+# 		x_max = 2400;
+# 		y_min = 100;
+# 		y_max = 2400;
+# 	}
+# 	else {
+# 		x_min = 0;
+# 		x_max = 2500;
+# 		y_min = 0;
+# 		y_max = 2500;
+# 	}
+# #endif
+# #ifdef SMALL_ENV
+# 	x_max = 900;
+# 	x_min = 100;
+# 	y_min = 100;
+# 	y_max = 900;
+# #endif
+# 	std::vector<Polygon_2> created_polys;
+# 	bool is_valid = true;
+# 	bool is_start_valid = true;
+	
+# #ifdef MIXED_CLUSTER
+# 	int each_cluster_num = 5;
+# 	int cluster_num = 0;
+# 	int total_obj_num = 0;
+# 	std::vector<int> cluster_num_list;
+
+# 	while (total_obj_num < numberOfPolygons) {
+# 		int cluster_objs = floor(distribution(engine) / 10000. * (each_cluster_num - 1)) + 1;
+# 		if (total_obj_num + cluster_objs > numberOfPolygons) {
+# 			cluster_num_list.push_back(numberOfPolygons - total_obj_num);
+# 			total_obj_num += (numberOfPolygons - total_obj_num);
+# 		}
+# 		else {
+# 			cluster_num_list.push_back(cluster_objs);
+# 			total_obj_num += cluster_objs;
+# 		}
+# 		cluster_num++;
+		
+# 	}
+	
+# #else
+# 	int each_cluster_num = 5;
+# 	int cluster_num = numberOfPolygons / each_cluster_num;
+# 	if (cluster_num * each_cluster_num < numberOfPolygons) {
+# 		cluster_num++;
+# 	}
+# 	std::vector<int> cluster_num_list;
+# 	for (int n = 0; n < cluster_num - 1; n++) {
+# 		cluster_num_list.push_back(each_cluster_num);
+# 	}
+# 	cluster_num_list.push_back(numberOfPolygons - each_cluster_num*(cluster_num - 1));
+# #endif
+
+# 	for (int i = 0; i < cluster_num; i++) {
+# 		bool isValid = false;
+# 		while (!isValid) {
+# 			Polygon_2 tp;
+# 			isValid = true;
+
+# 			std::cout << "cluster " << i << std::endl;
+# 			center_x = distribution(engine) / 10000.*(x_max - x_min) + x_min;
+# 			center_y = distribution(engine) / 10000.*(y_max - y_min) + y_min;
+# #ifdef ALL_FLAT
+# 			yaw = 0;
+# #else
+# 			if (distribution(engine) / 10000. < 0.5) {
+# 				yaw = 1.57;
+# 			}
+# 			else {
+# 				yaw = 0;
+# 			}
+# #endif
+# #ifdef NOT_AXIS_ALIGNED
+# 			yaw = distribution(engine) / 10000. * 3.14;
+# #endif
+# #ifdef DIFFERENT_SIZE
+# 			double different_length = (distribution(engine) / 10000. * 2.5 + 1) * OBJ_LENGTH;
+# 			double different_width = OBJ_WIDTH;
+# 			generatePoly(tp, center_x, center_y, yaw, different_length, different_width);
+			
+# #else
+# #ifdef SPECIAL_STRUCTURE
+# 			generateTetrisBlock(tp, center_x, center_y, yaw, 0);
+# #else
+# 			generatePoly(tp, center_x, center_y, yaw);
+# #endif
+# #endif
+# #ifndef STACK
+# 			for (auto p = created_polys.begin(); p != created_polys.end(); p++) {
+# 				if (bg::intersects(tp, *p)) {
+# 					isValid = false;
+# 					break;
+# 				}
+# 			}
+# #endif
+
+# 			if (!isValid) {
+# 				continue;
+# 			}
+
+# 			created_polys.push_back(tp);
+# 			addIntoEnv(tp, global_index);
+# 			global_index++;
+# 			std::vector<Polygon_2> exist_polys;
+# 			for (int j = 0; j < cluster_num_list[i] - 1; j++) {
+# 				std::cout << "obj num " << j << std::endl;
+# 				exist_polys.push_back(tp);
+# #ifdef SPECIAL_STRUCTURE
+# 				tp = addNewNearTetris(exist_polys, created_polys);
+# 				if (tp.outer().size() == 0) {
+# 					center_x = distribution(engine) / 10000.*(x_max - x_min) + x_min;
+# 					center_y = distribution(engine) / 10000.*(y_max - y_min) + y_min;
+# 					if (distribution(engine) / 10000. < 0.5) {
+# 						yaw = -1.57;
+# 					}
+# 					else {
+# 						yaw = 0;
+# 					}
+# 					generateTetrisBlock(tp, center_x, center_y, yaw, 0);
+# 				}
+# #else
+# 				tp = addNewNearPoly(exist_polys, created_polys);
+# #endif
+# 				std::cout << "poly size:" << tp.outer().size() << std::endl;
+# 				created_polys.push_back(tp);
+
+# 				addIntoEnv(tp, global_index);
+# 				global_index++;
+# 			}
+# 		}
+# 	}
+
+
+
+# 	// Then read the bounding rectangle (configuration space)
+# 	int numberOfBoundingVertex;
+# 	Point_2 p;
+# 	p.set<0>(0);
+# 	p.set<1>(0);
+# 	bg::append(m_boundingPoly.outer(), p);
+# #ifdef BIG_ENV
+# 	p.set<0>(0);
+# 	p.set<1>(2000);
+# 	bg::append(m_boundingPoly.outer(), p);
+# 	p.set<0>(2000);
+# 	p.set<1>(2000);
+# 	bg::append(m_boundingPoly.outer(), p);
+# 	p.set<0>(2000);
+# 	p.set<1>(0);
+# #endif
+# #ifdef SMALL_ENV
+# 	p.set<0>(0);
+# 	p.set<1>(1000);
+# 	bg::append(m_boundingPoly.outer(), p);
+# 	p.set<0>(1000);
+# 	p.set<1>(1000);
+# 	bg::append(m_boundingPoly.outer(), p);
+# 	p.set<0>(1000);
+# 	p.set<1>(0);
+# #endif
+# 	bg::append(m_boundingPoly.outer(), p);
+# 	bg::correct(m_boundingPoly);
+
+# 	m_envPolyVoronoiList.push_back(m_boundingPoly);
+# 	// Add to scence
+
+# 	m_pBoundingPolyAGI = new AdvancedGraphicsItem<Polygon_2>(&m_boundingPoly);
+# 	m_pBoundingPolyAGI->m_bFill = false;
+# 	m_pBoundingPolyAGI->m_bShowVertices = false;
+# 	m_pBoundingPolyAGI->m_bShowEdge = true;
+# 	m_pBoundingPolyAGI->m_edgePen = QPen(Qt::black, 3, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+# 	m_PolyAGIList.push_back(m_pBoundingPolyAGI);
+# 	m_scene.addItem(m_pBoundingPolyAGI);
+
+# 	// Then compute the outside bounding rectangle
+# 	double x1, y1, x2, y2;
+# 	std::vector<Point_2> const& points = m_boundingPoly.outer();
+
+# 	x1 = points[0].get<0>(); y1 = points[0].get<1>();
+# 	x2 = points[2].get<0>(); y2 = points[2].get<1>();
+# 	bg::append(m_boundingPoly2.outer(), Point_2(x1 - radius, y1 - radius));
+# 	bg::append(m_boundingPoly2.outer(), Point_2(x1 - radius, y2 + radius));
+# 	bg::append(m_boundingPoly2.outer(), Point_2(x2 + radius, y2 + radius));
+# 	bg::append(m_boundingPoly2.outer(), Point_2(x2 + radius, y1 - radius));
+# 	//	bg::append(m_boundingPoly2.outer(), Point_2(x1 - radius, y1 - radius));
+# 	bg::correct(m_boundingPoly2);
+# 	// Add to scene
+# 	m_pBoundingPolyAGI2 = new AdvancedGraphicsItem<Polygon_2>(&m_boundingPoly2);
+# 	m_pBoundingPolyAGI2->m_bFill = false;
+# 	m_pBoundingPolyAGI2->m_bShowVertices = false;
+# 	m_pBoundingPolyAGI2->m_bShowEdge = true;
+# 	m_pBoundingPolyAGI2->m_edgePen = QPen(Qt::black, 3, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+# 	m_PolyAGIList.push_back(m_pBoundingPolyAGI2);
+# 	// m_scene.addItem(m_pBoundingPolyAGI2);
+# 	std::string output_filename = "C:/Users/wei/Desktop/optimal_robot_picking/trunk/optimal_robot_picking/test-envs/testcases/2500_env/tetris/";
+
+# 	std::ofstream ofs(output_filename + std::to_string((long long)numberOfPolygons)  + "_"+ std::to_string((long long)current_case) + ".txt", std::ofstream::out);
+# 	ofs << 30 << std::endl;
+# 	ofs << numberOfPolygons << std::endl;
+# 	for (int q = 0; q < created_polys.size(); q++) {
+# 		ofs << created_polys[q].outer().size() - 1 << std::endl;
+# 		for (int v = 0; v < created_polys[q].outer().size() - 1; v++) {
+# 			ofs << created_polys[q].outer()[v].get<0>() << " " << created_polys[q].outer()[v].get<1>() << std::endl;
+# 		}
+# 	}
+# 	ofs << 4 << std::endl;
+# #ifdef BIG_ENV
+# 	ofs << 0 << " " << 0 << std::endl;
+# 	ofs << 0 << " " << 2000 << std::endl;
+# 	ofs << 2000 << " " << 2000 << std::endl;
+# 	ofs << 2000 << " " << 0 << std::endl;
+# #endif
+# #ifdef SMALL_ENV
+# 	ofs << 0 << " " << 0 << std::endl;
+# 	ofs << 0 << " " << 1000 << std::endl;
+# 	ofs << 1000 << " " << 1000 << std::endl;
+# 	ofs << 1000 << " " << 0 << std::endl;
+# #endif
+# 	ofs.close();
+
+# 	m_radius = radius;
+
+# 	drawBasicEnvironment();
+
+
+
+
+
+
+
+
+
 
     def manipulation_action_done_cb(self, goal_state, result):
         print("manipulationaction returned")

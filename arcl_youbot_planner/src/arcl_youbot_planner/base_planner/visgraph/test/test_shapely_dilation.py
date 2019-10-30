@@ -9,7 +9,7 @@ from shapely.figures import SIZE, BLUE, GRAY, set_limits, plot_line, plot_coords
 
 polygon = Polygon([(3, 2), (4, 2), (4, 4), (3, 4)])
 line = LineString([(3, 2), (4, 2), (4, 4), (3, 4), (3, 2)])
-test_line = LineString([(0,0),(6,6)])
+test_line = LineString([(3.2,3.5),(6,6)])
 
 fig = pyplot.figure(1, figsize=SIZE, dpi=90)
 
@@ -22,6 +22,7 @@ intersection = test_line.intersection(polygon)
 print('----')
 print(test_line)
 print(intersection)
+print(list(intersection.coords))
 print('----')
 
 polygon = Polygon(polygon)
