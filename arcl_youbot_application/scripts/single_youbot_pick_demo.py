@@ -8,7 +8,7 @@ import os.path
 
 if __name__ == "__main__":
     rospy.init_node("single_youbot_pick_demo")
-    env = app_util.YoubotEnvironment(-2.0, 2.0, 0.5, 4.5)
+    env = app_util.YoubotEnvironment(-2.3, 2.3, 0.2, 4.8)
 
     #import object list from file
     my_path = os.path.abspath(os.path.dirname(__file__))

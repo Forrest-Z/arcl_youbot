@@ -62,6 +62,8 @@ def get_yaw_from_polygon(obj):
         temp_length = long_length
         long_length = short_length
         short_length = temp_length
+    if long_x == 0:
+        return 90
     return math.atan(float(long_y/long_x))
 
 #return information from a cube, defined as [[x0,y0], [x1,y1], [x2,y2], [x3,y3]]

@@ -42,6 +42,11 @@ GAZEBO_COLORS = [
 "Gazebo/FlatBlack"
 ]
 BOUNDARY_NUM = 5
+WALL_0 = [(2.5, 0), (2.8, 0), (2.8, 5), (2.5, 5)]
+WALL_1 = [(2.8, 5), (2.8, 5.3), (-2.8, 5.3), (-2.8, 5)]
+WALL_2 = [(-2.5, 0), (-2.8, 0), (-2.8, 5), (-2.5, 5)]
+WALL_3 = [(-2.8, -0.7), (-2.8, 0), (-1.65, 0), (-1.65, -0.7)]
+WALL_4 = [(2.8, 0.7), (2.8, 0), (1.65, 0), (1.65, 0.7)]
 
 SCALE = 400.0
 OFFSET = 2.5
@@ -57,7 +62,6 @@ class YoubotEnvironment():
         self.y_min = y_min
         self.y_max = y_max
         self.object_list = []
-        self.env_boundary = []
         self.planning_scene_msg = PlanningSceneMsg()
 
     # filename: ffabsolute path for the environment file
@@ -73,12 +77,8 @@ class YoubotEnvironment():
                 point[1] = float(point[1]) / SCALE 
                 current_obj.append((point[0], point[1]))
             self.object_list.append(current_obj)
-        boundary_vertex_num = int(f.readline())
-        for v in range(boundary_vertex_num):
-            point = string.split(f.readline())
-            point[0] = float(point[0])
-            point[1] = float(point[1])
-            self.env_boundary.append((point[0], point[1]))
+
+        self.add_boundary()
 
         print self.object_list
 
@@ -90,11 +90,13 @@ class YoubotEnvironment():
             f.writelines(len(obj))
             for v in obj:
                 f.writelines(str(v[0]) + " " + str(v[1]))
-        f.writelines(BOUNDARY_NUM)
-        
 
-
-
+    def add_boundary(self):
+        self.object_list.append(WALL_0)
+        self.object_list.append(WALL_1)
+        self.object_list.append(WALL_2)
+        self.object_list.append(WALL_3)
+        self.object_list.append(WALL_4)
 
     def import_obj_from_list(self, object_list):
         self.object_list = object_list
@@ -150,7 +152,7 @@ class YoubotEnvironment():
 
         self.import_obj_from_list(list_created_objs)
 
-        return list_created_objs
+        self.add_boundary()
 # 		bool isValid = false;
 # 		while (!isValid) {
 # 			Polygon_2 tp;
@@ -577,7 +579,7 @@ class YoubotEnvironment():
         client.wait_for_result(rospy.Duration.from_sec(10.0))
 
     def generate_obj_in_gazebo(self):
-        for obj, obj_index in zip(self.object_list, range(len(self.object_list))):
+        for obj, obj_index in zip(self.object_list[:-5], range(len(self.object_list) - BOUNDARY_NUM)):
             scene_object = SceneObjectMsg()
             scene_object.object_type.data = "cube"
             scene_object.object_state.data = 0
