@@ -35,10 +35,7 @@ COLIN_TOLERANCE = 10
 T = 10**COLIN_TOLERANCE
 T2 = 10.0**COLIN_TOLERANCE
 
-# def visible_vertices(point, graph, origin=None, destination=None, scan='full'):
-# ===== for youbot destination =====
-def visible_vertices(point, graph, origin=None, destination=None, scan='full', is_destination=False):
-# ===== for youbot destination =====
+def visible_vertices(point, graph, origin=None, destination=None, scan='full'):
     """Returns list of Points in graph visible by point.
 
     If origin and/or destination Points are given, these will also be checked
@@ -57,18 +54,11 @@ def visible_vertices(point, graph, origin=None, destination=None, scan='full', i
     # point along the positive x-axis
     open_edges = OpenEdges()
     point_inf = Point(INF, point.y)
-    # ===== for youbot destination =====
-    if is_destination:
-        destination_polygon_id = point_in_polygon(point, graph)
-    # ===== for youbot destination =====
     for edge in edges:
         if point in edge: continue
         if edge_intersect(point, point_inf, edge):
             if on_segment(point, edge.p1, point_inf): continue
             if on_segment(point, edge.p2, point_inf): continue
-            # ===== for youbot destination =====
-            if is_destination and destination_polygon_id != -1 and edge in graph.polygons[destination_polygon_id]: continue
-            # ===== for youbot destination =====
             open_edges.insert(point, point_inf, edge)
 
     visible = []
@@ -116,7 +106,7 @@ def visible_vertices(point, graph, origin=None, destination=None, scan='full', i
         for edge in graph[p]:
             if (point not in edge) and ccw(point, p, edge.get_adjacent(p)) == CCW:
                 # ===== for youbot destination =====
-                if is_destination and destination_polygon_id != -1 and edge in graph.polygons[destination_polygon_id]: continue
+                # if is_destination and destination_polygon_id != -1 and edge in graph.polygons[destination_polygon_id]: continue
                 # ===== for youbot destination =====
                 open_edges.insert(point, p, edge)
 

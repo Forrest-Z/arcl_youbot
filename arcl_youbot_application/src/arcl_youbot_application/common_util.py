@@ -26,6 +26,7 @@ from arcl_youbot_application.msg import SceneObjectMsg
 import arcl_youbot_planner.base_planner.visgraph as vg
 from shapely.geometry import Polygon, LinearRing, LineString, MultiPolygon
 from shapely.ops import unary_union
+import random
 
 # import arcl_youbot_planner.arm_planner.prmstar as prmstar
 
@@ -171,7 +172,7 @@ def generate_poly(center_x, center_y, yaw, length, width):
     y = -width
     p3 = (center_x + math.cos(yaw)*x - math.sin(yaw)*y, center_y - (math.sin(yaw)*x + math.cos(yaw)*y))
 
-    poly = Polygon([p0, p1, p2, p3])
+    poly = Polygon([p0, p1, p3, p2])
     return poly
 
 
@@ -192,13 +193,13 @@ def add_near_poly(same_cluster_objs, created_objs, x_min, x_max, y_min, y_max, b
         direction = random.random() * 3.14159
         far_pt = (2500 * math.cos(direction) + close_pt.x, 2500 * math.sin(direction) + close_pt.y)
         cross_line = LineString([close_pt, far_pt])
-        center_pt = convex_hull_poly.intersection(cross_line)
-        center_pt.x += boundary_padding * math.cos(direction)
-        center_pt.y += boundary_padding * math.sin(direction)
+        center_pt = list(convex_hull_poly.intersection(cross_line).coords)[1]
+        center_pt_x = center_pt[0] + boundary_padding * math.cos(direction)
+        center_pt_y = center_pt[1] + boundary_padding * math.sin(direction)
         yaw = random.random() * 3.14159
         length = random.random() * (OBJECT_LENGTH_MAX - OBJECT_LENGTH_MIN) + OBJECT_LENGTH_MIN
         width = OBJECT_WIDTH
-        tp = generate_poly(center_pt.x, center_pt.y, yaw, length, width)
+        tp = generate_poly(center_pt_x, center_pt_y, yaw, length, width)
         for existing_obj in created_objs:
             if tp.intersects(existing_obj):
                 is_valid = False

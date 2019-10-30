@@ -2,9 +2,9 @@
 #max_velocity_y: 0.8 # meters/second
 #max_velocity_theta: 1.6 # radians/second
 
-max_velocity_x: 0.8 # meters/second
-max_velocity_y: 0.8 # meters/second
-max_velocity_theta: 1.2 # radians/second
+max_velocity_x: 0.3 # meters/second
+max_velocity_y: 0.3 # meters/second
+max_velocity_theta: 0.8 # radians/second
 
 max_velocity_x_approach: 0.2 # meters/second
 max_velocity_y_approach: 0.2 # meters/second
@@ -12,11 +12,11 @@ max_velocity_theta_approach: 0.4 # radians/second
 
 velocity_p_factor_x: 2
 velocity_p_factor_y: 2
-velocity_p_factor_theta: 1.5
+velocity_p_factor_theta: 1.2
 
-velocity_i_factor_x: 0.0 # was 0.25 never used
-velocity_i_factor_y: 0.0 # was 0.25 never used
-velocity_i_factor_theta: 0.0 # was 0.25 never used
+velocity_i_factor_x: 0 # was 0.25 never used
+velocity_i_factor_y: 0 # was 0.25 never used
+velocity_i_factor_theta: 0 # was 0.25 never used
 
 velocity_d_factor_x: 0.1
 velocity_d_factor_y: 0.1
@@ -26,9 +26,9 @@ velocity_p_factor_x_near: 1
 velocity_p_factor_y_near: 1
 velocity_p_factor_theta_near: 0.5
 
-velocity_i_factor_x_near: 0.001 # was 0.25 never used
-velocity_i_factor_y_near: 0.001 # was 0.25 never used
-velocity_i_factor_theta_near: 0.0 # was 0.25 never used
+velocity_i_factor_x_near: 0.05 # was 0.25 never used
+velocity_i_factor_y_near: 0.05 # was 0.25 never used
+velocity_i_factor_theta_near: 0.05 # was 0.25 never used
 
 velocity_d_factor_x_near: 0.1
 velocity_d_factor_y_near: 0.1
@@ -45,7 +45,7 @@ position_tolerance_theta_fast: 0.174533 # radian
 
 step_reached_threshold_x: 0.15
 step_reached_threshold_y: 0.15
-step_reached_threshold_theta: 0.174533
+step_reached_threshold_theta: 0.17
 
 goal_reached_threshold_x: 0.005
 goal_reached_threshold_y: 0.005

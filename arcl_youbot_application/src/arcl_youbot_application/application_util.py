@@ -95,7 +95,7 @@ class YoubotEnvironment():
 
         created_objs = []
         each_cluster_obj_num = 0
-        each_cluster_obj_num = math.ceil(object_number / cluster_number)
+        each_cluster_obj_num = int(math.ceil(object_number / cluster_number))
         cluster_obj_num_list = []
         for i in range(cluster_number-1):
             cluster_obj_num_list.append(each_cluster_obj_num)
@@ -131,7 +131,11 @@ class YoubotEnvironment():
                     same_cluster_objs.append(tp)
                     created_objs.append(tp)
     
-        return created_objs
+        list_created_objs = []
+        for obj in created_objs:
+            list_created_objs.append(list(obj.exterior.coords))
+
+        return list_created_objs
 # 		bool isValid = false;
 # 		while (!isValid) {
 # 			Polygon_2 tp;

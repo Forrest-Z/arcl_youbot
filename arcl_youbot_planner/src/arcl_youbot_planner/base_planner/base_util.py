@@ -100,9 +100,10 @@ import commands
 from shapely.geometry import Polygon, LinearRing, LineString
 from shapely.ops import unary_union
 
-YOUBOT_SHORT_RADIUS = 0.2  # in meters
-YOUBOT_LONG_RADIUS = 0.32  # in meters
-OFFSET = 0.1
+YOUBOT_SHORT_RADIUS = 0.23  # in meters
+YOUBOT_LONG_RADIUS = 0.38  # in meters
+OFFSET = YOUBOT_LONG_RADIUS - YOUBOT_SHORT_RADIUS
+BACK_DISTANCE = 0.1
 
 TEST = False
 
@@ -176,11 +177,11 @@ def vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles):
             is_last_segment_collision = False
             vector = (path[i+1].x - path[i].x, path[i+1].y - path[i].y)
             current_heading = math.atan2(vector[1], vector[0])
-    # back up 0.1 meters
-   
-    if abs(goal_heading - current_heading) > math.pi / 4:
-        goal_pos_back_x = path[-1].x - math.cos(goal_heading) * OFFSET
-        goal_pos_back_y = path[-1].y - math.sin(goal_heading) * OFFSET
+
+    # back 0.1 meters
+    if abs(abs(goal_heading) - abs(current_heading)) > math.pi / 4:
+        goal_pos_back_x = path[-1].x - math.cos(goal_heading) * BACK_DISTANCE
+        goal_pos_back_y = path[-1].y - math.sin(goal_heading) * BACK_DISTANCE
 
         path_with_heading.append((path[-1].x, path[-1].y, current_heading))
         path_with_heading.append((goal_pos_back_x, goal_pos_back_y, goal_heading))
@@ -225,7 +226,7 @@ def plot_vg_path(obstacles, path, g):
 
     # plot obstacles
     for o in obstacles:
-        plot_line(ax, LinearRing(o))
+        plot_line(ax, LinearRing(o), linewidth=1)
           
     # plot visgraph
     for edge in g.visgraph.edges:
@@ -333,16 +334,20 @@ def plot_edge(ax, x, y, color='gray', zorder=1, linewidth=1, alpha=1):
 
 
 if __name__ == "__main__":
-    start_pos = (10, 2)
-    goal_pos = (4, 9)
+    from arcl_youbot_application.application_util import YoubotEnvironment
+
+    # y = YoubotEnvironment(0, 5, 0, 5)
+    start_pos = (5, 2)
+    goal_pos = (1.2, 2.8)
     obstacles = [[(1, 1), (2, 1), (2, 4), (1, 4)],
                  [(1.5, 5), (2.5, 5), (2.5, 6), (1.5, 6)],
                  [(3, 8), (5, 9), (4.5, 9.5), (2.8, 8.2)],
                  [(5, 3), (6, 3), (6, 4), (6, 5)],
                  [(7, 4), (8, 4), (8, 10), (7, 10)],
                  [(10, 5), (12, 5), (12, 7), (10, 7)]]
+    # obstacles = y.create_scene(20, 10)
     start_heading = 0
-    goal_heading = math.pi / 2
+    goal_heading = 0
     path_with_heading, g = vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles)
 
     plot_vg_path(obstacles, path_with_heading, g)

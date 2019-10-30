@@ -125,12 +125,21 @@ class VisGraph(object):
             for v in visible_vertices(origin, self.graph, destination=dest):
                 add_to_visg.add_edge(Edge(origin, v))
         if not dest_exists:
-            # for v in visible_vertices(destination, self.graph, origin=orgn):
-            # ===== for youbot destination =====
-            for v in visible_vertices(destination, self.graph, origin=orgn, is_destination=True):
-            # ===== for youbot destination =====
-                add_to_visg.add_edge(Edge(destination, v))
+            dest_polygon_id, check_point = self.dest_closest_point_on_polygon(destination)
+            if dest_polygon_id != -1:
+                add_to_visg.add_edge(Edge(destination, check_point))
+            for v in visible_vertices(check_point, self.graph, origin=orgn):
+                add_to_visg.add_edge(Edge(check_point, v))
         return shortest_path(self.visgraph, origin, destination, add_to_visg)
+
+    def dest_closest_point_on_polygon(self, destination):
+        check_point = destination
+        dest_polygon_id = self.point_in_polygon(destination)
+        if dest_polygon_id != -1:
+            check_point = self.closest_point(destination, dest_polygon_id)
+            return dest_polygon_id, check_point
+        else:
+            return dest_polygon_id, destination
 
     def point_in_polygon(self, point):
         """Return polygon_id if point in a polygon, -1 otherwise."""
