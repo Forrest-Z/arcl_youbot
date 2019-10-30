@@ -31,7 +31,7 @@ import random
 # import arcl_youbot_planner.arm_planner.prmstar as prmstar
 
 OBJECT_WIDTH = 0.035
-OBJECT_LENGTH_MAX = 0.35
+OBJECT_LENGTH_MAX = 0.25
 OBJECT_LENGTH_MIN = 0.15
 
 
@@ -62,8 +62,8 @@ def get_yaw_from_polygon(obj):
         temp_length = long_length
         long_length = short_length
         short_length = temp_length
-    if long_x == 0:
-        return 90
+    # if long_x == 0:
+    #     return -90
     return math.atan(float(long_y/long_x))
 
 #return information from a cube, defined as [[x0,y0], [x1,y1], [x2,y2], [x3,y3]]
@@ -167,14 +167,14 @@ def generate_poly(center_x, center_y, yaw, length, width):
     x = -length
     y = width
     p1 = (center_x + math.cos(yaw)*x - math.sin(yaw)*y, center_y - (math.sin(yaw)*x + math.cos(yaw)*y))
-    x = length
-    y = -width
-    p2 = (center_x + math.cos(yaw)*x - math.sin(yaw)*y, center_y - (math.sin(yaw)*x + math.cos(yaw)*y))
     x = -length
+    y = -width
+    p2 = (center_x + math.cos(yaw)*x - math.sin(yaw)*y, center_y - (math.sin(yaw)*x + math.cos(yaw)*y))    
+    x = length
     y = -width
     p3 = (center_x + math.cos(yaw)*x - math.sin(yaw)*y, center_y - (math.sin(yaw)*x + math.cos(yaw)*y))
 
-    poly = Polygon([p0, p1, p3, p2])
+    poly = Polygon([p0, p1, p2, p3])
     return poly
 
 
@@ -198,6 +198,12 @@ def add_near_poly(same_cluster_objs, created_objs, x_min, x_max, y_min, y_max, b
         center_pt = list(convex_hull_poly.intersection(cross_line).coords)[1]
         center_pt_x = center_pt[0] + boundary_padding * math.cos(direction)
         center_pt_y = center_pt[1] + boundary_padding * math.sin(direction)
+        if center_pt_x < x_min or center_pt_x > x_max: 
+            is_valid = False 
+            continue
+        if center_pt_y < y_min or center_pt_y > y_max:
+            is_valid = False 
+            continue
         yaw = random.random() * 3.14159
         length = random.random() * (OBJECT_LENGTH_MAX - OBJECT_LENGTH_MIN) + OBJECT_LENGTH_MIN
         width = OBJECT_WIDTH

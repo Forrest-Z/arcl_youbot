@@ -1,6 +1,0 @@
-average up till now TIME: exhaus_time:0   , greedy_time:0 ,multi greedy time:0    ,particle greedy time:0  ,mcts time:0
-average up till now DIST: exhaus_dist:0   , greedy_dist:0 ,multi greedy dist:0    ,particle greedy dist:0  ,mcts dist:0
-average up till now TIME: exhaus_time:0   , greedy_time:0 ,multi greedy time:0    ,particle greedy time:0  ,mcts time:0
-average up till now DIST: exhaus_dist:0   , greedy_dist:0 ,multi greedy dist:0    ,particle greedy dist:0  ,mcts dist:0
-average up till now TIME: exhaus_time:0   , greedy_time:0 ,multi greedy time:0    ,particle greedy time:0  ,mcts time:0
-average up till now DIST: exhaus_dist:0   , greedy_dist:0 ,multi greedy dist:0    ,particle greedy dist:0  ,mcts dist:0

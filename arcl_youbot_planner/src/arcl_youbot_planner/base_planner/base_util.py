@@ -105,7 +105,7 @@ YOUBOT_LONG_RADIUS = 0.38  # in meters
 OFFSET = YOUBOT_LONG_RADIUS - YOUBOT_SHORT_RADIUS
 BACK_DISTANCE = 0.1
 
-TEST = False
+TEST = True
 
 
 def vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles):
@@ -193,31 +193,6 @@ def vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles):
 
     return path_with_heading, g
 
-def add_orientation(path, start_heading, goal_heading):
-    """
-    Assume the difference between start_heading and goal_heading is less than pi
-    """
-
-    # Calculate the distance between two points
-    step_distance = []
-    prev_point = path[0]
-    for point in path[1:]:
-        step_distance.append(edge_distance(prev_point, point))
-        prev_point = point
-    path_distance = sum(step_distance)
-
-    # total rotation
-    delta_rotation = goal_heading - start_heading
-
-    # create list of path with heading
-    current_heading = start_heading
-    path_with_heading = [(path[0].x, path[0].y, current_heading)]
-    for i in range(1, len(path)):
-        current_heading += delta_rotation * step_distance[i-1] / path_distance
-        path_with_heading.append((path[i].x, path[i].y, current_heading))
-
-    return path_with_heading
-
 def plot_vg_path(obstacles, path, g):
     from matplotlib import pyplot
 
@@ -225,8 +200,9 @@ def plot_vg_path(obstacles, path, g):
     ax = fig.subplots()
 
     # plot obstacles
+    print(len(obstacles))
     for o in obstacles:
-        plot_line(ax, LinearRing(o), linewidth=1)
+        plot_line(ax, LinearRing(o), linewidth=1.5)
           
     # plot visgraph
     for edge in g.visgraph.edges:
@@ -256,6 +232,10 @@ def plot_vg_path(obstacles, path, g):
     # plot orientation
     for point in path:
         ax.plot(point[0], point[1], marker=(2, 1, math.degrees(point[2])-90), markersize=20, linestyle='None')
+
+    ax.set_ylim(-1.5, 6.5)
+    ax.set_xlim(-4, 4)
+    ax.set_aspect("equal")
 
     # # plot offset
     # from shapely.figures import plot_line as plotline
