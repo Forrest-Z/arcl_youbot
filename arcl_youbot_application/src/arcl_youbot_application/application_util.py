@@ -651,6 +651,9 @@ class YoubotEnvironment():
             scene_object.dy = size[1]
             scene_object.dz = size[2]
 
+            scene_object.dx += base_util.YOUBOT_SHORT_RADIUS
+            scene_object.dy += base_util.YOUBOT_SHORT_RADIUS
+            scene_object.dz += base_util.YOUBOT_SHORT_RADIUS
             self.planning_scene_msg.scene_object_list.append(scene_object)
 
     def move_to_target(self, youbot_name, target_pose):
