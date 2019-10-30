@@ -58,7 +58,7 @@ goal_near_threshold_theta: 0.085
 
 move_lookahead: 10.0 # meters 
 
-velocity_command_timeout: 1.0 #seconds
+velocity_command_timeout: 0.1 #seconds
 
 memory_size: 5
 
