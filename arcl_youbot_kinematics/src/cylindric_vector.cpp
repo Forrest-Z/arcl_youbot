@@ -82,9 +82,9 @@ JointPosition CylindricPosition::toJointspace(bool elbow_down) const
     double max_length = L2 + L3;
     if(rs_2 + zs_2 >= max_length * max_length)
     {
-        q.setQ2(NAN);
-        q.setQ3(NAN);
-        q.setQ4(NAN);
+        q.setQ2(-1000);
+        q.setQ3(-1000);
+        q.setQ4(-1000);
         return q;
     }
 

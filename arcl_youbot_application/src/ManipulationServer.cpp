@@ -175,8 +175,7 @@ void ManipulationServer::goalCB()
     ykin::JointPosition final_joint_test;
     ykin::JointPosition joint_test;
     ykin::JointPosition pre_joint_test;
-    std::string test;
-    //std::cin>>test;
+    
     std::vector<geometry_msgs::Pose> final_base_pose_list;
     std::vector<ykin::CylindricPosition>  current_cylin_pose_list;
     bool is_grasp_pose_ok = false;
@@ -285,20 +284,7 @@ void ManipulationServer::goalCB()
 		    ss << "fly_gripper_" << (i);
 		    std::string name = ss.str();
             last_name = name;
-            //arc::gazeboUtility::deleteModel(nh_, last_name);
-            //arc::gazeboUtility::spawnSDFModel(nh_, "/home/wei/.gazebo/models/006_mustard_bottle/model.sdf", gripper_pose, name);
             
-            //arc::gazeboUtility::spawnPassThroughCuboid(nh_, 0.04, 0.004, 0.04, 
-            // gripper_pose.position.x,
-            // gripper_pose.position.y,
-            // gripper_pose.position.z,
-            // gripper_pose.orientation.x,
-            // gripper_pose.orientation.y, 
-            // gripper_pose.orientation.z, 
-            // gripper_pose.orientation.w,             
-            // name, true
-            // );		
-            //fly_gripper_pub.publish(gripper_pose);
             std::vector<double> gripper_dir{planned_grasp_vector.vector[i].grasp_dir.x,planned_grasp_vector.vector[i].grasp_dir.y,planned_grasp_vector.vector[i].grasp_dir.z};
             double min_cylin_r, max_cylin_r, cylin_z, theta, cylin_r;
             std::vector<double> q1_list;
@@ -513,18 +499,21 @@ void ManipulationServer::goalCB()
                         pre_joint_test = cylin_test.toJointspace();
                         //pre_joint_test.subtractOffset();
                         test_joint_values = {joint_test[0], joint_test[1], joint_test[2], joint_test[3], joint_test[4]};
-                        
-                        if(planInAdvance(base_pose, test_joint_values, nh_)){ 
-                            cylin_test.setZ(cylin_test.z()-0.07*normal_z);
-                            cylin_test.setR(cylin_test.r()+0.07*sqrt(pow(normal_x,2)+pow(normal_y, 2)));
-
-                            is_base_q1_ok = true;
-                            is_base_r_ok = true;
-                            break;    
-                            
-
-                        }else{
+                        if(!joint_test.isReachable() || !pre_joint_test.isReachable()){
                             is_base_q5_ok = false;
+                        }else{ 
+                            if(planInAdvance(base_pose, test_joint_values, nh_)){ 
+                                cylin_test.setZ(cylin_test.z()-0.07*normal_z);
+                                cylin_test.setR(cylin_test.r()+0.07*sqrt(pow(normal_x,2)+pow(normal_y, 2)));
+
+                                is_base_q1_ok = true;
+                                is_base_r_ok = true;
+                                break;    
+                                
+
+                            }else{
+                                is_base_q5_ok = false;
+                            }
                         }
                     }else{
                         is_base_q5_ok = false;

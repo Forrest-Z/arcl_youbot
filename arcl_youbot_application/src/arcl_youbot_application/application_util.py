@@ -44,8 +44,7 @@ GAZEBO_COLORS = [
 
 WALL = [(2.8, -0.3), (0.7, -0.3), (0.7, 0.0), (2.5, 0.0), (2.5, 5.0), (-2.5, 5.0), (-2.5, 0.0), (-0.7, 0.0), (-0.7, -0.3), (-2.8, -0.3), (-2.8, 5.3), (2.8, 5.3), (2.8, 0.0)]
 
-SCALE = 400.0
-OFFSET = 2.5
+
 class YoubotEnvironment(): 
     #example object_list: 
     #[[(1, 1), (2, 1.5), (1, 2)],
@@ -238,9 +237,9 @@ class YoubotEnvironment():
             scene_object.dy = size[1]
             scene_object.dz = size[2]
 
-            scene_object.dx += base_util.YOUBOT_SHORT_RADIUS
-            scene_object.dy += base_util.YOUBOT_SHORT_RADIUS
-            scene_object.dz += base_util.YOUBOT_SHORT_RADIUS
+            scene_object.dx_dilated += base_util.YOUBOT_SHORT_RADIUS
+            scene_object.dy_dilated += base_util.YOUBOT_SHORT_RADIUS
+            scene_object.dz_dilated += base_util.YOUBOT_SHORT_RADIUS
             self.planning_scene_msg.scene_object_list.append(scene_object)
 
     def move_to_target(self, youbot_name, target_pose):

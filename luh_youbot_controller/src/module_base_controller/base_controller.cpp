@@ -77,7 +77,7 @@ void ModuleBaseController::init()
 
 //    node_->param("module_base_controller/min_dist_x", min_dist_x_, 0.061);
 //    node_->param("module_base_controller/min_dist_y", min_dist_y_, 0.185);
-    ros::param::param("module_base_controller/velocity_command_timeout", velocity_command_timeout_, 1.0);
+    ros::param::param("module_base_controller/velocity_command_timeout", velocity_command_timeout_, 0.1);
     ros::param::param("module_base_controller/memory_size", memory_size_, 5);
     ros::param::param("module_base_controller/align_stop_timeout", align_stop_timeout_, 1.0);
     ros::param::param("module_base_controller/align_fail_timeout", align_fail_timeout_, 1.0);

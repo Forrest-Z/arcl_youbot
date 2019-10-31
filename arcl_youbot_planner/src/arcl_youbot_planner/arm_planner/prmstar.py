@@ -16,7 +16,7 @@ import os.path
 
 SAMPLE_NUM = 500
 ROBOT_COLLISION_CHECK_RADIUS = 0.7
-PATH_PLAN_TRYING_MAX = 10
+PATH_PLAN_TRYING_MAX = 30
 
 
 class PRMStarPlanner():
@@ -40,7 +40,9 @@ class PRMStarPlanner():
         self.object_size_list = []
         self.object_pybullet_id_list = []
         self.object_orientation_list = []
-        
+        joint_num = self.p_client.getNumJoints(self.robot_id)
+        for jnt_index in range(joint_num):
+            print(self.p_client.getJointInfo(self.robot_id, jnt_index))
 
     def build_roadmap(self):
         joint_mat = np.zeros([self.ARM_JOINT_NUM, self.sample_num])
@@ -139,6 +141,7 @@ class PRMStarPlanner():
             
             is_path_in_collision, self_collision_edge_list, external_collision_edge_list = self.check_path_collision(path, path_vertex_list, close_obj_index_list)
             if is_path_in_collision:
+                print("path in collision")
                 for self_coll_pair in self_collision_edge_list:
                     if self_coll_pair[0] < SAMPLE_NUM and self_coll_pair[1] < SAMPLE_NUM:
                         #delete the neighbor edge from the self.joint_neighbor
@@ -178,19 +181,21 @@ class PRMStarPlanner():
                     arm_util.set_arm_joint_pos(inter_pt, self.p_client, self.robot_id)
                     self.p_client.stepSimulation()
                     self_collision_list = self.p_client.getContactPoints(self.robot_id, self.robot_id)
-                    if len(self_collision_list) == 2:
-                        #print "no collision"
-                        pass                        
-                    else:
-                        self_collision_edge_list.append((path_vertex_list[pt_index], path_vertex_list[pt_index + 1]))
-                        # already have self-collision, no need to test external collision anymore
-                        is_self_collision = True
+                    for self_contact in self_collision_list:
+                        if (self_contact[3] == 12 and self_contact[4] == 15) or (self_contact[3] == 12 and self_contact[4] == 14) or (self_contact[3] == 14 and self_contact[4] == 15):
+                            pass
+                        else:
+                            self_collision_edge_list.append((path_vertex_list[pt_index], path_vertex_list[pt_index + 1]))
+                            is_self_collision = True
+                            break
+                    if is_self_collision:
                         break
                     is_this_seg_external_collision = False
                     for obj_index in close_obj_index_list:
                         external_collision_list = self.p_client.getContactPoints(self.robot_id, self.object_pybullet_id_list[obj_index])
                         if len(external_collision_list) > 0:
-                            #print("exist external collision")
+                            print("exist external collision")
+                            print(external_collision_list)
                             external_collision_edge_list.append((path_vertex_list[pt_index], path_vertex_list[pt_index + 1]))
                             is_this_seg_external_collision = True
                             is_external_collision = True
