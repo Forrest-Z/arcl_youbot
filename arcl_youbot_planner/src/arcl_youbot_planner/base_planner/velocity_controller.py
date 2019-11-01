@@ -1,12 +1,13 @@
 import rospy
 from pid import PID
 from geometry_msgs.msg import Twist
-from math import cos, sin, pi
+from math import cos, sin, pi, sqrt
 from base_util import get_youbot_base_pose2d
 from tf.transformations import euler_from_quaternion
 from gazebo_msgs.msg import ModelStates
 
 ALPHA = 0.2
+VEL_MAX = 0.42426
 
 class VelocityController(object):
     """ Send velocity command to follow a path based on current youbot position. """
@@ -114,21 +115,26 @@ class VelocityController(object):
 
             # normalization, because we limited velocity
             if velocity[0] != 0 and velocity[1] != 0 and diff_pos[0] != 0 and diff_pos[1] != 0:
-                if abs(abs(velocity[0] / velocity[1]) - abs(diff_pos[0] / diff_pos[1])) > 0.1:
-                    if abs(velocity[0]) > abs(velocity[1]):
-                        velocity[0] = diff_pos[0] / diff_pos[1] * velocity[1]
-                    else:
+                if abs(velocity[0] / velocity[1] - diff_pos[0] / diff_pos[1]) > 0.01:
+                    if abs(velocity[0]) == self.x_pid.output_limits[1] and abs(velocity[1]) == self.y_pid.output_limits[1]:
+                        diff_pos_norm = sqrt(diff_pos[0]**2 + diff_pos[1]**2)
+                        velocity[0] = diff_pos[0] / diff_pos_norm * VEL_MAX
+                        velocity[1] = diff_pos[1] / diff_pos_norm * VEL_MAX
+                    elif abs(velocity[0]) == self.x_pid.output_limits[1]:
                         velocity[1] = velocity[0] / diff_pos[0] * diff_pos[1]
-
+                    elif abs(velocity[1]) == self.y_pid.output_limits[1]:
+                        velocity[0] = diff_pos[0] / diff_pos[1] * velocity[1]
 
             self.velocity.linear.x = velocity[0]
             self.velocity.linear.y = velocity[1]
             self.velocity.angular.z = velocity[2]
 
-            print("-----" + str(self.step) + "-----")
-            print(self.current_pos)
-            print(current_step_pos)
-            print(velocity)
+            
+            if velocity[0] > 0.3 or velocity[1] > 0.3:
+                print("-----" + str(self.step) + "-----")
+                print(self.current_pos)
+                print(current_step_pos)
+                print(velocity)
         else:
             self.velocity.linear.x = 0
             self.velocity.linear.y = 0

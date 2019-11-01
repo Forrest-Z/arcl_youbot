@@ -14,7 +14,7 @@ from gazebo_msgs.srv import SpawnModel
 from geometry_msgs.msg import Pose
 from geometry_msgs.msg import Pose2D
 from std_msgs.msg import String
-from std_msgs.msg import UInt8
+from std_msgs.msg import UInt8, Float64
 import arcl_youbot_planner.arm_planner.astar 
 from tf.transformations import euler_from_quaternion, quaternion_from_euler, quaternion_about_axis, quaternion_from_matrix
 import scipy.spatial
@@ -27,6 +27,7 @@ from arcl_youbot_application.msg import SceneObjectMsg
 import arcl_youbot_planner.base_planner.visgraph as vg
 import arcl_youbot_planner.arm_planner.prmstar as prmstar
 import arcl_youbot_application.common_util as common_util
+from youbot_forklift_ros_interface.msg import GoToPositionAction, GoToPositionGoal
 import os.path
 
 GAZEBO_COLORS = [ 
@@ -353,3 +354,20 @@ class YoubotEnvironment():
         [final_path, final_cost] = prmstar_planner.direct_path(tuple(start), tuple(pre_pick_joint_value))
         arm_util.execute_path(youbot_name, final_path)
         print("moved back to the pre_pick pose")
+
+    def forklift_done_cb(self, goal_state, result):
+        print("Fork Lift GoToPosition returned")
+        print(result)
+
+    def set_forklift_position(self, youbot_name, position, position_reached=None, position_error=None):
+        client = actionlib.SimpleActionClient(youbot_name + "ForkLift", GoToPositionAction)
+        client.wait_for_server()
+        goal = GoToPositionGoal()
+        goal.goal_position_in_meter = position
+        if position_reached:
+            goal.position_reached = position_reached
+        if position_error:
+            goal.position_error = position_error
+        client.send_goal(goal, done_cb=self.forklift_done_cb)
+        client.wait_for_result(rospy.Duration.from_sec(10.0))
+        return client.get_result()
