@@ -8,3 +8,6 @@ std_msgs/String mesh_filename
 float32 dx
 float32 dy
 float32 dz
+float32 dx_dilated
+float32 dy_dilated
+float32 dz_dilated

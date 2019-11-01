@@ -44,8 +44,7 @@ GAZEBO_COLORS = [
 
 WALL = [(2.8, -0.3), (0.7, -0.3), (0.7, 0.0), (2.5, 0.0), (2.5, 5.0), (-2.5, 5.0), (-2.5, 0.0), (-0.7, 0.0), (-0.7, -0.3), (-2.8, -0.3), (-2.8, 5.3), (2.8, 5.3), (2.8, 0.0)]
 
-SCALE = 400.0
-OFFSET = 2.5
+
 class YoubotEnvironment(): 
     #example object_list: 
     #[[(1, 1), (2, 1.5), (1, 2)],
@@ -237,11 +236,15 @@ class YoubotEnvironment():
             scene_object.dx = size[0]
             scene_object.dy = size[1]
             scene_object.dz = size[2]
-
-            scene_object.dx += base_util.YOUBOT_SHORT_RADIUS
-            scene_object.dy += base_util.YOUBOT_SHORT_RADIUS
-            scene_object.dz += base_util.YOUBOT_SHORT_RADIUS
             self.planning_scene_msg.scene_object_list.append(scene_object)
+
+    def update_env(self, deleted_obj):
+        deleted_obj_index = self.object_list.index(deleted_obj)        
+        self.object_list.remove(deleted_obj)
+        deleted_obj_msg = self.planning_scene_msg.scene_object_list[deleted_obj_index]
+        print("planning_scene_msg size:" + str(len(self.planning_scene_msg.scene_object_list)))
+        self.planning_scene_msg.scene_object_list.remove(deleted_obj_msg)
+        print("planning_scene_msg size:" + str(len(self.planning_scene_msg.scene_object_list)))
 
     def move_to_target(self, youbot_name, target_pose):
         current_pos_2d = base_util.get_youbot_base_pose2d(youbot_name)
@@ -345,7 +348,7 @@ class YoubotEnvironment():
         print("moved to the pick pose")
 
         arm_util.set_gripper_width("youbot_0", 0.01)
-        rospy.sleep(rospy.Duration.from_sec(3.0))
+        rospy.sleep(rospy.Duration.from_sec(10.0))
 
         #directly retract arm to pre_pick_pos
         start = arm_util.get_current_joint_pos(youbot_name)

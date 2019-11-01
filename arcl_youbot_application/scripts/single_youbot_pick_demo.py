@@ -12,9 +12,9 @@ if __name__ == "__main__":
 
     #import object list from file
     my_path = os.path.abspath(os.path.dirname(__file__))
-    env.import_obj_from_file(os.path.join(my_path, "scatter/1.txt"))
-    # env.create_scene(20, 5)
-    # env.export_obj_to_file(os.path.join(my_path, "scatter/1.txt"))
+    env.import_obj_from_file(os.path.join(my_path, "scatter/new.txt"))
+    #env.create_scene(20, 5)
+    #env.export_obj_to_file(os.path.join(my_path, "scatter/new.txt"))
 
     #spawn the objects in gazebo, and generate the planningscene msg 
     env.generate_obj_in_gazebo()
@@ -32,7 +32,7 @@ if __name__ == "__main__":
     # arm_util.set_gripper_width("youbot", 0.0)
     # arm_util.set_gripper_width("youbot", 0.06)
     # arm_util.set_gripper_width("youbot", 0.0)
-    env.send_grasp_action(env.planning_scene_msg, "obj_19", env.planning_scene_msg.scene_object_list[19].object_pose, " ", "cube", rest_base_pose, True)
+    env.send_grasp_action(env.planning_scene_msg, "obj_10", env.planning_scene_msg.scene_object_list[10].object_pose, " ", "cube", rest_base_pose, True)
     target_base_pose = env.grasp_plan_result.final_base_pose
     print(target_base_pose)
     env.move_to_target("youbot_0", target_base_pose)
@@ -40,3 +40,6 @@ if __name__ == "__main__":
     pick_joint_value = [env.grasp_plan_result.q1, env.grasp_plan_result.q2, env.grasp_plan_result.q3, env.grasp_plan_result.q4, env.grasp_plan_result.q5]
     pre_pick_joint_value = [env.grasp_plan_result.q1_pre, env.grasp_plan_result.q2_pre, env.grasp_plan_result.q3_pre, env.grasp_plan_result.q4_pre, env.grasp_plan_result.q5_pre]    
     env.pick_object("youbot_0", pick_joint_value, pre_pick_joint_value)
+    env.update_env(env.object_list[10])
+
+    env.move_to_target("youbot_0", rest_base_pose)

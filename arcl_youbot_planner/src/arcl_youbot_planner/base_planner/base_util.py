@@ -105,7 +105,7 @@ YOUBOT_LONG_RADIUS = 0.38  # in meters
 OFFSET = YOUBOT_LONG_RADIUS - YOUBOT_SHORT_RADIUS
 BACK_DISTANCE = 0.1
 
-TEST = True
+TEST = False
 
 
 def vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles):
