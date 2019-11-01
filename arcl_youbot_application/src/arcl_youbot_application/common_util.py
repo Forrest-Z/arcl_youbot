@@ -5,8 +5,6 @@ import pybullet as p
 import time
 import numpy as np
 import pybullet_data
-import arcl_youbot_planner.arm_planner.arm_util as arm_util
-import arcl_youbot_planner.base_planner.base_util as base_util
 # import control_msgs.msg.FollowJointTrajectoryActionGoal
 from geometry_msgs.msg import Twist 
 from gazebo_msgs.srv import SpawnModel
@@ -26,15 +24,14 @@ from arcl_youbot_application.msg import SceneObjectMsg
 import arcl_youbot_planner.base_planner.visgraph as vg
 from shapely.geometry import Polygon, LinearRing, LineString, MultiPolygon
 from shapely.ops import unary_union
-import random
 
 # import arcl_youbot_planner.arm_planner.prmstar as prmstar
 
 OBJECT_WIDTH = 0.035
-OBJECT_LENGTH_MAX = 0.25
+OBJECT_LENGTH_MAX = 0.35
 OBJECT_LENGTH_MIN = 0.15
-
-
+USE_GAZEBO = 0
+USE_OPTI = 1
 
 
 
@@ -62,8 +59,6 @@ def get_yaw_from_polygon(obj):
         temp_length = long_length
         long_length = short_length
         short_length = temp_length
-    # if long_x == 0:
-    #     return -90
     return math.atan(float(long_y/long_x))
 
 #return information from a cube, defined as [[x0,y0], [x1,y1], [x2,y2], [x3,y3]]
@@ -167,10 +162,10 @@ def generate_poly(center_x, center_y, yaw, length, width):
     x = -length
     y = width
     p1 = (center_x + math.cos(yaw)*x - math.sin(yaw)*y, center_y - (math.sin(yaw)*x + math.cos(yaw)*y))
-    x = -length
-    y = -width
-    p2 = (center_x + math.cos(yaw)*x - math.sin(yaw)*y, center_y - (math.sin(yaw)*x + math.cos(yaw)*y))    
     x = length
+    y = -width
+    p2 = (center_x + math.cos(yaw)*x - math.sin(yaw)*y, center_y - (math.sin(yaw)*x + math.cos(yaw)*y))
+    x = -length
     y = -width
     p3 = (center_x + math.cos(yaw)*x - math.sin(yaw)*y, center_y - (math.sin(yaw)*x + math.cos(yaw)*y))
 
@@ -195,19 +190,13 @@ def add_near_poly(same_cluster_objs, created_objs, x_min, x_max, y_min, y_max, b
         direction = random.random() * 3.14159
         far_pt = (2500 * math.cos(direction) + close_pt.x, 2500 * math.sin(direction) + close_pt.y)
         cross_line = LineString([close_pt, far_pt])
-        center_pt = list(convex_hull_poly.intersection(cross_line).coords)[1]
-        center_pt_x = center_pt[0] + boundary_padding * math.cos(direction)
-        center_pt_y = center_pt[1] + boundary_padding * math.sin(direction)
-        if center_pt_x < x_min or center_pt_x > x_max: 
-            is_valid = False 
-            continue
-        if center_pt_y < y_min or center_pt_y > y_max:
-            is_valid = False 
-            continue
+        center_pt = convex_hull_poly.intersection(cross_line)
+        center_pt.x += boundary_padding * math.cos(direction)
+        center_pt.y += boundary_padding * math.sin(direction)
         yaw = random.random() * 3.14159
         length = random.random() * (OBJECT_LENGTH_MAX - OBJECT_LENGTH_MIN) + OBJECT_LENGTH_MIN
         width = OBJECT_WIDTH
-        tp = generate_poly(center_pt_x, center_pt_y, yaw, length, width)
+        tp = generate_poly(center_pt.x, center_pt.y, yaw, length, width)
         for existing_obj in created_objs:
             if tp.intersects(existing_obj):
                 is_valid = False

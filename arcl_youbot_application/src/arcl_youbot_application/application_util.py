@@ -58,7 +58,7 @@ class YoubotEnvironment():
         self.y_max = y_max
         self.object_list = []
         self.planning_scene_msg = PlanningSceneMsg()
-        self.mode = common_util.USE_GAZEBO
+        self.mode = 0
 
     # filename: ffabsolute path for the environment file
     def import_obj_from_file(self, filename):
