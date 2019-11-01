@@ -48,5 +48,5 @@
 
 
   <xacro:joint_state_publisher namespace="youbot_0/gazebo"/>
-
+  <xacro:gzplugin_grasp_fix />
 </robot>
