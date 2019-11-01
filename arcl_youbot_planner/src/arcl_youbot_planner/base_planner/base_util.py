@@ -105,7 +105,7 @@ YOUBOT_LONG_RADIUS = 0.38  # in meters
 OFFSET = YOUBOT_LONG_RADIUS - YOUBOT_SHORT_RADIUS
 BACK_DISTANCE = 0.1
 
-TEST = True
+TEST = False
 
 
 def vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles):
@@ -141,7 +141,6 @@ def vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles):
     # ===== change orientation of youbot so it can fit in this graph =====
     current_heading = start_heading
     path_with_heading = []
-    is_last_segment_collision = False
     for i in range(len(path) - 1):
         # add path
         path_with_heading.append((path[i].x, path[i].y, current_heading))
@@ -152,7 +151,6 @@ def vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles):
         # find intersections & adjust orientation
         intersections = line.intersection(union_dilated_large_obstacles)
         if not intersections.is_empty:
-            is_last_segment_collision = True
             if not isinstance(intersections, LineString):
                 intersection = intersections[0].coords[0]
             else:
@@ -164,32 +162,23 @@ def vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles):
                 path_with_heading.append((path[i].x, path[i].y, current_heading))
             # if the intersection comes before next path
             else:
-                vector_norm = math.sqrt(vector[0]**2 + vector[1]**2)
-                norm_vector = (vector[0] / vector_norm, vector[1] / vector_norm)
-                offset_vecotr = (norm_vector[0] * OFFSET, norm_vector[1] * OFFSET)
-                intersection_vector = (intersection[0] - path[i].x, intersection[1] - path[i].y)
-                offset_intersection = (intersection[0] - offset_vecotr[0], intersection[1] - offset_vecotr[1])
-                if abs(intersection_vector[0]) + abs(intersection_vector[1]) > abs(offset_vecotr[0]) + abs(offset_vecotr[1]):
-                    path_with_heading.append((offset_intersection[0], offset_intersection[1], current_heading))
-                else:
-                    path_with_heading.append((path[i].x, path[i].y, current_heading))
+                path_with_heading.append((intersection[0], intersection[1], current_heading))
         else:
-            is_last_segment_collision = False
-            vector = (path[i+1].x - path[i].x, path[i+1].y - path[i].y)
-            current_heading = math.atan2(vector[1], vector[0])
+            raise ValueError('base_util, BUG: both points of an edge are not the vertex of polygon!!!!!!')
 
-    # back 0.1 meters
-    if abs(abs(goal_heading) - abs(current_heading)) > math.pi / 4:
-        goal_pos_back_x = path[-1].x - math.cos(goal_heading) * BACK_DISTANCE
-        goal_pos_back_y = path[-1].y - math.sin(goal_heading) * BACK_DISTANCE
-
-        path_with_heading.append((path[-1].x, path[-1].y, current_heading))
-        path_with_heading.append((goal_pos_back_x, goal_pos_back_y, goal_heading))
-        path_with_heading.append((path[-1].x, path[-1].y, goal_heading))
+    if not isinstance(intersections, LineString):
+        intersection = intersections[1].coords[0]
     else:
-        if is_last_segment_collision:
-            path_with_heading.append((path[-1].x, path[-1].y, current_heading))
-        path_with_heading.append((path[-1].x, path[-1].y, goal_heading))
+        raise ValueError('base_util, BUG: should have two points!!!!!!')
+    # need more time to rotate without collision
+    if abs(abs(goal_heading) - abs(current_heading)) > math.pi / 4:
+        goal_pos_back_x = intersection[0] - math.cos(current_heading) * BACK_DISTANCE
+        goal_pos_back_y = intersection[1] - math.sin(current_heading) * BACK_DISTANCE
+        path_with_heading.append((goal_pos_back_x, goal_pos_back_y, current_heading))   
+        # path_with_heading.append((intersection[0], intersection[1], goal_heading)) 
+    else:
+        path_with_heading.append((intersection[0], intersection[1], current_heading))
+    path_with_heading.append((path[-1].x, path[-1].y, goal_heading))
 
     return path_with_heading, g
 

@@ -270,8 +270,6 @@ class YoubotEnvironment():
         obstacles = self.object_list
         start_heading = current_pos_2d[2]
         goal_heading = target_pos_2d[2]
-        # TODO: delete the next line
-        start_pos = (0.0, 0.2)
         print("start:")
         print(start_pos, start_heading)
         print("goal:")
