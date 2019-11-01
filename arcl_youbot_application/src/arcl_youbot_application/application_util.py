@@ -58,6 +58,7 @@ class YoubotEnvironment():
         self.y_max = y_max
         self.object_list = []
         self.planning_scene_msg = PlanningSceneMsg()
+        self.mode = common_util.USE_GAZEBO
 
     # filename: ffabsolute path for the environment file
     def import_obj_from_file(self, filename):
@@ -89,6 +90,7 @@ class YoubotEnvironment():
     def import_obj_from_list(self, object_list):
         self.object_list = object_list
     
+
     def create_scene(self, object_number, cluster_number):
         boundary_padding = 0.5
         x_min = self.x_min + boundary_padding
@@ -142,6 +144,9 @@ class YoubotEnvironment():
         self.object_num = len(self.object_list)
 
         self.object_list.append(WALL)
+
+    def import_obj_from_optitrack():
+        pass
 
     def manipulation_action_done_cb(self, goal_state, result):
         print("manipulationaction returned")
@@ -247,7 +252,7 @@ class YoubotEnvironment():
         print("planning_scene_msg size:" + str(len(self.planning_scene_msg.scene_object_list)))
 
     def move_to_target(self, youbot_name, target_pose):
-        current_pos_2d = base_util.get_youbot_base_pose2d(youbot_name)
+        current_pos_2d = base_util.get_youbot_base_pose2d(youbot_name, self.mode)
         print("current_pos_2d")
         print(current_pos_2d)
         target_pos_2d = [0, 0, 0]
@@ -281,12 +286,12 @@ class YoubotEnvironment():
         base_util.plot_vg_path(obstacles, path_with_heading, g)
 
         # base_util.execute_path(youbot_name, path_with_heading, "/youbot_base/move")
-        base_util.execute_path_vel_pub(youbot_name, path_with_heading)
+        base_util.execute_path_vel_pub(youbot_name, path_with_heading, self.mode)
         # call base planner
         # execute_path
 
     def move_to_target_2d(self, youbot_name, target_pos_2d):
-        current_pos_2d = base_util.get_youbot_base_pose2d(youbot_name)
+        current_pos_2d = base_util.get_youbot_base_pose2d(youbot_name, self.mode)
         print("current_pos_2d")
         print(current_pos_2d)
         
