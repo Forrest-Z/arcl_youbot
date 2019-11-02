@@ -129,12 +129,10 @@ class VelocityController(object):
             self.velocity.linear.y = velocity[1]
             self.velocity.angular.z = velocity[2]
 
-            
-            if velocity[0] > 0.3 or velocity[1] > 0.3:
-                print("-----" + str(self.step) + "-----")
-                print(self.current_pos)
-                print(current_step_pos)
-                print(velocity)
+            print("-----" + str(self.step) + "-----")
+            print(self.current_pos)
+            print(current_step_pos)
+            print(velocity)
         else:
             self.velocity.linear.x = 0
             self.velocity.linear.y = 0
