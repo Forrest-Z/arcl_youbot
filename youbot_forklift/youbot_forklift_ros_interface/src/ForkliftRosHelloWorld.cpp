@@ -51,7 +51,7 @@ int main (int argc, char **argv)
   velocity.data = 0.01;
   velocityPublisher.publish(velocity);
 
-  goal.goal_position_in_meter = 0.0;
+  goal.goal_position_in_meter = 0.2;
   forkliftClient.sendGoal(goal, &doneCb, &activeCb, &feedbackCb);
 
 
