@@ -30,8 +30,8 @@ if __name__ == "__main__":
     rest_base_pose.orientation.w = 1
 
     target_base_pose = Pose()
-    target_base_pose.position.x = 0
-    target_base_pose.position.y = 0
+    target_base_pose.position.x = 0.42
+    target_base_pose.position.y = -1.2
     target_base_pose.position.z = 0.1
     target_base_pose.orientation.x = 0
     target_base_pose.orientation.y = 0
