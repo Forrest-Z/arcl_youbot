@@ -48,3 +48,4 @@ if __name__ == "__main__":
 #    env.update_env(env.object_list[10])
 
 #    env.move_to_target("youbot_0", rest_base_pose)
+    env.set_forklift_position('youbot_0', 0.0)

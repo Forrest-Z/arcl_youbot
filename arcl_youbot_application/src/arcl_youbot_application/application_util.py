@@ -365,7 +365,7 @@ class YoubotEnvironment():
         print(result)
 
     def set_forklift_position(self, youbot_name, position, position_reached=None, position_error=None):
-        client = actionlib.SimpleActionClient(youbot_name + "ForkLift", GoToPositionAction)
+        client = actionlib.SimpleActionClient("goToPosAction", GoToPositionAction)
         client.wait_for_server()
         goal = GoToPositionGoal()
         goal.goal_position_in_meter = position
@@ -376,3 +376,11 @@ class YoubotEnvironment():
         client.send_goal(goal, done_cb=self.forklift_done_cb)
         client.wait_for_result(rospy.Duration.from_sec(10.0))
         return client.get_result()
+
+    def set_forklift_position_gazebo(self, youbot_name, position, position_reached=None, position_error=None):
+        from std_msgs.msg import Float64
+        fork_pub = rospy.Publisher('/forklift/forklift_controller/command', Float64, queue_size=1)
+        rate = rospy.Rate(5)
+        rate.sleep()
+        fork_pub.publish(position)
+        rate.sleep()
