@@ -71,6 +71,7 @@ struct YoubotConfiguration
     std::string config_path;
     int num_arms;
     bool has_base;
+    std::string robot_name;
 };
 
 #endif // COMMON_H

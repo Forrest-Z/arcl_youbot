@@ -102,6 +102,9 @@ void YoubotBaseInterface::cmd_vel_callback(const geometry_msgs::Twist::ConstPtr&
     std::cout<<"received cmd_vel"<<std::endl;
 }
 
+void YoubotBaseInterface::base_pose_callback(const geometry_msgs::PoseStamped::ConstPtr& msg){
+    base_pose_ = msg->pose;
+}
 //########## INITIALISE ################################################################################################
 void YoubotBaseInterface::initialise()
 {
@@ -266,6 +269,8 @@ void YoubotBaseInterface::readState()
 
     try
     {
+        ros::NodeHandle base_pose_sub_nh;
+        base_pose_sub_ = base_pose_sub_nh.subscribe("/vrpn_client_node/youbot_0/pose", 1, &YoubotBaseInterface::base_pose_callback, this);
         base_->getBasePosition(longitudinalPosition, transversalPosition, orientation);
         x = longitudinalPosition.value();
         y = transversalPosition.value();
@@ -522,10 +527,33 @@ bool YoubotBaseInterface::writeCommands()
     youbot::EthercatMaster::getInstance().AutomaticReceiveOn(false);
     try
     {
-        quantity<si::velocity> velocity_command_x = controller_command_.linear.x * meter_per_second;
-        quantity<si::velocity> velocity_command_y = controller_command_.linear.y * meter_per_second;
+
+        tf::Quaternion target_quaternion_;
+                
+        target_quaternion_.setX(base_pose_.orientation.x);  
+        target_quaternion_.setY(base_pose_.orientation.y);  
+        target_quaternion_.setZ(base_pose_.orientation.z);  
+        target_quaternion_.setW(base_pose_.orientation.w);  
+        tf::Matrix3x3 m(target_quaternion_);
+        tf::Vector3 x_axis = m.getColumn(0);
+        double base_xx = x_axis.getX() / sqrt( pow(x_axis.getX(), 2) + pow(x_axis.getY(), 2) );
+        double base_xy = x_axis.getY() / sqrt( pow(x_axis.getX(), 2) + pow(x_axis.getY(), 2) );
+
+        double yaw;
+        yaw = atan2(base_xy, base_xx);
+
+        auto xt = controller_command_.linear.x * cosf(yaw) - controller_command_.linear.y * sinf(yaw);
+        auto yt = controller_command_.linear.y * cosf(yaw) + controller_command_.linear.x * sinf(yaw);
+
+
+        quantity<si::velocity> velocity_command_x = xt * meter_per_second;
+        quantity<si::velocity> velocity_command_y = yt * meter_per_second;
         quantity<si::angular_velocity> velocity_command_theta = controller_command_.angular.z * radian_per_second;
 
+        
+
+
+        
         base_->setBaseVelocity(velocity_command_x, velocity_command_y, velocity_command_theta);
 
     }

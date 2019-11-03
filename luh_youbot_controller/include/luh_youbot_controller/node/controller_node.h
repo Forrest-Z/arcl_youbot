@@ -53,6 +53,7 @@ protected:
 
     std::vector<ControllerModule*> arm_modules_;
     std::vector<ControllerModule*> base_modules_;
+    std::string robot_name_;
 
     boost::mutex ethercat_mutex_;
 

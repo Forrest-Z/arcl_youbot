@@ -106,6 +106,7 @@ protected:
     ros::ServiceServer switch_off_server_;
     ros::ServiceServer switch_on_server_;
     ros::Subscriber base_velocity_sub_;
+    ros::Subscriber base_pose_sub_;
 
     tf::TransformBroadcaster odom_broadcaster_;
 
@@ -122,6 +123,7 @@ protected:
 
     sensor_msgs::JointState joint_state_msg_;
     geometry_msgs::Pose2D current_pose_;
+    geometry_msgs::Pose base_pose_;
 
     ros::Time current_sample_time_;
     ros::Time last_sample_time_;
@@ -157,5 +159,7 @@ protected:
     bool switchOffBaseMotorsCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
     bool switchOnBaseMotorsCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
     void cmd_vel_callback(const geometry_msgs::Twist::ConstPtr& msg);
+    void base_pose_callback(const geometry_msgs::PoseStamped::ConstPtr& msg);
+
 };
 #endif // LUH_YOUBOT_BASE_INTERFACE_H

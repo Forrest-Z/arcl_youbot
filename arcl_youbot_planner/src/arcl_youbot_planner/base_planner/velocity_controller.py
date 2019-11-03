@@ -73,7 +73,7 @@ class VelocityController(object):
     def set_path(self, path):
         """ Have a new path to follow. Reset everything """
         self.path = path
-        self.step = 0
+        self.step = 1
         self.x_pid.reset()
         self.y_pid.reset()
         self.theta_pid.reset()
@@ -83,17 +83,20 @@ class VelocityController(object):
         self.velocity.linear.x = 0
         self.velocity.linear.y = 0
         self.velocity.angular.z = 0
-        self.use_goal_reached_threshold = False
+        if len(self.path) == 2:
+            self.use_goal_reached_threshold = True
+        else:
+            self.use_goal_reached_threshold = False
         # self.smooth_velocity = [0, 0, 0]
 
-    def get_velocity(self):
+    def get_velocity(self, current_pos):
         """ Output velocity based the current position and next target position from the path """
         if self.step < len(self.path):
-            self.current_pos = get_youbot_base_pose2d(self.youbot_name)
+            self.current_pos = current_pos
             current_step_pos = self.path[self.step]
             diff_pos = self.compute_difference(current_step_pos, self.current_pos)
             current_step_reached = self.is_current_step_reached(diff_pos)
-            current_step_near = self.is_current_step_near(diff_pos)
+            goal_near = self.is_goal_near(diff_pos)
             # if current position is close enough to next target position
             if current_step_reached:   
                 self.step += 1
@@ -103,7 +106,7 @@ class VelocityController(object):
                 else:
                     self.use_goal_reached_threshold = True
 
-            if self.use_goal_reached_threshold and current_step_near:
+            if self.use_goal_reached_threshold and goal_near:
                 velocity = self.compute_near_velocity(diff_pos)
             else:
                 velocity = self.compute_velocity(diff_pos)
@@ -128,13 +131,12 @@ class VelocityController(object):
             self.velocity.linear.x = velocity[0]
             self.velocity.linear.y = velocity[1]
             self.velocity.angular.z = velocity[2]
-
             
-            if velocity[0] > 0.3 or velocity[1] > 0.3:
-                print("-----" + str(self.step) + "-----")
-                print(self.current_pos)
-                print(current_step_pos)
-                print(velocity)
+            # if velocity[0] > 0.3 or velocity[1] > 0.3:
+            print("-----" + str(self.step) + "-----")
+            print(self.current_pos)
+            print(current_step_pos)
+            print([self.velocity.linear.x, self.velocity.linear.y, self.velocity.angular.z])
         else:
             self.velocity.linear.x = 0
             self.velocity.linear.y = 0
@@ -142,7 +144,7 @@ class VelocityController(object):
 
         return self.velocity
     
-    def is_current_step_near(self, diff_pos):
+    def is_goal_near(self, diff_pos):
         if (abs(diff_pos[0]) < self.goal_near_threshold[0] 
                 and abs(diff_pos[1]) < self.goal_near_threshold[1] 
                 and abs(diff_pos[2]) < self.goal_near_threshold[2]):

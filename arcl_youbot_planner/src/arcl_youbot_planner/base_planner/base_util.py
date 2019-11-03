@@ -10,48 +10,74 @@ from control_msgs.msg import FollowJointTrajectoryAction, FollowJointTrajectoryG
 from arcl_youbot_msgs.msg import MoveBaseAction, MoveBaseGoal
 from gazebo_msgs.msg import ModelStates
 from tf.transformations import euler_from_quaternion
-
+from geometry_msgs.msg import PoseStamped
 
 #youbot_name: youbot
 def get_youbot_base_pose2d(youbot_name, mode):
-    data = rospy.wait_for_message('gazebo/model_states', ModelStates)
-    current_pose = [0,0,0]
-    youbot_index = 0
-    for name, data_index in zip(data.name, range(len(data.name))):
-        if name == youbot_name:
-            youbot_index = data_index
+    if mode == 0:
+        data = rospy.wait_for_message('gazebo/model_states', ModelStates)
+        current_pose = [0,0,0]
+        youbot_index = 0
+        for name, data_index in zip(data.name, range(len(data.name))):
+            if name == youbot_name:
+                youbot_index = data_index
 
 
-    current_pose[0] = data.pose[youbot_index].position.x
-    current_pose[1] = data.pose[youbot_index].position.y
-    q = (data.pose[youbot_index].orientation.x,
-             data.pose[youbot_index].orientation.y,
-             data.pose[youbot_index].orientation.z,
-             data.pose[youbot_index].orientation.w)
-    (roll, pitch, yaw) = euler_from_quaternion(q)
-    current_pose[2] = yaw
-    return current_pose
+        current_pose[0] = data.pose[youbot_index].position.x
+        current_pose[1] = data.pose[youbot_index].position.y
+        q = (data.pose[youbot_index].orientation.x,
+                data.pose[youbot_index].orientation.y,
+                data.pose[youbot_index].orientation.z,
+                data.pose[youbot_index].orientation.w)
+        (roll, pitch, yaw) = euler_from_quaternion(q)
+        current_pose[2] = yaw
+        return current_pose
+    elif mode == 1:
+        data = rospy.wait_for_message('/vrpn_client_node/' + youbot_name + '/pose', PoseStamped)
+        
+        current_pose = [0, 0, 0]
+        current_pose[0] = data.pose.position.x
+        current_pose[1] = data.pose.position.y
+        q = (data.pose.orientation.x,
+                data.pose.orientation.y,
+                data.pose.orientation.z,
+                data.pose.orientation.w)
+        (roll, pitch, yaw) = euler_from_quaternion(q)
+        current_pose[2] = yaw
+        return current_pose
 
 #youbot_name: youbot
 def get_youbot_base_pose(youbot_name, mode):
-    data = rospy.wait_for_message('gazebo/model_states', ModelStates)
-    current_position = [0,0,0]
-    current_orientation = [0,0,0,1]
-    youbot_index = 0
-    for name, data_index in zip(data.name, range(len(data.name))):
-        if name == youbot_name:
-            youbot_index = data_index
+    if mode == 0:
+        data = rospy.wait_for_message('gazebo/model_states', ModelStates)
+        current_position = [0,0,0]
+        current_orientation = [0,0,0,1]
+        youbot_index = 0
+        for name, data_index in zip(data.name, range(len(data.name))):
+            if name == youbot_name:
+                youbot_index = data_index
 
 
-    current_position[0] = data.pose[youbot_index].position.x
-    current_position[1] = data.pose[youbot_index].position.y
-    current_position[2] = data.pose[youbot_index].position.z
-    current_orientation[0] = data.pose[youbot_index].orientation.x
-    current_orientation[1] = data.pose[youbot_index].orientation.y
-    current_orientation[2] = data.pose[youbot_index].orientation.z
-    current_orientation[3] = data.pose[youbot_index].orientation.w    
-    return current_position, current_orientation
-
+        current_position[0] = data.pose[youbot_index].position.x
+        current_position[1] = data.pose[youbot_index].position.y
+        current_position[2] = data.pose[youbot_index].position.z
+        current_orientation[0] = data.pose[youbot_index].orientation.x
+        current_orientation[1] = data.pose[youbot_index].orientation.y
+        current_orientation[2] = data.pose[youbot_index].orientation.z
+        current_orientation[3] = data.pose[youbot_index].orientation.w    
+        return current_position, current_orientation
+    elif mode == 1:
+        data = rospy.wait_for_message('/vrpn_client_node/' + youbot_name + '/pose', PoseStamped)
+        current_position = [0,0,0]
+        current_orientation = [0,0,0,1]
+        current_position[0] = data.pose.position.x
+        current_position[1] = data.pose.position.y
+        current_position[2] = data.pose.position.z
+        current_orientation[0] = data.pose.orientation.x
+        current_orientation[1] = data.pose.orientation.y
+        current_orientation[2] = data.pose.orientation.z
+        current_orientation[3] = data.pose.orientation.w    
+        return current_position, current_orientation
 # base_action_name:   "youbot_base/move"
 # work with base_controller.cpp updatePositionMode()
 def execute_path(youbot_name, final_path, base_action_name):
@@ -78,7 +104,7 @@ from velocity_controller import VelocityController
 from geometry_msgs.msg import Twist
 
 # work with velocity_controller.py
-def execute_path_vel_pub(youbot_name, final_path):
+def execute_path_vel_pub(youbot_name, final_path, mode):
     vel_pub = rospy.Publisher('/' + youbot_name + '/robot/cmd_vel', Twist, queue_size=1)
     vc = VelocityController(youbot_name)
     vc.set_path(final_path)
@@ -86,7 +112,7 @@ def execute_path_vel_pub(youbot_name, final_path):
     path_completed = False
     
     while not rospy.is_shutdown() and not path_completed: 
-        msg = vc.get_velocity()  
+        msg = vc.get_velocity(get_youbot_base_pose2d(youbot_name, mode))
         vel_pub.publish(msg)
         if msg.linear.x == 0.0 and msg.linear.y == 0.0 and msg.angular.z == 0.0:
             path_completed = True

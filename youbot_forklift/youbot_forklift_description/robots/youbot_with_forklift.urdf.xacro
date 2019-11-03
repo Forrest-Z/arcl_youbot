@@ -12,8 +12,8 @@
 	<xacro:include filename="$(find luh_youbot_description)/urdf/youbot_base/base.urdf.xacro" />
 	<!-- <xacro:include filename="$(find luh_youbot_description)/urdf/materials.urdf.xacro" /> -->
 	
- 
- <xacro:youbot_base name="base"  namespace="youbot_0"/>
+
+ <xacro:youbot_base name="base"  namespace="youbot_2"/>
   <xacro:youbot_forklift name="forklift" parent="base_link">
     <origin xyz="0 0 -0.075" rpy="0 0 0"/>
 	</xacro:youbot_forklift>

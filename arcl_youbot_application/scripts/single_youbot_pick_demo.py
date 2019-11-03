@@ -10,7 +10,7 @@ if __name__ == "__main__":
     rospy.init_node("single_youbot_pick_demo")
     #env = app_util.YoubotEnvironment(-1.5, 1.5, -3.0, 1.0)    
     env = app_util.YoubotEnvironment(-2.5, 2.5, 0.0, 5.0)
-    env.mode = 0
+    env.mode = 1
     #import object list from file
     my_path = os.path.abspath(os.path.dirname(__file__))
     #env.import_obj_from_file(os.path.join(my_path, "scatter/new.txt"))
@@ -30,8 +30,8 @@ if __name__ == "__main__":
     rest_base_pose.orientation.w = 1
 
     target_base_pose = Pose()
-    target_base_pose.position.x = 0.42
-    target_base_pose.position.y = 1.2
+    target_base_pose.position.x = 0.0
+    target_base_pose.position.y = -0.20
     target_base_pose.position.z = 0.1
     target_base_pose.orientation.x = 0
     target_base_pose.orientation.y = 0
@@ -48,4 +48,4 @@ if __name__ == "__main__":
 #    env.update_env(env.object_list[10])
 
 #    env.move_to_target("youbot_0", rest_base_pose)
-    env.set_forklift_position('youbot_0', 0.0)
+    # env.set_forklift_position_gazebo('youbot_2', 0.2)

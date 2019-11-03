@@ -51,7 +51,7 @@ ControllerNode::ControllerNode(ros::NodeHandle &node):
     // node_->param("luh_youbot_controller/use_gazebo_simulation", use_gazebo_simulation_, true);
     // node_->param("luh_youbot_controller/use_luh_gripper_v3", use_luh_gripper_v3_, false);
 
-    
+    robot_name_ = node_->getNamespace();
 
     if(use_standard_gripper_)
         ROS_INFO("Using standard gripper.");

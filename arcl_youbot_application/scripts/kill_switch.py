@@ -13,3 +13,4 @@ if __name__ == "__main__":
     kill_pub_0.publish(msg)
     kill_pub_1.publish(msg)
     kill_pub_2.publish(msg)
+    rospy.spin()

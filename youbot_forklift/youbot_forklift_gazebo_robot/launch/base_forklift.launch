@@ -15,7 +15,7 @@
           -x $(arg init_pos_x)
           -y $(arg init_pos_y)
           -z $(arg init_pos_z)
-          -model youbot">
+          -model youbot_2">
   </node>
 
   <!-- launch joint state controller -->
