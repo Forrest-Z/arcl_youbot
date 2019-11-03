@@ -10,74 +10,47 @@ from control_msgs.msg import FollowJointTrajectoryAction, FollowJointTrajectoryG
 from arcl_youbot_msgs.msg import MoveBaseAction, MoveBaseGoal
 from gazebo_msgs.msg import ModelStates
 from tf.transformations import euler_from_quaternion
-from geometry_msgs.msg import PoseStamped
+
 
 #youbot_name: youbot
 def get_youbot_base_pose2d(youbot_name, mode):
-    if mode == 0:
-        data = rospy.wait_for_message('gazebo/model_states', ModelStates)
-        current_pose = [0,0,0]
-        youbot_index = 0
-        for name, data_index in zip(data.name, range(len(data.name))):
-            if name == youbot_name:
-                youbot_index = data_index
+    data = rospy.wait_for_message('gazebo/model_states', ModelStates)
+    current_pose = [0,0,0]
+    youbot_index = 0
+    for name, data_index in zip(data.name, range(len(data.name))):
+        if name == youbot_name:
+            youbot_index = data_index
 
 
-        current_pose[0] = data.pose[youbot_index].position.x
-        current_pose[1] = data.pose[youbot_index].position.y
-        q = (data.pose[youbot_index].orientation.x,
-                data.pose[youbot_index].orientation.y,
-                data.pose[youbot_index].orientation.z,
-                data.pose[youbot_index].orientation.w)
-        (roll, pitch, yaw) = euler_from_quaternion(q)
-        current_pose[2] = yaw
-        return current_pose
-    elif mode == 1:
-        data = rospy.wait_for_message('/vrpn_client_node/' + youbot_name + '/pose', PoseStamped)
-        
-        current_pose = [0, 0, 0]
-        current_pose[0] = data.pose.position.x
-        current_pose[1] = data.pose.position.y
-        q = (data.pose.orientation.x,
-                data.pose.orientation.y,
-                data.pose.orientation.z,
-                data.pose.orientation.w)
-        (roll, pitch, yaw) = euler_from_quaternion(q)
-        current_pose[2] = yaw
-        return current_pose
+    current_pose[0] = data.pose[youbot_index].position.x
+    current_pose[1] = data.pose[youbot_index].position.y
+    q = (data.pose[youbot_index].orientation.x,
+             data.pose[youbot_index].orientation.y,
+             data.pose[youbot_index].orientation.z,
+             data.pose[youbot_index].orientation.w)
+    (roll, pitch, yaw) = euler_from_quaternion(q)
+    current_pose[2] = yaw
+    return current_pose
 
 #youbot_name: youbot
 def get_youbot_base_pose(youbot_name, mode):
-    if mode == 0:
-        data = rospy.wait_for_message('gazebo/model_states', ModelStates)
-        current_position = [0,0,0]
-        current_orientation = [0,0,0,1]
-        youbot_index = 0
-        for name, data_index in zip(data.name, range(len(data.name))):
-            if name == youbot_name:
-                youbot_index = data_index
+    data = rospy.wait_for_message('gazebo/model_states', ModelStates)
+    current_position = [0,0,0]
+    current_orientation = [0,0,0,1]
+    youbot_index = 0
+    for name, data_index in zip(data.name, range(len(data.name))):
+        if name == youbot_name:
+            youbot_index = data_index
 
 
-        current_position[0] = data.pose[youbot_index].position.x
-        current_position[1] = data.pose[youbot_index].position.y
-        current_position[2] = data.pose[youbot_index].position.z
-        current_orientation[0] = data.pose[youbot_index].orientation.x
-        current_orientation[1] = data.pose[youbot_index].orientation.y
-        current_orientation[2] = data.pose[youbot_index].orientation.z
-        current_orientation[3] = data.pose[youbot_index].orientation.w    
-        return current_position, current_orientation
-    elif mode == 1:
-        data = rospy.wait_for_message('/vrpn_client_node/' + youbot_name + '/pose', PoseStamped)
-        current_position = [0,0,0]
-        current_orientation = [0,0,0,1]
-        current_position[0] = data.pose.position.x
-        current_position[1] = data.pose.position.y
-        current_position[2] = data.pose.position.z
-        current_orientation[0] = data.pose.orientation.x
-        current_orientation[1] = data.pose.orientation.y
-        current_orientation[2] = data.pose.orientation.z
-        current_orientation[3] = data.pose.orientation.w    
-        return current_position, current_orientation
+    current_position[0] = data.pose[youbot_index].position.x
+    current_position[1] = data.pose[youbot_index].position.y
+    current_position[2] = data.pose[youbot_index].position.z
+    current_orientation[0] = data.pose[youbot_index].orientation.x
+    current_orientation[1] = data.pose[youbot_index].orientation.y
+    current_orientation[2] = data.pose[youbot_index].orientation.z
+    current_orientation[3] = data.pose[youbot_index].orientation.w    
+    return current_position, current_orientation
 
 # base_action_name:   "youbot_base/move"
 # work with base_controller.cpp updatePositionMode()
@@ -105,7 +78,7 @@ from velocity_controller import VelocityController
 from geometry_msgs.msg import Twist
 
 # work with velocity_controller.py
-def execute_path_vel_pub(youbot_name, final_path, mode):
+def execute_path_vel_pub(youbot_name, final_path):
     vel_pub = rospy.Publisher('/' + youbot_name + '/robot/cmd_vel', Twist, queue_size=1)
     vc = VelocityController(youbot_name)
     vc.set_path(final_path)
@@ -113,7 +86,7 @@ def execute_path_vel_pub(youbot_name, final_path, mode):
     path_completed = False
     
     while not rospy.is_shutdown() and not path_completed: 
-        msg = vc.get_velocity(mode)  
+        msg = vc.get_velocity()  
         vel_pub.publish(msg)
         if msg.linear.x == 0.0 and msg.linear.y == 0.0 and msg.angular.z == 0.0:
             path_completed = True
@@ -127,9 +100,10 @@ import commands
 from shapely.geometry import Polygon, LinearRing, LineString
 from shapely.ops import unary_union
 
-YOUBOT_SHORT_RADIUS = 0.2  # in meters
-YOUBOT_LONG_RADIUS = 0.32  # in meters
-OFFSET = 0.1
+YOUBOT_SHORT_RADIUS = 0.23  # in meters
+YOUBOT_LONG_RADIUS = 0.38  # in meters
+OFFSET = YOUBOT_LONG_RADIUS - YOUBOT_SHORT_RADIUS
+BACK_DISTANCE = 0.1
 
 TEST = False
 
@@ -167,7 +141,6 @@ def vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles):
     # ===== change orientation of youbot so it can fit in this graph =====
     current_heading = start_heading
     path_with_heading = []
-    is_last_segment_collision = False
     for i in range(len(path) - 1):
         # add path
         path_with_heading.append((path[i].x, path[i].y, current_heading))
@@ -178,7 +151,6 @@ def vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles):
         # find intersections & adjust orientation
         intersections = line.intersection(union_dilated_large_obstacles)
         if not intersections.is_empty:
-            is_last_segment_collision = True
             if not isinstance(intersections, LineString):
                 intersection = intersections[0].coords[0]
             else:
@@ -190,32 +162,24 @@ def vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles):
                 path_with_heading.append((path[i].x, path[i].y, current_heading))
             # if the intersection comes before next path
             else:
-                vector_norm = math.sqrt(vector[0]**2 + vector[1]**2)
-                norm_vector = (vector[0] / vector_norm, vector[1] / vector_norm)
-                offset_vecotr = (norm_vector[0] * OFFSET, norm_vector[1] * OFFSET)
-                intersection_vector = (intersection[0] - path[i].x, intersection[1] - path[i].y)
-                offset_intersection = (intersection[0] - offset_vecotr[0], intersection[1] - offset_vecotr[1])
-                if abs(intersection_vector[0]) + abs(intersection_vector[1]) > abs(offset_vecotr[0]) + abs(offset_vecotr[1]):
-                    path_with_heading.append((offset_intersection[0], offset_intersection[1], current_heading))
-                else:
-                    path_with_heading.append((path[i].x, path[i].y, current_heading))
-        else:
-            is_last_segment_collision = False
-            vector = (path[i+1].x - path[i].x, path[i+1].y - path[i].y)
-            current_heading = math.atan2(vector[1], vector[0])
-    # back up 0.1 meters
-   
-    if abs(goal_heading - current_heading) > math.pi / 4:
-        goal_pos_back_x = path[-1].x - math.cos(goal_heading) * OFFSET
-        goal_pos_back_y = path[-1].y - math.sin(goal_heading) * OFFSET
+                path_with_heading.append((intersection[0], intersection[1], current_heading))
+        # else:
+        #     raise ValueError('base_util, BUG: both points of an edge are not the vertex of polygon!!!!!!')
 
-        path_with_heading.append((path[-1].x, path[-1].y, current_heading))
-        path_with_heading.append((goal_pos_back_x, goal_pos_back_y, goal_heading))
-        path_with_heading.append((path[-1].x, path[-1].y, goal_heading))
-    else:
-        if is_last_segment_collision:
-            path_with_heading.append((path[-1].x, path[-1].y, current_heading))
-        path_with_heading.append((path[-1].x, path[-1].y, goal_heading))
+    if not intersections.is_empty:
+        if not isinstance(intersections, LineString):
+            intersection = intersections[1].coords[0]
+        # else:
+        #     raise ValueError('base_util, BUG: should have two points!!!!!!')
+        # need more time to rotate without collision
+        if abs(abs(goal_heading) - abs(current_heading)) > math.pi / 4:
+            goal_pos_back_x = intersection[0] - math.cos(current_heading) * BACK_DISTANCE
+            goal_pos_back_y = intersection[1] - math.sin(current_heading) * BACK_DISTANCE
+            path_with_heading.append((goal_pos_back_x, goal_pos_back_y, current_heading))   
+            # path_with_heading.append((intersection[0], intersection[1], goal_heading)) 
+        else:
+            path_with_heading.append((intersection[0], intersection[1], current_heading))
+    path_with_heading.append((path[-1].x, path[-1].y, goal_heading))
 
     return path_with_heading, g
 
@@ -226,8 +190,9 @@ def plot_vg_path(obstacles, path, g):
     ax = fig.subplots()
 
     # plot obstacles
+    print(len(obstacles))
     for o in obstacles:
-        plot_line(ax, LinearRing(o))
+        plot_line(ax, LinearRing(o), linewidth=1.5)
           
     # plot visgraph
     for edge in g.visgraph.edges:
@@ -257,6 +222,10 @@ def plot_vg_path(obstacles, path, g):
     # plot orientation
     for point in path:
         ax.plot(point[0], point[1], marker=(2, 1, math.degrees(point[2])-90), markersize=20, linestyle='None')
+
+    ax.set_ylim(-1.5, 6.5)
+    ax.set_xlim(-4, 4)
+    ax.set_aspect("equal")
 
     # # plot offset
     # from shapely.figures import plot_line as plotline
@@ -335,16 +304,20 @@ def plot_edge(ax, x, y, color='gray', zorder=1, linewidth=1, alpha=1):
 
 
 if __name__ == "__main__":
-    start_pos = (10, 2)
-    goal_pos = (4, 9)
+    from arcl_youbot_application.application_util import YoubotEnvironment
+
+    # y = YoubotEnvironment(0, 5, 0, 5)
+    start_pos = (5, 2)
+    goal_pos = (1.2, 2.8)
     obstacles = [[(1, 1), (2, 1), (2, 4), (1, 4)],
                  [(1.5, 5), (2.5, 5), (2.5, 6), (1.5, 6)],
                  [(3, 8), (5, 9), (4.5, 9.5), (2.8, 8.2)],
                  [(5, 3), (6, 3), (6, 4), (6, 5)],
                  [(7, 4), (8, 4), (8, 10), (7, 10)],
                  [(10, 5), (12, 5), (12, 7), (10, 7)]]
+    # obstacles = y.create_scene(20, 10)
     start_heading = 0
-    goal_heading = math.pi / 2
+    goal_heading = 0
     path_with_heading, g = vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles)
 
     plot_vg_path(obstacles, path_with_heading, g)

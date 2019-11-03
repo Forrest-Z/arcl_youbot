@@ -86,10 +86,10 @@ class VelocityController(object):
         self.use_goal_reached_threshold = False
         # self.smooth_velocity = [0, 0, 0]
 
-    def get_velocity(self, mode):
+    def get_velocity(self):
         """ Output velocity based the current position and next target position from the path """
         if self.step < len(self.path):
-            self.current_pos = get_youbot_base_pose2d(self.youbot_name, mode)
+            self.current_pos = get_youbot_base_pose2d(self.youbot_name)
             current_step_pos = self.path[self.step]
             diff_pos = self.compute_difference(current_step_pos, self.current_pos)
             current_step_reached = self.is_current_step_reached(diff_pos)
