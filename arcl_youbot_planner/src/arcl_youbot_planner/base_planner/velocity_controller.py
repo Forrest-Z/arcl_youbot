@@ -89,10 +89,10 @@ class VelocityController(object):
             self.use_goal_reached_threshold = False
         # self.smooth_velocity = [0, 0, 0]
 
-    def get_velocity(self, current_pos):
+    def get_velocity(self, youbot_name, mode):
         """ Output velocity based the current position and next target position from the path """
         if self.step < len(self.path):
-            self.current_pos = current_pos
+            self.current_pos = get_youbot_base_pose2d(youbot_name, mode)
             current_step_pos = self.path[self.step]
             diff_pos = self.compute_difference(current_step_pos, self.current_pos)
             current_step_reached = self.is_current_step_reached(diff_pos)
@@ -115,25 +115,50 @@ class VelocityController(object):
             # self.smooth_velocity[0] = (1.0 - ALPHA) * self.smooth_velocity[0] + ALPHA * velocity[0]
             # self.smooth_velocity[1] = (1.0 - ALPHA) * self.smooth_velocity[1] + ALPHA * velocity[1]
             # self.smooth_velocity[2] = (1.0 - ALPHA) * self.smooth_velocity[2] + ALPHA * velocity[2]
-
+            # velocity = list(self.smooth_velocity)
+            
+            
             # normalization, because we limited velocity
             if velocity[0] != 0 and velocity[1] != 0 and diff_pos[0] != 0 and diff_pos[1] != 0:
                 if abs(velocity[0] / velocity[1] - diff_pos[0] / diff_pos[1]) > 0.01:
                     if abs(velocity[0]) == self.x_pid.output_limits[1] and abs(velocity[1]) == self.y_pid.output_limits[1]:
-                        diff_pos_norm = sqrt(diff_pos[0]**2 + diff_pos[1]**2)
-                        velocity[0] = diff_pos[0] / diff_pos_norm * VEL_MAX
-                        velocity[1] = diff_pos[1] / diff_pos_norm * VEL_MAX
+                        # diff_pos_norm = sqrt(diff_pos[0]**2 + diff_pos[1]**2)
+                        if abs(diff_pos[0] > diff_pos[1]):
+                            velocity[1] = velocity[0] / diff_pos[0] * diff_pos[1]
+                        else:
+                            velocity[0] = diff_pos[0] / diff_pos[1] * velocity[1]
+                        # velocity[0] = diff_pos[0] / diff_pos_norm * VEL_MAX
+                        # velocity[1] = diff_pos[1] / diff_pos_norm * VEL_MAX
                     elif abs(velocity[0]) == self.x_pid.output_limits[1]:
                         velocity[1] = velocity[0] / diff_pos[0] * diff_pos[1]
                     elif abs(velocity[1]) == self.y_pid.output_limits[1]:
                         velocity[0] = diff_pos[0] / diff_pos[1] * velocity[1]
+            # velocity[0] = 0
+            # velocity[2] = 0
+            #print("-----global vel:" + str(self.step) + "-----")
+            #print([velocity[0], velocity[1], velocity[2]])
+            #print("global yaw:" + str(self.current_pos[2]))
+            #print("global test:" + str(diff_pos))
+            # if mode == 1:
+            #     xt = velocity[0] * cos(self.current_pos[2]) - velocity[1] * sin(self.current_pos[2])
+            #     yt = velocity[1] * cos(self.current_pos[2]) + velocity[0] * sin(self.current_pos[2])
+            if mode == 1:    
+                xt = velocity[0]
+                yt = velocity[1]
+                velocity[0] = yt
+                velocity[1] = 0-xt
 
+            #self.velocity.linear.x = 0
             self.velocity.linear.x = velocity[0]
             self.velocity.linear.y = velocity[1]
+            #self.velocity.angular.z = 0
+
             self.velocity.angular.z = velocity[2]
             
+            
+            
             # if velocity[0] > 0.3 or velocity[1] > 0.3:
-            print("-----" + str(self.step) + "-----")
+            print("-----local vel:" + str(self.step) + "-----")
             print(self.current_pos)
             print(current_step_pos)
             print([self.velocity.linear.x, self.velocity.linear.y, self.velocity.angular.z])

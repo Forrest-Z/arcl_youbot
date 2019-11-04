@@ -24,8 +24,8 @@
         <param name="luh_youbot_controller/base_controller_frequency" value="10.0" />
 
     <!-- LAUNCH DRIVER NODE -->
-	<node name="controller_node_2" pkg="luh_youbot_controller" type="controller_node" output="screen" args="youbot_2" />
-	<!-- <node name="controller_node_0" pkg="luh_youbot_controller" type="controller_node" output="screen" args="youbot_0" /> -->
+	<!-- <node name="controller_node_2" pkg="luh_youbot_controller" type="controller_node" output="screen" args="youbot_2" /> -->
+	<node name="controller_node_0" pkg="luh_youbot_controller" type="controller_node" output="screen" args="youbot_0" />
 	<!-- <node name="controller_node_1" pkg="luh_youbot_controller" type="controller_node" output="screen" args="youbot_1" />-->
 
 

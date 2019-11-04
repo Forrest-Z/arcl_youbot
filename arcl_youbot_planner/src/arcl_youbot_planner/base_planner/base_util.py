@@ -112,7 +112,7 @@ def execute_path_vel_pub(youbot_name, final_path, mode):
     path_completed = False
     
     while not rospy.is_shutdown() and not path_completed: 
-        msg = vc.get_velocity(get_youbot_base_pose2d(youbot_name, mode))
+        msg = vc.get_velocity(youbot_name, mode)
         vel_pub.publish(msg)
         if msg.linear.x == 0.0 and msg.linear.y == 0.0 and msg.angular.z == 0.0:
             path_completed = True
