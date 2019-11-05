@@ -1,5 +1,16 @@
 # arcl_youbot
 
+## INSTALL
+
+1. `git clone https://github.com/wt160/arcl_youbot.git`
+
+2. `cd arcl_youbot`
+
+3. `bash install.sh`
+
+4. For youbot only: `bash youbot_ros_variable.sh`
+
+
 Test youbot_pick_demo in gazebo
 
 Command: 
@@ -13,7 +24,7 @@ Command:
 4. `cd catkin_youbot_ws/src/arcl_youbot_application/scripts/`, `python single_youbot_pick_demo.py`
  
 Test base_controller in gazebo
-3, rostopic pub -r 50 /cmd_vel geometry_msgs/Twist  '{linear:  {x: 0.1, y: 0.0, z: 0.0}, angular: {x: 0.0,y: 0.0,z: 0.0}}'
+`rostopic pub -r 50 /cmd_vel geometry_msgs/Twist  '{linear:  {x: 0.1, y: 0.0, z: 0.0}, angular: {x: 0.0,y: 0.0,z: 0.0}}'`
 
 ## Dependency:
 ### Base Planner:
