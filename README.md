@@ -8,7 +8,7 @@
 
 3. `bash install.sh`
 
-4. For youbot only: `bash youbot_ros_variable.sh`
+4. For youbot only: `bash youbot_ros_variable.sh; cd; source .bashrc`
 
 
 Test youbot_pick_demo in gazebo
