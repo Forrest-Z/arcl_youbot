@@ -4,6 +4,8 @@
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
     <arg name="world_name" value="$(find luh_youbot_gazebo)/worlds/youbot_empty.world"/>
     <arg name="gui" default="true" />
+    <arg name="debug" default="true" />
+    <arg name="verbose" default="true" />
   </include>
 
   <!-- Convert an xacro and put on parameter server -->

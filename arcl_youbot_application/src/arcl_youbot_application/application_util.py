@@ -10,7 +10,8 @@ import arcl_youbot_planner.arm_planner.arm_util as arm_util
 import arcl_youbot_planner.base_planner.base_util as base_util
 # import control_msgs.msg.FollowJointTrajectoryActionGoal
 from geometry_msgs.msg import Twist 
-from gazebo_msgs.srv import SpawnModel
+from gazebo_msgs.srv import SpawnModel, SetModelState
+from gazebo_msgs.msg import ModelState
 from geometry_msgs.msg import Pose
 from geometry_msgs.msg import Pose2D
 from std_msgs.msg import String
@@ -29,6 +30,7 @@ import arcl_youbot_planner.arm_planner.prmstar as prmstar
 import arcl_youbot_application.common_util as common_util
 from youbot_forklift_ros_interface.msg import GoToPositionAction, GoToPositionGoal
 import os.path
+from geometry_msgs.msg import PoseStamped
 
 GAZEBO_COLORS = [ 
 "Gazebo/White",
@@ -44,6 +46,7 @@ GAZEBO_COLORS = [
 ]
 
 WALL = [(2.8, -0.3), (0.7, -0.3), (0.7, 0.0), (2.5, 0.0), (2.5, 5.0), (-2.5, 5.0), (-2.5, 0.0), (-0.7, 0.0), (-0.7, -0.3), (-2.8, -0.3), (-2.8, 5.3), (2.8, 5.3), (2.8, 0.0)]
+OPTI_OBJ_SIZE = [(0.04, 0.04, 0.20), (0.04, 0.04, 0.227), (0.04, 0.04, 0.175)]
 
 
 class YoubotEnvironment(): 
@@ -59,8 +62,10 @@ class YoubotEnvironment():
         self.y_max = y_max
         self.object_list = []
         self.planning_scene_msg = PlanningSceneMsg()
+        self.reserved_planning_scene_msg = PlanningSceneMsg()
         self.mode = 0
-
+        self.obj_name_list = ['obj_0', 'obj_1', 'obj_2']
+        
     # filename: ffabsolute path for the environment file
     def import_obj_from_file(self, filename):
         f = open(filename, 'r')
@@ -146,8 +151,23 @@ class YoubotEnvironment():
 
         self.object_list.append(WALL)
 
-    def import_obj_from_optitrack():
-        pass
+    def import_obj_from_optitrack(self):
+        for obj_name, obj_index in zip(self.obj_name_list, range(len(self.obj_name_list))):
+            data = rospy.wait_for_message('/vrpn_client_node/' + obj_name + '/pose', PoseStamped)
+            
+            current_pose = [0, 0, 0]
+            current_pose[0] = data.pose.position.x
+            current_pose[1] = data.pose.position.y
+            q = (data.pose.orientation.x,
+                    data.pose.orientation.y,
+                    data.pose.orientation.z,
+                    data.pose.orientation.w)
+            (roll, pitch, yaw) = euler_from_quaternion(q)
+            print('yaw:' + str(yaw))
+            current_pose[2] = yaw
+            current_poly = common_util.generate_poly(current_pose[0], current_pose[1], yaw, OPTI_OBJ_SIZE[obj_index][2]/2.0, OPTI_OBJ_SIZE[obj_index][0]/2.0)
+            current_poly_list = list(current_poly.exterior.coords)
+            self.object_list.append(current_poly_list)
 
     def manipulation_action_done_cb(self, goal_state, result):
         print("manipulationaction returned")
@@ -243,6 +263,7 @@ class YoubotEnvironment():
             scene_object.dy = size[1]
             scene_object.dz = size[2]
             self.planning_scene_msg.scene_object_list.append(scene_object)
+            self.reserved_planning_scene_msg.scene_object_list.append(scene_object)
 
     def update_env(self, deleted_obj):
         deleted_obj_index = self.object_list.index(deleted_obj)        
@@ -251,6 +272,7 @@ class YoubotEnvironment():
         print("planning_scene_msg size:" + str(len(self.planning_scene_msg.scene_object_list)))
         self.planning_scene_msg.scene_object_list.remove(deleted_obj_msg)
         print("planning_scene_msg size:" + str(len(self.planning_scene_msg.scene_object_list)))
+        raw_input("wait")
 
     def move_to_target(self, youbot_name, target_pose):
         current_pos_2d = base_util.get_youbot_base_pose2d(youbot_name, self.mode)
@@ -282,7 +304,7 @@ class YoubotEnvironment():
         # path_with_heading = vg.vg_youbot_path.add_orientation(path, start_heading, goal_heading)
         # path_with_heading = base_util.add_orientation(path, start_heading, goal_heading)
 
-        base_util.plot_vg_path(obstacles, path_with_heading, g)
+        # base_util.plot_vg_path(obstacles, path_with_heading, g)
 
         # base_util.execute_path(youbot_name, path_with_heading, "/youbot_base/move")
         base_util.execute_path_vel_pub(youbot_name, path_with_heading, self.mode)
@@ -309,11 +331,33 @@ class YoubotEnvironment():
         # path_with_heading = vg.vg_youbot_path.add_orientation(path, start_heading, goal_heading)
         path_with_heading = base_util.add_orientation(path, start_heading, goal_heading)
 
-        base_util.plot_vg_path(obstacles, path_with_heading, g)
+        # base_util.plot_vg_path(obstacles, path_with_heading, g)
 
         base_util.execute_path(youbot_name, path_with_heading, "youbot_base/move")
         # call base planner
         # execute_path
+
+    # joint_target in the range of [0, 5]
+    def move_arm_to_joint(self, youbot_name, joint_target):
+        physicsClient = p.connect(p.DIRECT)#or p.DIRECT for non-graphical version
+        p.setAdditionalSearchPath(pybullet_data.getDataPath()) #optionally
+        p.setGravity(0,0,-10)
+        prmstar_planner = None
+        my_path = os.path.abspath(os.path.dirname(__file__))
+        my_path = os.path.join(my_path, "../../../luh_youbot_description/robots/youbot_0.urdf")
+        print(my_path)
+        prmstar_planner = prmstar.PRMStarPlanner(p, my_path)
+        #prmstar.build_roadmap()
+        prmstar_planner.remove_obstacles()
+        prmstar_planner.import_obstacles(self.object_list)
+        robot_position, robot_orientation = base_util.get_youbot_base_pose(youbot_name, self.mode)
+        prmstar_planner.set_robot_pose(robot_position, robot_orientation)
+
+        start = arm_util.get_current_joint_pos(youbot_name)
+        #plan and move arm to pre_pick_pos
+        [final_path, final_cost] = prmstar_planner.path_plan(tuple(start), tuple(joint_target))
+        # raw_input("finished path planning, check path")
+        arm_util.execute_path(youbot_name, final_path)
 
     def pick_object(self, youbot_name, pick_joint_value, pre_pick_joint_value):
         physicsClient = p.connect(p.DIRECT)#or p.DIRECT for non-graphical version
@@ -325,9 +369,9 @@ class YoubotEnvironment():
         print(my_path)
         prmstar_planner = prmstar.PRMStarPlanner(p, my_path)
         #prmstar.build_roadmap()
-
+        prmstar_planner.remove_obstacles()
         prmstar_planner.import_obstacles(self.object_list)
-        robot_position, robot_orientation = base_util.get_youbot_base_pose(youbot_name)
+        robot_position, robot_orientation = base_util.get_youbot_base_pose(youbot_name, self.mode)
         prmstar_planner.set_robot_pose(robot_position, robot_orientation)
 
         start = arm_util.get_current_joint_pos(youbot_name)
@@ -351,7 +395,7 @@ class YoubotEnvironment():
         arm_util.execute_path(youbot_name, final_path)
         print("moved to the pick pose")
 
-        arm_util.set_gripper_width("youbot_0", 0.01)
+        arm_util.set_gripper_width("youbot_0", 0.00)
         rospy.sleep(rospy.Duration.from_sec(10.0))
 
         #directly retract arm to pre_pick_pos
@@ -359,6 +403,39 @@ class YoubotEnvironment():
         [final_path, final_cost] = prmstar_planner.direct_path(tuple(start), tuple(pre_pick_joint_value))
         arm_util.execute_path(youbot_name, final_path)
         print("moved back to the pre_pick pose")
+
+
+    def drop_object(self, obj_name):
+        arm_util.set_gripper_width("youbot_0", 0.068)
+        deserted_pose = Pose()
+        deserted_pose.position.x = 0
+        deserted_pose.position.y = -10
+        deserted_pose.position.z = 0.1
+        deserted_pose.orientation.x = 0
+        deserted_pose.orientation.y = 0
+        deserted_pose.orientation.z = 0
+        deserted_pose.orientation.w = 1
+        rospy.sleep(rospy.Duration(3, 0))
+        self.set_obj_pose(obj_name, deserted_pose)
+
+    def set_obj_pose(self, obj_name, pose):
+        rospy.wait_for_service('/gazebo/set_model_state')
+        try:
+            set_obj_pose = rospy.ServiceProxy('/gazebo/set_model_state', SetModelState)
+            target_model_state = ModelState()
+            target_model_state.model_name = obj_name
+            target_model_state.reference_frame = "world"
+            target_model_state.pose.position.x = pose.position.x
+            target_model_state.pose.position.y = pose.position.y
+            target_model_state.pose.position.z = pose.position.z
+            target_model_state.pose.orientation.x = pose.orientation.x
+            target_model_state.pose.orientation.y = pose.orientation.y
+            target_model_state.pose.orientation.z = pose.orientation.z
+            target_model_state.pose.orientation.w = pose.orientation.w
+            set_obj_pose(target_model_state)
+            
+        except rospy.ServiceException, e:
+            print "Service call failed: %s"%e
 
     def forklift_done_cb(self, goal_state, result):
         print("Fork Lift GoToPosition returned")

@@ -135,10 +135,9 @@ class VelocityController(object):
                         velocity[0] = diff_pos[0] / diff_pos[1] * velocity[1]
             # velocity[0] = 0
             # velocity[2] = 0
-            #print("-----global vel:" + str(self.step) + "-----")
-            #print([velocity[0], velocity[1], velocity[2]])
-            #print("global yaw:" + str(self.current_pos[2]))
-            #print("global test:" + str(diff_pos))
+            # print("-----global vel:" + str(self.step) + "-----")
+            # print([velocity[0], velocity[1], velocity[2]])
+            # print("global yaw:" + str(self.current_pos[2]))
             # if mode == 1:
             #     xt = velocity[0] * cos(self.current_pos[2]) - velocity[1] * sin(self.current_pos[2])
             #     yt = velocity[1] * cos(self.current_pos[2]) + velocity[0] * sin(self.current_pos[2])
@@ -156,12 +155,11 @@ class VelocityController(object):
             self.velocity.angular.z = velocity[2]
             
             
-            
-            # if velocity[0] > 0.3 or velocity[1] > 0.3:
-            print("-----local vel:" + str(self.step) + "-----")
-            print(self.current_pos)
-            print(current_step_pos)
-            print([self.velocity.linear.x, self.velocity.linear.y, self.velocity.angular.z])
+        
+            # print("-----local vel:" + str(self.step) + " / " + str(len(self.path)) + "-----")
+            # print(self.current_pos)
+            # print(current_step_pos)
+            # print([self.velocity.linear.x, self.velocity.linear.y, self.velocity.angular.z])
         else:
             self.velocity.linear.x = 0
             self.velocity.linear.y = 0

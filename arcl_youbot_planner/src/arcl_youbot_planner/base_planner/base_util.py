@@ -131,7 +131,7 @@ YOUBOT_LONG_RADIUS = 0.38  # in meters
 OFFSET = YOUBOT_LONG_RADIUS - YOUBOT_SHORT_RADIUS
 BACK_DISTANCE = 0.1
 
-TEST = False
+TEST = True
 
 
 def vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles):
@@ -140,7 +140,7 @@ def vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles):
     """
 
     # ===== create free configuration space =====
-    cpu_cores = int(commands.getstatusoutput('cat /proc/cpuinfo | grep processor | wc -l')[1])
+    #cpu_cores = int(commands.getstatusoutput('cat /proc/cpuinfo | grep processor | wc -l')[1])
     # enlarged obstacles based on YOUBOT_SHORT_RADIUS, join_style=2 flat, join_style=1 round
     dilated_obstacles = [Polygon(obs).buffer(YOUBOT_SHORT_RADIUS, join_style=2, mitre_limit=1.5) for obs in obstacles]
     # enlarged obstacles based on YOUBOT_LONG_RADIUS, join_style=2 flat, join_style=1 round
@@ -161,7 +161,8 @@ def vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles):
     if TEST:
         g.build(polygons)
     else:
-        g.build(polygons, workers=cpu_cores)
+        pass
+       # g.build(polygons, workers=cpu_cores)
     path = g.shortest_path(vg.Point(start_pos[0], start_pos[1]), vg.Point(goal_pos[0], goal_pos[1]))
 
     # ===== change orientation of youbot so it can fit in this graph =====
@@ -183,6 +184,12 @@ def vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles):
                 intersection = intersections.coords[0]
             vector = (path[i+1].x - path[i].x, path[i+1].y - path[i].y)
             current_heading = math.atan2(vector[1], vector[0])
+            if abs(goal_heading - current_heading) > math.pi / 2:
+                current_heading = current_heading - math.pi
+            if current_heading > math.pi:
+                current_heading -= 2*math.pi
+            elif current_heading < -math.pi:
+                current_heading += 2*math.pi
             # if the vector starts inside a polygon (shapely returns intersection == path[i])
             if intersection == (path[i].x, path[i].y):
                 path_with_heading.append((path[i].x, path[i].y, current_heading))
@@ -249,7 +256,7 @@ def plot_vg_path(obstacles, path, g):
     for point in path:
         ax.plot(point[0], point[1], marker=(2, 1, math.degrees(point[2])-90), markersize=20, linestyle='None')
 
-    ax.set_ylim(-1.5, 6.5)
+    ax.set_ylim(-5.5, 6.5)
     ax.set_xlim(-4, 4)
     ax.set_aspect("equal")
 
