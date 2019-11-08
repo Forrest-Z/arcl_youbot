@@ -127,7 +127,7 @@ class VisGraph(object):
         if not dest_exists:
             dest_polygon_id, check_point = self.dest_closest_point_on_polygon(destination)
             if dest_polygon_id != -1:
-                raise ValueError('vis_graph, BUG: goal point is inside of a polygon!!!!!!')
+                # raise ValueError('vis_graph, BUG: goal point is inside of a polygon!!!!!!')
                 add_to_visg.add_edge(Edge(destination, check_point))
             for v in visible_vertices(check_point, self.graph, origin=orgn):
                 add_to_visg.add_edge(Edge(check_point, v))

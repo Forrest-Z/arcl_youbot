@@ -267,6 +267,7 @@ void ManipulationServer::goalCB()
     srv.request.dx = target_dx;
     srv.request.dy = target_dy;
     srv.request.dz  =target_dz;
+    ROS_WARN_STREAM("target_object_pose:"<<target_object_pose_.position.x<<","<<target_object_pose_.position.y);
     //ros::Publisher fly_gripper_pub = nh_.advertise<geometry_msgs::Pose>("/vrep/fly_gripper", 1000);
     youbot_grasp::PlannedGrasp_vector planned_grasp_vector;
     double normal_x, normal_y, normal_z;
@@ -342,7 +343,7 @@ void ManipulationServer::goalCB()
                     //the gripper pose is vertical down, the base could be on any direction depending on q5
                     if(theta - M_PI < 0.1 && theta - M_PI > -0.1){
                         #ifdef DEBUG_
-                            ROS_INFO_STREAM("gripper is arm_upright");
+                            //ROS_INFO_STREAM("gripper is arm_upright");
                         #endif
                         arm_upright = true;
 
@@ -352,7 +353,7 @@ void ManipulationServer::goalCB()
                             
                             q5 += ykin::JOINT_OFFSETS[4];
                             #ifdef DEBUG_
-                            ROS_INFO_STREAM("testing with q5 = "<<q5);
+                            //ROS_INFO_STREAM("testing with q5 = "<<q5);
                             #endif
                             //q5 = 0 - q5;
                             cylin_test.setQ1(q1);
@@ -369,7 +370,7 @@ void ManipulationServer::goalCB()
                             // === Robot Base collision check with the environment ===
                             FromGraspPoseToBasePose(gripper_pose, gripper_dir, cylin_r, q1, q5, theta, base_pose);
                             #ifdef DEBUG_
-                                ROS_INFO_STREAM("base_pose:"<<base_pose.position.x<<","<<base_pose.position.y<<","<<base_pose.position.z);
+                                ROS_INFO_STREAM("check base_pose:"<<base_pose.position.x<<","<<base_pose.position.y<<","<<base_pose.position.z);
                             #endif
                             
                             arc::polygon_2 base_poly;
@@ -380,10 +381,10 @@ void ManipulationServer::goalCB()
     	                    std::string name = ss.str();
                             int space;
                             // === Robot Base collision check with the environment ===
-                            //arc::gazeboUtility::spawnPassThroughCuboid(nh_, YOUBOT_BASE_LENGTH, 
-		                    //YOUBOT_BASE_WIDTH, 0.002, base_pose, name, false);
+                            // arc::gazeboUtility::spawnPassThroughCuboid(nh_, YOUBOT_BASE_LENGTH, 
+		                    // YOUBOT_BASE_WIDTH, 0.002, base_pose, name, false);
                         //std::cin>>space;
-                            if(!base_planning_scene.isCollisionFree(base_poly))
+                            if(!base_planning_scene.isCollisionFreeSlow(base_poly))
                             {
                                 is_base_q5_ok = false;
                             }
@@ -480,6 +481,7 @@ void ManipulationServer::goalCB()
 
                     for(int p = 0; p < final_base_pose_list.size(); p++){
                         temp_dist = sqrt((final_base_pose_list[p].position.x - rest_base_pose_.position.x)*(final_base_pose_list[p].position.x - rest_base_pose_.position.x) + (final_base_pose_list[p].position.y - rest_base_pose_.position.y)*(final_base_pose_list[p].position.y - rest_base_pose_.position.y));
+                        ROS_WARN_STREAM("base_pose:"<<final_base_pose_list[p].position.x<<","<<final_base_pose_list[p].position.y<<", temp_dist:"<<temp_dist);
                         if(temp_dist < shortest_dist_to_rest){
                             shortest_dist_to_rest = temp_dist;
                             base_pose = final_base_pose_list[p];

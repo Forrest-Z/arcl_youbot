@@ -197,25 +197,21 @@ namespace gazebo
     float roll = pose.Rot().Roll();
     float pitch = pose.Rot().Pitch();
     float yaw = pose.Rot().Yaw();
-    
-    //test
-    //ROS_INFO("%.2f %.2f %.2f %.2f %.2f %.2f",pose.pos.x,pose.pos.y,pose.pos.z,roll,pitch,yaw);
-    //if (pose.pos.z >= 0.09){
-    //    base_link_->SetWorldPose(math::Pose(pose.pos.x,pose.pos.y,0.08,roll,pitch,yaw));
-    //}
-    
-    double xt = x_ * cosf(yaw) - y_ * sinf(yaw);
-    double yt = y_ * cosf(yaw) + x_ * sinf(yaw);
-    double vel_factor = 1.0;
-    base_link_->SetAngularVel(ignition::math::Vector3d(0.0, 0.0, rot_));
-    base_link_->SetLinearVel(ignition::math::Vector3d(xt, yt, -0.0));
+
+    if(fabs(roll) < 0.001 && fabs(pitch) < 0.001)
+    {
+        float yaw = pose.Rot().Yaw();
+        double xt = x_ * cosf(yaw) - y_ * sinf(yaw);
+        double yt = y_ * cosf(yaw) + x_ * sinf(yaw);
+        base_link_->SetLinearVel(ignition::math::Vector3d(xt, yt, 0));
+        base_link_->SetAngularVel(ignition::math::Vector3d(0, 0, rot_));
+    }
 
     // set wheel velocity
-    
-    // wheel_joints_[0]->SetVelocity(0, base_kin_inv_[0] * x_ + base_kin_inv_[1]  * y_ + base_kin_inv_[2]  * rot_);
-    // wheel_joints_[1]->SetVelocity(0, base_kin_inv_[3] * x_ + base_kin_inv_[4]  * y_ + base_kin_inv_[5]  * rot_);
-    // wheel_joints_[2]->SetVelocity(0, base_kin_inv_[6] * x_ + base_kin_inv_[7]  * y_ + base_kin_inv_[8]  * rot_);
-    // wheel_joints_[3]->SetVelocity(0, base_kin_inv_[9] * x_ + base_kin_inv_[10] * y_ + base_kin_inv_[11] * rot_);
+    wheel_joints_[0]->SetVelocity(0, base_kin_inv_[0] * x_ + base_kin_inv_[1]  * y_ + base_kin_inv_[2]  * rot_);
+    wheel_joints_[1]->SetVelocity(0, base_kin_inv_[3] * x_ + base_kin_inv_[4]  * y_ + base_kin_inv_[5]  * rot_);
+    wheel_joints_[2]->SetVelocity(0, base_kin_inv_[6] * x_ + base_kin_inv_[7]  * y_ + base_kin_inv_[8]  * rot_);
+    wheel_joints_[3]->SetVelocity(0, base_kin_inv_[9] * x_ + base_kin_inv_[10] * y_ + base_kin_inv_[11] * rot_);
 
     // publish odometry
     if (odometry_rate_ > 0.0) {

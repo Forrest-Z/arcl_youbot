@@ -209,15 +209,25 @@ class PRMStarPlanner():
     def import_obstacles(self, object_list):
         self.object_list = object_list
         # self.object_position = 
-        for obj in self.object_list:
+        for obj in self.object_list[0:-1]:
             size, position, quaternion = common_util.get_info_from_cube(obj)
 
             obj_collision_id = self.p_client.createCollisionShape(shapeType=p.GEOM_BOX, halfExtents=size)
             obj_pybullet_id = self.p_client.createMultiBody(baseCollisionShapeIndex=obj_collision_id, basePosition=position, baseOrientation=quaternion)
+            print("adding object " + str(obj_pybullet_id))
             self.object_pybullet_id_list.append(obj_pybullet_id)
             self.object_position_list.append(position)
             self.object_orientation_list.append(quaternion)
             self.object_size_list.append(size)
+
+    def remove_obstacles(self):
+        for obj_id in self.object_pybullet_id_list:
+            self.p_client.removeBody(obj_id)
+        self.object_position_list[:] = []
+        self.object_pybullet_id_list[:] = []
+        self.object_orientation_list[:] = []
+        self.object_size_list[:] = []
+
 
     def set_robot_pose2d(self, pose2d):
         self.robot_pose2d = pose2d   

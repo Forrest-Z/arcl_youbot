@@ -64,11 +64,11 @@ void PlanningScene::InitFromMsg(arcl_youbot_application::PlanningSceneMsg msg)
 
 void PlanningScene::printDebugInfo()
 {
-	//ROS_WARN_STREAM("DEBUG PlanningScene:");
+	ROS_WARN_STREAM("DEBUG PlanningScene:");
 	for(auto i = scene_object_list_.begin();i != scene_object_list_.end();i ++){
 		geometry_msgs::Pose temp;
 		(*i)->getObjectPose(temp);
-	//	ROS_WARN_STREAM("object name:"<<(*i)->object_name_<<", object pose:"<<temp.position.x<<","<<temp.position.y<<","<<temp.position.z<<", size:"<<(*i)->length_<<","<<(*i)->width_<<","<<(*i)->height_);
+		ROS_WARN_STREAM("object name:"<<(*i)->object_name_<<", object pose:"<<temp.position.x<<","<<temp.position.y<<","<<temp.position.z<<", size:"<<(*i)->length_<<","<<(*i)->width_<<","<<(*i)->height_);
 	}
 }
 
@@ -1466,8 +1466,8 @@ bool PlanningScene::isCollisionFree(const polygon_2& robot, bool debugInfo)
 	box_2 robotBoundingBox = 
 		bg::return_envelope<box_2, polygon_2>(robot);
 
-	std::cout << "Polygon to be checked " << bg::dsv(robot) << std::endl;
-	std::cout << "Its bounding box " << bg::dsv(robotBoundingBox) << std::endl;
+	//std::cout << "Polygon to be checked " << bg::dsv(robot) << std::endl;
+	//std::cout << "Its bounding box " << bg::dsv(robotBoundingBox) << std::endl;
 
 	int minXI, maxXI, minYI, maxYI;
 	point_2 min_corner = robotBoundingBox.min_corner();
@@ -1475,7 +1475,7 @@ bool PlanningScene::isCollisionFree(const polygon_2& robot, bool debugInfo)
 	getCollisionArrayIndices(minXI, maxXI, minYI, maxYI, min_corner.get<0>(), 
 		max_corner.get<0>(), min_corner.get<1>(), max_corner.get<1>());
 
-	std::cout << minXI << " " << maxXI << " " << minYI << " " << maxYI << std::endl;		
+	// std::cout << minXI << " " << maxXI << " " << minYI << " " << maxYI << std::endl;		
 
 	// Compute possible collisions. Logic: 
 	// 1. for each possibly affected cell, check whether the robot is actually in the cell 
@@ -1493,7 +1493,7 @@ bool PlanningScene::isCollisionFree(const polygon_2& robot, bool debugInfo)
 				for(std::vector<PlanningSceneObject*>::iterator it = scene_object_pointers_[ix][iy].begin();
 					it != scene_object_pointers_[ix][iy].end(); it++)
 				{
-					ROS_WARN_STREAM("checking object:"<<(*it)->object_name_);
+					//ROS_WARN_STREAM("checking object:"<<(*it)->object_name_);
 				//	fran fran_;
 					// Some logic to avoid checking the same obstacle mutliple times
 					if(checkedObstacleSet.find((*it)->object_id_) == checkedObstacleSet.end())
@@ -1501,7 +1501,7 @@ bool PlanningScene::isCollisionFree(const polygon_2& robot, bool debugInfo)
 						point_2 object_center, robot_center;
 						bg::centroid((*it)->object_footprint_, object_center);
 						if(bg::within(object_center, robot)){
-							ROS_WARN_STREAM((*it)->object_name_ <<"object center is within robot ");
+							//ROS_WARN_STREAM((*it)->object_name_ <<"object center is within robot ");
 							return false;
 						}
 						// Check collision of the bounding boxes first 
