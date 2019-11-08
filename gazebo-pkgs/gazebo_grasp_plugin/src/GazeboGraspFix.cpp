@@ -470,7 +470,7 @@ bool CheckGrip(const std::vector<GzVector3> &forces,
       GzVector3 v2 = *it2;
       float l1 = gazebo::GetLength(v1);
       float l2 = gazebo::GetLength(v2);
-      if ((l1 < 1e-04) || (l2 < 1e-04)) continue;
+      // if ((l1 < 1e-04) || (l2 < 1e-04)) continue;
       /*GzVector3 _v1=v1;
       GzVector3 _v2=v2;
       _v1/=l1;
@@ -480,18 +480,18 @@ bool CheckGrip(const std::vector<GzVector3> &forces,
       std::cout<<"v2:"<<gazebo::GetX(v2)<<","<<gazebo::GetY(v2)<<","<<gazebo::GetZ(v2)<<std::endl;
       float angle = AngularDistance(v1, v2);
       gzmsg<<"Angular distance between v1.len="<<gazebo::GetLength(v1)<<" and v2.len="<<gazebo::GetLength(v2)<<": "<<angle*180/M_PI<<std::endl;
-      if (angle > minAngleDiff)
-      {
+      // (angle > minAngleDiff)
+      //{
         float ratio;
         if (l1 > l2) ratio = l2 / l1;
         else ratio = l1 / l2;
         gzmsg<<"Got angle "<<angle<<", ratio "<<ratio<<std::endl;
-        if (ratio >= lengthRatio)
-        {
+        //if (ratio >= lengthRatio)
+        //{
           gzmsg<<"CheckGrip() is true"<<std::endl;
           return true;
-        }
-      }
+        //}
+      //}
     }
   }
   return false;

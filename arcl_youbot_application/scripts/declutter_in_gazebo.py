@@ -14,10 +14,18 @@ if __name__ == "__main__":
     env.mode = 0
     #import object list from file
     my_path = os.path.abspath(os.path.dirname(__file__))
-    env.import_obj_from_file(os.path.join(my_path, "scatter/new.txt"))
+    env.import_obj_from_file(os.path.join(my_path, "scatter/new_1.txt"))
     #env.create_scene(20, 5)
     #env.export_obj_to_file(os.path.join(my_path, "scatter/new.txt"))
-    pick_index_list = [10, 8, 9, 4, 11, 0, 12, 7, 5, 6, 14, 2, 1, 13, 16,15, 3, 17, 18, 19]
+    # pick_index_list = [8, 9, 4, 0, 7, 5, 6, 2, 1, 3]
+    # pick_index_list = [0, 6, 4, 5, 2, 1, 3]
+    # pick_index_list = [5, 3, 4, 1, 0, 2]
+    # pick_index_list = [3, 4, 1, 0, 2]
+    # pick_index_list = [3, 1, 0, 2]
+    # pick_index_list = [0, 1]
+    pick_index_list = [0]
+
+
     #spawn the objects in gazebo, and generate the planningscene msg 
     env.generate_obj_in_gazebo()
 
@@ -39,7 +47,9 @@ if __name__ == "__main__":
     target_base_pose.orientation.z = 0
     target_base_pose.orientation.w = 1
 
-
+    reserved_object_list = []
+    for test_obj in env.object_list:
+        reserved_object_list.append(test_obj)
     arm_up_joint = [202/180.0*math.pi, 65/180.0*math.pi, -146 / 180.0 * math.pi, 102.5 / 180.0 * math.pi, 172 / 180.0 * math.pi]
     env.move_arm_to_joint("youbot_0", arm_up_joint)
     for index in pick_index_list:
@@ -50,8 +60,9 @@ if __name__ == "__main__":
         pick_joint_value = [env.grasp_plan_result.q1, env.grasp_plan_result.q2, env.grasp_plan_result.q3, env.grasp_plan_result.q4, env.grasp_plan_result.q5]
         pre_pick_joint_value = [env.grasp_plan_result.q1_pre, env.grasp_plan_result.q2_pre, env.grasp_plan_result.q3_pre, env.grasp_plan_result.q4_pre, env.grasp_plan_result.q5_pre]    
         env.pick_object("youbot_0", pick_joint_value, pre_pick_joint_value)
-        env.update_env(env.object_list[index])
+        env.update_env(reserved_object_list[index])
 
         env.move_to_target("youbot_0", rest_base_pose)
         env.drop_object('obj_' + str(index))
         env.move_arm_to_joint("youbot_0", arm_up_joint)
+        raw_input("wait")
