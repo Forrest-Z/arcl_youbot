@@ -287,10 +287,10 @@ def plot_edge(ax, x, y, color='gray', zorder=1, linewidth=1, alpha=1):
 
 
 
-# import sys, signal
-# def signal_handler(signal, frame):
-#     print("\nprogram exiting gracefully")
-#     sys.exit(0)
+import sys, signal
+def signal_handler(signal, frame):
+    print("\nprogram exiting gracefully")
+    sys.exit(0)
 
 # signal.signal(signal.SIGINT, signal_handler)
 

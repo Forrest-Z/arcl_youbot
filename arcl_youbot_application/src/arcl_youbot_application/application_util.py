@@ -297,7 +297,10 @@ class YoubotEnvironment():
         print(start_pos, start_heading)
         print("goal:")
         print(goal_pos, goal_heading)
+        import time
+        start_time = time.time()
         path_with_heading, g = base_util.vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles)
+        print("time: " + str(time.time() - start_time))
         print("path:")
         print(path_with_heading)
         
