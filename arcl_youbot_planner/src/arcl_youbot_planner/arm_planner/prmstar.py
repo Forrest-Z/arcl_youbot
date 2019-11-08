@@ -16,7 +16,7 @@ import os.path
 
 SAMPLE_NUM = 500
 ROBOT_COLLISION_CHECK_RADIUS = 0.7
-PATH_PLAN_TRYING_MAX = 30
+PATH_PLAN_TRYING_MAX = 60
 
 
 class PRMStarPlanner():
@@ -91,6 +91,9 @@ class PRMStarPlanner():
         path.append(goal)
         return path, 0
 
+    def set_current_goal_index(self, goal_index):
+        self.goal_index = goal_index
+
     def path_plan(self, start, goal):
         start_arr = np.asarray(start)
         goal_arr = np.asarray(goal)
@@ -122,6 +125,9 @@ class PRMStarPlanner():
 
         self.p_client.resetBasePositionAndOrientation(self.robot_id, self.robot_position, self.robot_orientation)
 
+        
+
+
         is_path_in_collision = True
         path_plan_trying_times = 0
         path = []
@@ -134,10 +140,18 @@ class PRMStarPlanner():
             # print("result path_vertex_list:")
             # print(path_vertex_list)
             close_obj_index_list = []
+            closest_dist = 10000000
+            closest_index = 0
+            for obj_pos, obj_index in zip(self.object_position_list, range(len(self.object_position_list))):
+                if math.sqrt(math.pow(obj_pos[0] - self.robot_position[0], 2) + math.pow(obj_pos[1] - self.robot_position[1], 2)) < closest_dist:
+                    closest_index = obj_index
+                    closest_dist = math.sqrt(math.pow(obj_pos[0] - self.robot_position[0], 2) + math.pow(obj_pos[1] - self.robot_position[1], 2))
             for obj_pos, obj_index in zip(self.object_position_list, range(len(self.object_position_list))):
                 if math.sqrt(math.pow(obj_pos[0] - self.robot_position[0], 2) + math.pow(obj_pos[1] - self.robot_position[1], 2)) < ROBOT_COLLISION_CHECK_RADIUS:
                     close_obj_index_list.append(obj_index)
-            
+            if len(close_obj_index_list) > 0:
+                print("cloest index:" + str(closest_index))
+                close_obj_index_list.remove(closest_index)
             
             is_path_in_collision, self_collision_edge_list, external_collision_edge_list = self.check_path_collision(path, path_vertex_list, close_obj_index_list)
             if is_path_in_collision:
@@ -192,6 +206,9 @@ class PRMStarPlanner():
                         break
                     is_this_seg_external_collision = False
                     for obj_index in close_obj_index_list:
+                        print("robot_id:" + str(self.robot_id))
+                        print("obj_id:" + str(self.object_pybullet_id_list[obj_index]))
+                        print("obj pos:" + str(self.object_position_list[obj_index][0]) + "," + str(self.object_position_list[obj_index][1]))
                         external_collision_list = self.p_client.getContactPoints(self.robot_id, self.object_pybullet_id_list[obj_index])
                         if len(external_collision_list) > 0:
                             print("exist external collision")

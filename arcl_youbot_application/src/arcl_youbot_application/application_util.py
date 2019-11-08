@@ -236,7 +236,8 @@ class YoubotEnvironment():
             size = [short_length, short_length,long_length]
             position = [center_x, center_y, short_length / 2.0]
             quaternion = [qx, qy, qz, qw]
-            color = GAZEBO_COLORS[obj_index % len(GAZEBO_COLORS)]
+            # color = GAZEBO_COLORS[obj_index % len(GAZEBO_COLORS)]
+            color = GAZEBO_COLORS[0]            
             object_name = "obj_" + str(obj_index)
             common_util.spawnCuboid(size, position, quaternion, color, object_name)
 
@@ -266,13 +267,17 @@ class YoubotEnvironment():
             self.reserved_planning_scene_msg.scene_object_list.append(scene_object)
 
     def update_env(self, deleted_obj):
+        print(deleted_obj)
         deleted_obj_index = self.object_list.index(deleted_obj)        
+        print(self.object_list)
         self.object_list.remove(deleted_obj)
+        print("update_env:" + str(deleted_obj_index))
+        print("planning_scene_msg size:" + str(len(self.planning_scene_msg.scene_object_list)))
         deleted_obj_msg = self.planning_scene_msg.scene_object_list[deleted_obj_index]
         print("planning_scene_msg size:" + str(len(self.planning_scene_msg.scene_object_list)))
         self.planning_scene_msg.scene_object_list.remove(deleted_obj_msg)
         print("planning_scene_msg size:" + str(len(self.planning_scene_msg.scene_object_list)))
-        raw_input("wait")
+        # raw_input("wait")
 
     def move_to_target(self, youbot_name, target_pose):
         current_pos_2d = base_util.get_youbot_base_pose2d(youbot_name, self.mode)
@@ -369,6 +374,7 @@ class YoubotEnvironment():
         print(my_path)
         prmstar_planner = prmstar.PRMStarPlanner(p, my_path)
         #prmstar.build_roadmap()
+
         prmstar_planner.remove_obstacles()
         prmstar_planner.import_obstacles(self.object_list)
         robot_position, robot_orientation = base_util.get_youbot_base_pose(youbot_name, self.mode)
@@ -396,7 +402,7 @@ class YoubotEnvironment():
         print("moved to the pick pose")
 
         arm_util.set_gripper_width("youbot_0", 0.00)
-        rospy.sleep(rospy.Duration.from_sec(10.0))
+        rospy.sleep(rospy.Duration.from_sec(5.0))
 
         #directly retract arm to pre_pick_pos
         start = arm_util.get_current_joint_pos(youbot_name)
