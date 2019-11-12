@@ -11,40 +11,90 @@ from arcl_youbot_msgs.msg import MoveBaseAction, MoveBaseGoal
 from gazebo_msgs.msg import ModelStates
 from tf.transformations import euler_from_quaternion
 from geometry_msgs.msg import PoseStamped
+from velocity_controller import VelocityController
+from geometry_msgs.msg import Twist
 
 #youbot_name: youbot
-def get_youbot_base_pose2d(youbot_name, mode):
-    if mode == 0:
-        data = rospy.wait_for_message('gazebo/model_states', ModelStates)
-        current_pose = [0,0,0]
+
+class BaseController():
+
+    def __init__(self, youbot_name):
+        self.is_pose_received = False
+        self.current_pose_2d = [0,0,0]
+        self.youbot_name = youbot_name
+
+        self.vel_pub = rospy.Publisher('/' + youbot_name + '/robot/cmd_vel', Twist, queue_size=1)
+        rospy.Subscriber('/gazebo/model_states', ModelStates, self.base_pose2d_callback, [youbot_name])
+
+    def base_pose2d_callback(self, data, args):
         youbot_index = 0
+
         for name, data_index in zip(data.name, range(len(data.name))):
-            if name == youbot_name:
+            if name == args[0]:
+                # print(name)
                 youbot_index = data_index
-
-
-        current_pose[0] = data.pose[youbot_index].position.x
-        current_pose[1] = data.pose[youbot_index].position.y
+        # print(args[0])
+        # print(args[1])
+        # print(youbot_index)
+        # print('_______')
+        # print("base_pose2d callback")
+        # print(data.pose)
+        # print(data.name)
+        # print(data.pose[youbot_index].position.x)
+        # print(data.pose[youbot_index].position.y)
+        self.current_pose_2d[0] = data.pose[youbot_index].position.x
+        self.current_pose_2d[1] = data.pose[youbot_index].position.y
         q = (data.pose[youbot_index].orientation.x,
                 data.pose[youbot_index].orientation.y,
                 data.pose[youbot_index].orientation.z,
                 data.pose[youbot_index].orientation.w)
         (roll, pitch, yaw) = euler_from_quaternion(q)
-        current_pose[2] = yaw
-        return current_pose
-    elif mode == 1:
-        data = rospy.wait_for_message('/vrpn_client_node/' + youbot_name + '/pose', PoseStamped)
+        self.current_pose_2d[2] = yaw
+        self.is_pose_received = True
+        # print(args[0])
+        # print(args[1]).
+
+
+
+    # work with velocity_controller.py
+    def execute_path_vel_pub(self, final_path, mode):
+        vc = VelocityController(self.youbot_name)
+        vc.set_path(final_path)
+        loop_rate = rospy.Rate(100)
+        path_completed = False
         
-        current_pose = [0, 0, 0]
-        current_pose[0] = data.pose.position.x
-        current_pose[1] = data.pose.position.y
-        q = (data.pose.orientation.x,
-                data.pose.orientation.y,
-                data.pose.orientation.z,
-                data.pose.orientation.w)
-        (roll, pitch, yaw) = euler_from_quaternion(q)
-        current_pose[2] = yaw
-        return current_pose
+        while not rospy.is_shutdown() and not path_completed: 
+            current_pose = self.get_youbot_base_pose2d(mode)
+            msg = vc.get_velocity(self.youbot_name, current_pose, mode)
+            self.vel_pub.publish(msg)
+            if msg.linear.x == 0.0 and msg.linear.y == 0.0 and msg.angular.z == 0.0:
+                path_completed = True
+            loop_rate.sleep()
+
+
+    def get_youbot_base_pose2d(self, mode):
+        if mode == 0:
+            # data = rospy.wait_for_message('gazebo/model_states', ModelStates)
+            while self.is_pose_received == False:
+                # print("is_pose_received - false")
+                pass
+            self.is_pose_received = False
+            # print("current_pose:")
+            # print(self.current_pose_2d)
+            return self.current_pose_2d
+        elif mode == 1:
+            data = rospy.wait_for_message('/vrpn_client_node/' + self.youbot_name + '/pose', PoseStamped)
+            
+            current_pose = [0, 0, 0]
+            current_pose[0] = data.pose.position.x
+            current_pose[1] = data.pose.position.y
+            q = (data.pose.orientation.x,
+                    data.pose.orientation.y,
+                    data.pose.orientation.z,
+                    data.pose.orientation.w)
+            (roll, pitch, yaw) = euler_from_quaternion(q)
+            current_pose[2] = yaw
+            return current_pose
 
 #youbot_name: youbot
 def get_youbot_base_pose(youbot_name, mode):
@@ -99,25 +149,7 @@ def execute_path(youbot_name, final_path, base_action_name):
         client.send_goal_and_wait(goal, rospy.Duration.from_sec(10.0), rospy.Duration.from_sec(12.0))
         # client.wait_for_result(rospy.Duration.from_sec(10.0)) 
 
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-from velocity_controller import VelocityController
-from geometry_msgs.msg import Twist
 
-# work with velocity_controller.py
-def execute_path_vel_pub(youbot_name, final_path, mode):
-    vel_pub = rospy.Publisher('/' + youbot_name + '/robot/cmd_vel', Twist, queue_size=1)
-    vc = VelocityController(youbot_name)
-    vc.set_path(final_path)
-    loop_rate = rospy.Rate(100)
-    path_completed = False
-    
-    while not rospy.is_shutdown() and not path_completed: 
-        msg = vc.get_velocity(youbot_name, mode)
-        vel_pub.publish(msg)
-        if msg.linear.x == 0.0 and msg.linear.y == 0.0 and msg.angular.z == 0.0:
-            path_completed = True
-        loop_rate.sleep()
-# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 # ==================== visibility graph ====================
 import arcl_youbot_planner.base_planner.visgraph as vg

@@ -46,7 +46,7 @@ GAZEBO_COLORS = [
 ]
 
 WALL = [(2.8, -0.3), (0.7, -0.3), (0.7, 0.0), (2.5, 0.0), (2.5, 5.0), (-2.5, 5.0), (-2.5, 0.0), (-0.7, 0.0), (-0.7, -0.3), (-2.8, -0.3), (-2.8, 5.3), (2.8, 5.3), (2.8, 0.0)]
-OPTI_OBJ_SIZE = [(0.04, 0.04, 0.20), (0.04, 0.04, 0.227), (0.04, 0.04, 0.175)]
+OPTI_OBJ_SIZE = [(0.04, 0.04, 0.20), (0.04, 0.04, 0.227), (0.04, 0.04, 0.175), (0.04, 0.04, 0.165), (0.04, 0.04, 0.185)]
 
 
 class YoubotEnvironment(): 
@@ -64,7 +64,7 @@ class YoubotEnvironment():
         self.planning_scene_msg = PlanningSceneMsg()
         self.reserved_planning_scene_msg = PlanningSceneMsg()
         self.mode = 0
-        self.obj_name_list = ['obj_0', 'obj_1', 'obj_2']
+        self.obj_name_list = ['obj_0', 'obj_3', 'obj_8', 'obj_10', 'obj_12']
         
     # filename: ffabsolute path for the environment file
     def import_obj_from_file(self, filename):
@@ -168,6 +168,7 @@ class YoubotEnvironment():
             current_poly = common_util.generate_poly(current_pose[0], current_pose[1], yaw, OPTI_OBJ_SIZE[obj_index][2]/2.0, OPTI_OBJ_SIZE[obj_index][0]/2.0)
             current_poly_list = list(current_poly.exterior.coords)
             self.object_list.append(current_poly_list)
+        self.generate_planning_scene_msg()
 
     def manipulation_action_done_cb(self, goal_state, result):
         print("manipulationaction returned")
@@ -187,6 +188,82 @@ class YoubotEnvironment():
         goal.is_synchronize.data = is_synchronize
         client.send_goal(goal, done_cb=self.manipulation_action_done_cb)
         client.wait_for_result(rospy.Duration.from_sec(10.0))
+
+    def generate_planning_scene_msg(self):
+        for obj, obj_index in zip(self.object_list[:-1], range(len(self.object_list) - 1)):
+            scene_object = SceneObjectMsg()
+            scene_object.object_type.data = "cube"
+            scene_object.object_state.data = 0
+            
+            long_x = obj[0][0] - obj[len(obj)-1][0]
+            long_y = obj[0][1] - obj[len(obj)-1][1]
+            long_length = math.sqrt(long_x*long_x + long_y*long_y)
+
+            short_x = obj[0][0] - obj[1][0]
+            short_y = obj[0][1] - obj[1][1]
+            short_length = math.sqrt(short_x*short_x + short_y*short_y)
+            
+            temp_length = 0
+            if long_length < short_length:
+                temp_length = long_length
+                long_length = short_length
+                short_length = temp_length
+
+            center_x = 0
+            center_y = 0
+            for pt in obj:
+                center_x += pt[0]
+                center_y += pt[1]
+            center_x = center_x / len(obj)
+            center_y = center_y / len(obj)
+            yaw = common_util.get_yaw_from_polygon(obj)
+            print("yaw:"+str(yaw))
+
+            rotation_matrix = np.array((
+        (0,     -math.sin(yaw),     -math.cos(yaw), 0.0),
+        (0,  math.cos(yaw),     -math.sin(yaw), 0.0),
+        (1,     0, 0, 0.0),
+        (                0.0,                 0.0,                 0.0, 1.0)
+        ), dtype=np.float64)
+            q = quaternion_from_matrix(rotation_matrix)
+            #q = quaternion_from_euler(0, 0, yaw)
+            #q = [0,0,0,1]
+            qx = q[0]
+            qy = q[1]
+            qz = q[2]
+            qw = q[3]
+            print(q)
+            short_length = 0.0376
+            size = [short_length, short_length,long_length]
+            position = [center_x, center_y, short_length / 2.0]
+            quaternion = [qx, qy, qz, qw]
+            # color = GAZEBO_COLORS[obj_index % len(GAZEBO_COLORS)]
+            object_name = "obj_" + str(obj_index)
+
+            current_obj_pose = Pose()
+            current_obj_2dpose = Pose2D()
+            current_obj_pose.position.x = position[0]
+            current_obj_pose.position.y = position[1]
+            current_obj_pose.position.z = position[2]
+
+            current_obj_pose.orientation.x = quaternion[0]
+            current_obj_pose.orientation.y = quaternion[1]
+            current_obj_pose.orientation.z = quaternion[2]
+            current_obj_pose.orientation.w = quaternion[3]
+
+            scene_object.object_pose = current_obj_pose
+            current_obj_2dpose.x = position[0]
+            current_obj_2dpose.y = position[1]
+            current_obj_2dpose.theta = yaw
+            scene_object.object_se2_pose = current_obj_2dpose
+
+            scene_object.object_name.data = object_name
+            scene_object.mesh_filename.data = " "
+            scene_object.dx = size[0]
+            scene_object.dy = size[1]
+            scene_object.dz = size[2]
+            self.planning_scene_msg.scene_object_list.append(scene_object)
+            self.reserved_planning_scene_msg.scene_object_list.append(scene_object)
 
     def generate_obj_in_gazebo(self):
         for obj, obj_index in zip(self.object_list[:-1], range(len(self.object_list) - 1)):
@@ -280,7 +357,8 @@ class YoubotEnvironment():
         # raw_input("wait")
 
     def move_to_target(self, youbot_name, target_pose):
-        current_pos_2d = base_util.get_youbot_base_pose2d(youbot_name, self.mode)
+        base_controller = base_util.BaseController(youbot_name)
+        current_pos_2d = base_controller.get_youbot_base_pose2d(self.mode)
         print("current_pos_2d")
         print(current_pos_2d)
         target_pos_2d = [0, 0, 0]
@@ -309,15 +387,16 @@ class YoubotEnvironment():
         # path_with_heading = vg.vg_youbot_path.add_orientation(path, start_heading, goal_heading)
         # path_with_heading = base_util.add_orientation(path, start_heading, goal_heading)
 
-        # base_util.plot_vg_path(obstacles, path_with_heading, g)
+        base_util.plot_vg_path(obstacles, path_with_heading, g)
 
         # base_util.execute_path(youbot_name, path_with_heading, "/youbot_base/move")
-        base_util.execute_path_vel_pub(youbot_name, path_with_heading, self.mode)
+        base_controller.execute_path_vel_pub(path_with_heading, self.mode)
         # call base planner
         # execute_path
 
     def move_to_target_2d(self, youbot_name, target_pos_2d):
-        current_pos_2d = base_util.get_youbot_base_pose2d(youbot_name, self.mode)
+        base_controller = base_util.BaseController(youbot_name)
+        current_pos_2d = base_controller.get_youbot_base_pose2d(youbot_name, self.mode)
         print("current_pos_2d")
         print(current_pos_2d)
         
@@ -338,12 +417,24 @@ class YoubotEnvironment():
 
         # base_util.plot_vg_path(obstacles, path_with_heading, g)
 
-        base_util.execute_path(youbot_name, path_with_heading, "youbot_base/move")
+        base_controller.execute_path(youbot_name, path_with_heading, "youbot_base/move")
         # call base planner
         # execute_path
 
+    def plot_reachibility(self):
+        physicsClient = p.connect(p.GUI)#or p.DIRECT for non-graphical version
+        p.setAdditionalSearchPath(pybullet_data.getDataPath()) #optionally
+        p.setGravity(0,0,-10)
+        prmstar_planner = None
+        my_path = os.path.abspath(os.path.dirname(__file__))
+        my_path = os.path.join(my_path, "../../../luh_youbot_description/robots/youbot_0.urdf")
+        print(my_path)
+        prmstar_planner = prmstar.PRMStarPlanner(p, my_path)
+        robot_position, robot_orientation = base_util.get_youbot_base_pose("youbot_0", 0)
+        prmstar_planner.generate_reachibility(robot_position, robot_orientation)
+
     # joint_target in the range of [0, 5]
-    def move_arm_to_joint(self, youbot_name, joint_target):
+    def move_arm_to_joint_pose(self, youbot_name, joint_target):
         physicsClient = p.connect(p.DIRECT)#or p.DIRECT for non-graphical version
         p.setAdditionalSearchPath(pybullet_data.getDataPath()) #optionally
         p.setGravity(0,0,-10)
@@ -353,16 +444,34 @@ class YoubotEnvironment():
         print(my_path)
         prmstar_planner = prmstar.PRMStarPlanner(p, my_path)
         #prmstar.build_roadmap()
-        prmstar_planner.remove_obstacles()
-        prmstar_planner.import_obstacles(self.object_list)
-        robot_position, robot_orientation = base_util.get_youbot_base_pose(youbot_name, self.mode)
-        prmstar_planner.set_robot_pose(robot_position, robot_orientation)
+        is_target_in_collision = False
+        is_target_in_collision = prmstar_planner.check_pose_collision(joint_target)
+        if is_target_in_collision == True:
+            return False
+        else:
+            prmstar_planner.remove_obstacles()
+            prmstar_planner.import_obstacles(self.object_list)
+            robot_position, robot_orientation = base_util.get_youbot_base_pose(youbot_name, self.mode)
+            prmstar_planner.set_robot_pose(robot_position, robot_orientation)
 
-        start = arm_util.get_current_joint_pos(youbot_name)
-        #plan and move arm to pre_pick_pos
-        [final_path, final_cost] = prmstar_planner.path_plan(tuple(start), tuple(joint_target))
-        # raw_input("finished path planning, check path")
-        arm_util.execute_path(youbot_name, final_path)
+            start = arm_util.get_current_joint_pos(youbot_name)
+                    #plan and move arm to pre_pick_pos
+            [final_path, final_cost] = prmstar_planner.path_plan(tuple(start), tuple(joint_target))
+            # raw_input("finished path planning, check path")
+            arm_util.execute_path(youbot_name, final_path)
+            return True
+
+    def build_roadmap(self):
+        physicsClient = p.connect(p.DIRECT)#or p.DIRECT for non-graphical version
+        p.setAdditionalSearchPath(pybullet_data.getDataPath()) #optionally
+        p.setGravity(0,0,-10)
+        prmstar_planner = None
+        my_path = os.path.abspath(os.path.dirname(__file__))
+        my_path = os.path.join(my_path, "../../../luh_youbot_description/robots/youbot_0.urdf")
+        print(my_path)
+        prmstar_planner = prmstar.PRMStarPlanner(p, my_path, False)
+        prmstar_planner.build_roadmap()
+
 
     def pick_object(self, youbot_name, pick_joint_value, pre_pick_joint_value):
         physicsClient = p.connect(p.DIRECT)#or p.DIRECT for non-graphical version

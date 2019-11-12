@@ -2,7 +2,7 @@ import rospy
 from pid import PID
 from geometry_msgs.msg import Twist
 from math import cos, sin, pi, sqrt
-from base_util import get_youbot_base_pose2d
+# from base_util import get_youbot_base_pose2d
 from tf.transformations import euler_from_quaternion
 from gazebo_msgs.msg import ModelStates
 
@@ -89,10 +89,10 @@ class VelocityController(object):
             self.use_goal_reached_threshold = False
         # self.smooth_velocity = [0, 0, 0]
 
-    def get_velocity(self, youbot_name, mode):
+    def get_velocity(self, youbot_name, current_pos, mode):
         """ Output velocity based the current position and next target position from the path """
         if self.step < len(self.path):
-            self.current_pos = get_youbot_base_pose2d(youbot_name, mode)
+            self.current_pos = current_pos
             current_step_pos = self.path[self.step]
             diff_pos = self.compute_difference(current_step_pos, self.current_pos)
             current_step_reached = self.is_current_step_reached(diff_pos)

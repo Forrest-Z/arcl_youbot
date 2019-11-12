@@ -14,16 +14,16 @@ if __name__ == "__main__":
     env.mode = 0
     #import object list from file
     my_path = os.path.abspath(os.path.dirname(__file__))
-    env.import_obj_from_file(os.path.join(my_path, "scatter/new_1.txt"))
+    env.import_obj_from_file(os.path.join(my_path, "scatter/new_10.txt"))
     #env.create_scene(20, 5)
     #env.export_obj_to_file(os.path.join(my_path, "scatter/new.txt"))
-    # pick_index_list = [8, 9, 4, 0, 7, 5, 6, 2, 1, 3]
+    pick_index_list = [8, 9, 4, 0, 7, 5, 6, 2, 1, 3]
     # pick_index_list = [0, 6, 4, 5, 2, 1, 3]
     # pick_index_list = [5, 3, 4, 1, 0, 2]
     # pick_index_list = [3, 4, 1, 0, 2]
     # pick_index_list = [3, 1, 0, 2]
     # pick_index_list = [0, 1]
-    pick_index_list = [0]
+    # pick_index_list = [0]
 
 
     #spawn the objects in gazebo, and generate the planningscene msg 
@@ -51,8 +51,9 @@ if __name__ == "__main__":
     for test_obj in env.object_list:
         reserved_object_list.append(test_obj)
     arm_up_joint = [202/180.0*math.pi, 65/180.0*math.pi, -146 / 180.0 * math.pi, 102.5 / 180.0 * math.pi, 172 / 180.0 * math.pi]
-    env.move_arm_to_joint("youbot_0", arm_up_joint)
+    env.move_arm_to_joint_pose("youbot_0", arm_up_joint)
     for index in pick_index_list:
+        print("pick " + str(index))
         env.send_grasp_action(env.planning_scene_msg, "obj_" + str(index), env.reserved_planning_scene_msg.scene_object_list[index].object_pose, " ", "cube", rest_base_pose, True)
         target_base_pose = env.grasp_plan_result.final_base_pose
         env.move_to_target("youbot_0", target_base_pose)
@@ -64,5 +65,5 @@ if __name__ == "__main__":
 
         env.move_to_target("youbot_0", rest_base_pose)
         env.drop_object('obj_' + str(index))
-        env.move_arm_to_joint("youbot_0", arm_up_joint)
-        raw_input("wait")
+        env.move_arm_to_joint_pose("youbot_0", arm_up_joint)
+        # raw_input("wait")

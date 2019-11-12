@@ -71,7 +71,7 @@ void YoubotGripperController::Load(physics::ModelPtr parent,
                 "arm_1/gripper_command", 1, &YoubotGripperController::gripperCommandCallback, this);
 
     // === SERVICE SERVER ===
-    grip_check_server_ = rosnode_->advertiseService("gripper/check", &YoubotGripperController::gripCheckCallback, this);
+    //grip_check_server_ = rosnode_->advertiseService("gripper/check", &YoubotGripperController::gripCheckCallback, this);
 
     // listen to the update event (broadcast every simulation iteration)
     update_connection_ =
@@ -175,14 +175,14 @@ void YoubotGripperController::gripperCommandCallback(const std_msgs::Float32::Co
     setCmd(msg->data);
 }
 
-bool YoubotGripperController::gripCheckCallback(luh_youbot_gripper::GripCheck::Request &req,
-                                                luh_youbot_gripper::GripCheck::Response &res)
-{
-    boost::mutex::scoped_lock scoped_lock(lock);
+// bool YoubotGripperController::gripCheckCallback(luh_youbot_gripper::GripCheck::Request &req,
+//                                                 luh_youbot_gripper::GripCheck::Response &res)
+// {
+//     boost::mutex::scoped_lock scoped_lock(lock);
 
-    res.has_object = !(left_pos_reached_ && right_pos_reached_);
-    return true;
-}
+//     res.has_object = !(left_pos_reached_ && right_pos_reached_);
+//     return true;
+// }
 
 void YoubotGripperController::gripObjectCallback()
 {

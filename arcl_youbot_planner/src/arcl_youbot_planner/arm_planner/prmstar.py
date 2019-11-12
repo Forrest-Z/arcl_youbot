@@ -14,23 +14,24 @@ import arcl_youbot_planner.arm_planner.astar
 import scipy.spatial
 import os.path
 
-SAMPLE_NUM = 500
+SAMPLE_NUM = 1000
 ROBOT_COLLISION_CHECK_RADIUS = 0.7
 PATH_PLAN_TRYING_MAX = 60
 
 
 class PRMStarPlanner():
-    def __init__(self, p_client, urdf_path):
+    def __init__(self, p_client, urdf_path, is_roadmap_ready=True):
         self.sample_num = SAMPLE_NUM
         self.p_client = p_client
         self.urdf_path = urdf_path
         self.robot_id = self.p_client.loadURDF(self.urdf_path, flags=self.p_client.URDF_USE_SELF_COLLISION)
         self.ARM_JOINT_NUM = arm_util.ARM_JOINT_NUM
         my_path = os.path.abspath(os.path.dirname(__file__))
-        self.joint_mat = np.load(os.path.join(my_path, "prm_roadmap/prm_roadmap.npy"))
-        self.joint_neighbor = np.load(os.path.join(my_path, 'prm_roadmap/prm_roadmap_neighbor.npy'))
-        joint_dict_object = np.load(os.path.join(my_path, 'prm_roadmap/prm_roadmap_dict.npy'), allow_pickle=True)
-        self.joint_dict = joint_dict_object.item()
+        if is_roadmap_ready == True:
+            self.joint_mat = np.load(os.path.join(my_path, "prm_roadmap/prm_roadmap.npy"))
+            self.joint_neighbor = np.load(os.path.join(my_path, 'prm_roadmap/prm_roadmap_neighbor.npy'))
+            joint_dict_object = np.load(os.path.join(my_path, 'prm_roadmap/prm_roadmap_dict.npy'), allow_pickle=True)
+            self.joint_dict = joint_dict_object.item()
         self.tree = None
         self.object_list = []
         self.robot_pose2d = None
@@ -48,6 +49,7 @@ class PRMStarPlanner():
         joint_mat = np.zeros([self.ARM_JOINT_NUM, self.sample_num])
         joint_dict = {}
         sample_index = 0
+        my_path = os.path.abspath(os.path.dirname(__file__))
         while sample_index < self.sample_num:
             jnt_vector = []
             for jnt in range(self.ARM_JOINT_NUM):
@@ -67,7 +69,7 @@ class PRMStarPlanner():
 
         
         print "finish"        
-        np.save('prm_roadmap/prm_roadmap.npy', joint_mat)
+        np.save(os.path.join(my_path, "prm_roadmap/prm_roadmap.npy"), joint_mat)
 
         self.tree = scipy.spatial.cKDTree(joint_mat.T)
         joint_neighbor = np.zeros([self.sample_num, self.sample_num])
@@ -79,12 +81,34 @@ class PRMStarPlanner():
             dist, index = self.tree.query(joint_mat[:, sample_index], neighbor_num)
             joint_neighbor[sample_index, index] = 1
             sample_index += 1
-        np.save('prm_roadmap/prm_roadmap_neighbor.npy', joint_neighbor)
+        np.save(os.path.join(my_path, 'prm_roadmap/prm_roadmap_neighbor.npy'), joint_neighbor)
         print "neighbor finish"
         print len(joint_dict)
-        np.save('prm_roadmap/prm_roadmap_dict.npy', joint_dict)
+        np.save(os.path.join(my_path, 'prm_roadmap/prm_roadmap_dict.npy'), joint_dict)
+    
+    def generate_reachibility(self, position, orientation):
+        joint_mat = np.zeros([self.ARM_JOINT_NUM, self.sample_num])
+        joint_dict = {}
+        sample_index = 0
+        self.p_client.resetBasePositionAndOrientation(self.robot_id, position, orientation)
+        while sample_index < self.sample_num:
+            jnt_vector = []
+            for jnt in range(self.ARM_JOINT_NUM):
+                joint_mat[jnt, sample_index] = np.random.uniform(arm_util.MIN_JOINT_POS[jnt] - arm_util.JOINT_OFFSET[jnt] ,arm_util.MAX_JOINT_POS[jnt] - arm_util.JOINT_OFFSET[jnt])
+            arm_util.set_arm_joint_pos(joint_mat[:, sample_index], self.p_client, self.robot_id)
+            self.p_client.resetBasePositionAndOrientation(self.robot_id, position, orientation)
+            self.p_client.stepSimulation()
+            self.p_client.resetBasePositionAndOrientation(self.robot_id, position, orientation)
 
+            link_state = self.p_client.getLinkState(self.robot_id, 13, computeForwardKinematics=1)
+            tip_pos = list(link_state[0])
+            tip_pos[2] = 0.02
+            common_util.spawnCuboid([0.005, 0.005, 0.005], tip_pos, [0,0,0,1], "Gazebo/Blue", "tip_"+ str(sample_index))
+            #connect neighbors
+            sample_index += 1
 
+        
+        
     def direct_path(self, start, goal):
         path = []
         path.append(start)
@@ -177,6 +201,22 @@ class PRMStarPlanner():
                 break
         return path, final_cost
 
+
+    def check_pose_collision(self, pose):
+        is_self_collision = False
+        arm_util.set_arm_joint_pos(pose, self.p_client, self.robot_id)
+        self.p_client.stepSimulation()
+        self_collision_list = self.p_client.getContactPoints(self.robot_id, self.robot_id)
+        for self_contact in self_collision_list:
+            if (self_contact[3] == 12 and self_contact[4] == 15) or (self_contact[3] == 12 and self_contact[4] == 14) or (self_contact[3] == 14 and self_contact[4] == 15) or (self_contact[3] == 15 and self_contact[4] == 0):
+                pass
+            else:
+                print("self-collision:")
+                print(self_contact)
+                is_self_collision = True
+                break
+        return is_self_collision
+
     def check_path_collision(self, path, path_vertex_list, close_obj_index_list):
         self_collision_edge_list = []
         external_collision_edge_list = []
@@ -196,9 +236,11 @@ class PRMStarPlanner():
                     self.p_client.stepSimulation()
                     self_collision_list = self.p_client.getContactPoints(self.robot_id, self.robot_id)
                     for self_contact in self_collision_list:
-                        if (self_contact[3] == 12 and self_contact[4] == 15) or (self_contact[3] == 12 and self_contact[4] == 14) or (self_contact[3] == 14 and self_contact[4] == 15):
+                        if (self_contact[3] == 12 and self_contact[4] == 15) or (self_contact[3] == 12 and self_contact[4] == 14) or (self_contact[3] == 14 and self_contact[4] == 15) or (self_contact[3] == 15 and self_contact[4] == 0):
                             pass
                         else:
+                            print("self-collision:")
+                            print(self_contact)
                             self_collision_edge_list.append((path_vertex_list[pt_index], path_vertex_list[pt_index + 1]))
                             is_self_collision = True
                             break

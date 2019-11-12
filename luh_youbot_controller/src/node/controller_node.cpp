@@ -130,6 +130,7 @@ ControllerNode::ControllerNode(ros::NodeHandle &node):
     }
     else
     {
+        ROS_WARN_STREAM("no arm!!!!!!!!!!!!!!!!!!1");
         ControllerModule::setArmIsBusy(true);
         ControllerModule::setGripperIsBusy(true);
     }

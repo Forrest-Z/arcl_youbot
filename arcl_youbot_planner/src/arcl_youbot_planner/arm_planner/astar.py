@@ -110,5 +110,5 @@ def AStarSearch(start, end, graph):
     #print("F")
     #print(F)
     #print(cameFrom)
-    raise RuntimeError("A* failed to find a solution")
+    #raise RuntimeError("A* failed to find a solution")
     
