@@ -319,10 +319,10 @@ def plot_edge(ax, x, y, color='gray', zorder=1, linewidth=1, alpha=1):
 
 
 
-# import sys, signal
-# def signal_handler(signal, frame):
-#     print("\nprogram exiting gracefully")
-#     sys.exit(0)
+import sys, signal
+def signal_handler(signal, frame):
+    print("\nprogram exiting gracefully")
+    sys.exit(0)
 
 # signal.signal(signal.SIGINT, signal_handler)
 
@@ -371,11 +371,15 @@ def plot_edge(ax, x, y, color='gray', zorder=1, linewidth=1, alpha=1):
 if __name__ == "__main__":
     from arcl_youbot_application.application_util import YoubotEnvironment
 
+    signal.signal(signal.SIGINT, signal_handler)
+
     # y = YoubotEnvironment(0, 5, 0, 5)
-    start_pos = (5, 2)
-    goal_pos = (1.2, 2.8)
+    import time
+
+    start_pos = (4, 2)
+    goal_pos = (10, 9)
     obstacles = [[(1, 1), (2, 1), (2, 4), (1, 4)],
-                 [(1.5, 5), (2.5, 5), (2.5, 6), (1.5, 6)],
+                 [(1.5, 4.5), (2.5, 4.5), (2.5, 6), (1.5, 6)],
                  [(3, 8), (5, 9), (4.5, 9.5), (2.8, 8.2)],
                  [(5, 3), (6, 3), (6, 4), (6, 5)],
                  [(7, 4), (8, 4), (8, 10), (7, 10)],
@@ -383,7 +387,9 @@ if __name__ == "__main__":
     # obstacles = y.create_scene(20, 10)
     start_heading = 0
     goal_heading = 0
+    start_time = time.time()
     path_with_heading, g = vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles)
+    print(time.time()-start_time)
 
     plot_vg_path(obstacles, path_with_heading, g)
 

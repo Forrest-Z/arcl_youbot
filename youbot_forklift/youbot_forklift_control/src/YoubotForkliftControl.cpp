@@ -65,7 +65,7 @@ void YoubotForkliftControl::setMotorParameters() {
 	stepPerMeter = 360 / degPerStep /stepSize / mmPerRev * 1000;
 	meterPerStep = 1/stepPerMeter;
 	lengthOfRodInMeters = 0.25;
-	setMaxVelocity(0.004);
+	setMaxVelocity(0.01);  // origin is 0.004
 }
 
 bool YoubotForkliftControl::setMaxVelocity(double speedInMetersPerS) {
