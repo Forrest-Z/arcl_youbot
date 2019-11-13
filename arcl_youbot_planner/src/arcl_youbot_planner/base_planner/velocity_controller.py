@@ -123,16 +123,26 @@ class VelocityController(object):
                 if abs(velocity[0] / velocity[1] - diff_pos[0] / diff_pos[1]) > 0.01:
                     if abs(velocity[0]) == self.x_pid.output_limits[1] and abs(velocity[1]) == self.y_pid.output_limits[1]:
                         # diff_pos_norm = sqrt(diff_pos[0]**2 + diff_pos[1]**2)
-                        if abs(diff_pos[0] > diff_pos[1]):
+                        if abs(diff_pos[0]) > abs(diff_pos[1]):
+                            temp = (velocity[0], velocity[1])
                             velocity[1] = velocity[0] / diff_pos[0] * diff_pos[1]
                         else:
+                            temp = (velocity[0], velocity[1])
                             velocity[0] = diff_pos[0] / diff_pos[1] * velocity[1]
                         # velocity[0] = diff_pos[0] / diff_pos_norm * VEL_MAX
                         # velocity[1] = diff_pos[1] / diff_pos_norm * VEL_MAX
                     elif abs(velocity[0]) == self.x_pid.output_limits[1]:
+                        temp = (velocity[0], velocity[1])
                         velocity[1] = velocity[0] / diff_pos[0] * diff_pos[1]
                     elif abs(velocity[1]) == self.y_pid.output_limits[1]:
+                        temp = (velocity[0], velocity[1])
                         velocity[0] = diff_pos[0] / diff_pos[1] * velocity[1]
+            if abs(velocity[0]) > self.x_pid.output_limits[1]:
+                velocity[1] = velocity[1] * self.x_pid.output_limits[1] / velocity[0]
+                velocity[0] = self.x_pid.output_limits[1]
+            if abs(velocity[1]) > self.y_pid.output_limits[1]:
+                velocity[0] = velocity[0] * self.y_pid.output_limits[1] / velocity[1]
+                velocity[1] = self.x_pid.output_limits[0]
             # velocity[0] = 0
             # velocity[2] = 0
             # print("-----global vel:" + str(self.step) + "-----")
@@ -141,11 +151,11 @@ class VelocityController(object):
             # if mode == 1:
             #     xt = velocity[0] * cos(self.current_pos[2]) - velocity[1] * sin(self.current_pos[2])
             #     yt = velocity[1] * cos(self.current_pos[2]) + velocity[0] * sin(self.current_pos[2])
-            if mode == 1:    
-                xt = velocity[0]
-                yt = velocity[1]
-                velocity[0] = yt
-                velocity[1] = 0-xt
+            # if mode == 1:    
+            #     xt = velocity[0]
+            #     yt = velocity[1]
+            #     velocity[0] = yt
+            #     velocity[1] = 0-xt
 
             #self.velocity.linear.x = 0
             self.velocity.linear.x = velocity[0]

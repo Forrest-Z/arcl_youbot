@@ -37,21 +37,14 @@ if __name__ == "__main__":
     target_base_pose.orientation.y = 0
     target_base_pose.orientation.z = 0
     target_base_pose.orientation.w = 1
-<<<<<<< HEAD
-    env.send_grasp_action(env.planning_scene_msg, "obj_3", env.planning_scene_msg.scene_object_list[1].object_pose, " ", "cube", rest_base_pose, True)
+    env.send_grasp_action(env.planning_scene_msg, "obj_0", env.planning_scene_msg.scene_object_list[0].object_pose, " ", "cube", rest_base_pose, True)
     target_base_pose = env.grasp_plan_result.final_base_pose
     print(target_base_pose)
-=======
-    # env.import_obj_from_optitrack()
-#    env.send_grasp_action(env.planning_scene_msg, "obj_4", env.planning_scene_msg.scene_object_list[4].object_pose, " ", "cube", rest_base_pose, True)
-#    target_base_pose = env.grasp_plan_result.final_base_pose
-#    print(target_base_pose)
->>>>>>> 7be066c15fe72736dbb117341ee2c2d99b47a9e1
     # while True:
     #     from arcl_youbot_planner.base_planner.base_util import get_youbot_base_pose2d
     #     pose2d = get_youbot_base_pose2d('youbot_0', 1)
     #     print(str(pose2d[0]) + "," + str(pose2d[1]) + "," + str(pose2d[2]))
-    # env.move_to_target("youbot_0", target_base_pose)
+    env.move_to_target("youbot_0", target_base_pose)
     
 #    pick_joint_value = [env.grasp_plan_result.q1, env.grasp_plan_result.q2, env.grasp_plan_result.q3, env.grasp_plan_result.q4, env.grasp_plan_result.q5]
 #    pre_pick_joint_value = [env.grasp_plan_result.q1_pre, env.grasp_plan_result.q2_pre, env.grasp_plan_result.q3_pre, env.grasp_plan_result.q4_pre, env.grasp_plan_result.q5_pre]    
@@ -59,4 +52,4 @@ if __name__ == "__main__":
 #    env.update_env(env.object_list[10])
 
 #    env.move_to_target("youbot_0", rest_base_pose)
-    env.set_forklift_position('youbot_2', 0.0)
+    # env.set_forklift_position('youbot_2', 0.0)
