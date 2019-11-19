@@ -86,6 +86,9 @@ def set_gripper_width(youbot_name, width, mode=0):
 
 def execute_path(youbot_name, final_path):
     client = actionlib.SimpleActionClient(youbot_name + '/arm_1/follow_joint_trajectory', FollowJointTrajectoryAction)
+
+    print("wait for server")
+    print(youbot_name + '/arm_1/follow_joint_trajectory')
     client.wait_for_server()
     goal = FollowJointTrajectoryGoal()
     begin_time = 0

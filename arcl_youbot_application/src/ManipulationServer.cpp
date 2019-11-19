@@ -127,8 +127,8 @@ void ManipulationServer::GenerateSamplesForArmConf(geometry_msgs::Pose gripper_p
     double tip_z;
    // 0.067 is the length of the gripper finger
     
-//    tip_z = gripper_pose.position.z - normal_z*0.02;
-    tip_z = gripper_pose.position.z;
+    tip_z = gripper_pose.position.z - normal_z*0.02;
+    // tip_z = gripper_pose.position.z;
 
     cylin_z = tip_z - ykin::H2 + ykin::L0; // relative to arm_link_0
     
@@ -316,8 +316,8 @@ void ManipulationServer::goalCB()
                 cylin_test.setTheta(theta);
                 cylin_test.printValues("sanity check:(cylin)");
                 pre_cylin_test = cylin_test;
-                pre_cylin_test.setZ(pre_cylin_test.z()+0.075*normal_z);
-                pre_cylin_test.setR(pre_cylin_test.r()-0.075*sqrt(pow(normal_x,2)+pow(normal_y, 2))/*/normal_z*/);
+                pre_cylin_test.setZ(pre_cylin_test.z()+0.07*normal_z);
+                pre_cylin_test.setR(pre_cylin_test.r()-0.07*sqrt(pow(normal_x,2)+pow(normal_y, 2))/*/normal_z*/);
                 joint_test = cylin_test.toJointspace();
                 //joint_test.subtractOffset();
                 pre_joint_test = pre_cylin_test.toJointspace();
@@ -440,15 +440,15 @@ void ManipulationServer::goalCB()
                             std::vector<double> test_joint_values{joint_test[0], joint_test[1], joint_test[2], joint_test[3], joint_test[4]};
                             joint_test.printValues("leans to one side, plan joint test");
                             if(planInAdvance(base_pose, test_joint_values, nh_)){ 
-                                cylin_test.setZ(cylin_test.z()+0.075*normal_z);
-                                cylin_test.setR(cylin_test.r()-0.075*sqrt(pow(normal_x,2)+pow(normal_y, 2))/*/normal_z*/);
+                                cylin_test.setZ(cylin_test.z()+0.07*normal_z);
+                                cylin_test.setR(cylin_test.r()-0.07*sqrt(pow(normal_x,2)+pow(normal_y, 2))/*/normal_z*/);
                                 joint_test = cylin_test.toJointspace();
                                 joint_test.subtractOffset();
                                 test_joint_values = {joint_test[0], joint_test[1], joint_test[2], joint_test[3], joint_test[4]};
                                 
                                 if(planInAdvance(base_pose, test_joint_values, nh_)){ 
-                                    cylin_test.setZ(cylin_test.z()-0.075*normal_z);
-                                    cylin_test.setR(cylin_test.r()+0.075*sqrt(pow(normal_x,2)+pow(normal_y, 2))/*/normal_z*/);
+                                    cylin_test.setZ(cylin_test.z()-0.07*normal_z);
+                                    cylin_test.setR(cylin_test.r()+0.07*sqrt(pow(normal_x,2)+pow(normal_y, 2))/*/normal_z*/);
                                     is_base_r_ok = true;
                                     break;    
                                         
@@ -496,8 +496,8 @@ void ManipulationServer::goalCB()
                     std::vector<double> test_joint_values{joint_test[0], joint_test[1], joint_test[2], joint_test[3], joint_test[4]};
                                 
                     if(planInAdvance(base_pose, test_joint_values, nh_)){ 
-                        cylin_test.setZ(cylin_test.z()+0.075*normal_z);
-                        cylin_test.setR(cylin_test.r()-0.075*sqrt(pow(normal_x,2)+pow(normal_y, 2)));
+                        cylin_test.setZ(cylin_test.z()+0.07*normal_z);
+                        cylin_test.setR(cylin_test.r()-0.07*sqrt(pow(normal_x,2)+pow(normal_y, 2)));
                         pre_joint_test = cylin_test.toJointspace();
                         //pre_joint_test.subtractOffset();
                         test_joint_values = {joint_test[0], joint_test[1], joint_test[2], joint_test[3], joint_test[4]};
@@ -505,8 +505,8 @@ void ManipulationServer::goalCB()
                             is_base_q5_ok = false;
                         }else{ 
                             if(planInAdvance(base_pose, test_joint_values, nh_)){ 
-                                cylin_test.setZ(cylin_test.z()-0.075*normal_z);
-                                cylin_test.setR(cylin_test.r()+0.075*sqrt(pow(normal_x,2)+pow(normal_y, 2)));
+                                cylin_test.setZ(cylin_test.z()-0.07*normal_z);
+                                cylin_test.setR(cylin_test.r()+0.07*sqrt(pow(normal_x,2)+pow(normal_y, 2)));
 
                                 is_base_q1_ok = true;
                                 is_base_r_ok = true;

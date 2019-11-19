@@ -84,21 +84,20 @@ void YoubotGazeboInterface::initialise(bool use_standard_gripper, bool use_luh_g
 //    node.param("youBotDriverCycleFrequencyInHz", config_.frequency, 200.0);
     config_.config_path = ros::package::getPath("youbot_driver");
     config_.config_path.append("/config");
-    config_.node_handle->param<std::string>("youBotConfigurationFilePath", config_.config_path, config_.config_path);
-
+    ros::param::param("youBotConfigurationFilePath", config_.config_path, config_.config_path);
     // === CREATE ARMS ===
     if(youbot_has_arms)
     {
         int i = 1;
         std::stringstream ss;
         ss << "youBotArmName" << i; // youBotArmName1 is first checked param... then youBotArmName2, etc.
-        while (config_.node_handle->hasParam(ss.str()))
+        while (ros::param::has(ss.str()))
         {
             std::string arm_name;
             config_.node_handle->getParam(ss.str(), arm_name);
 
             arms_.push_back(new YoubotArmGazeboInterface(arm_name, config_));
-
+            ROS_WARN_STREAM("123123123");
             ss.str("");
             ss << "youBotArmName" <<  (++i);
         }

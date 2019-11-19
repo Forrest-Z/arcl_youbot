@@ -92,15 +92,16 @@ class BaseController():
                 path_completed = True
             loop_rate.sleep()
 
-        from matplotlib import pyplot
+        if mode == 1:
+            from matplotlib import pyplot
 
-        fig = pyplot.figure()
-        ax = fig.subplots()
+            fig = pyplot.figure()
+            ax = fig.subplots()
 
-        ax.plot(range(len(x_vel_log)), x_vel_log, color='blue')
-        ax.plot(range(len(y_vel_log)), y_vel_log, color='red')
+            ax.plot(range(len(x_vel_log)), x_vel_log, color='blue')
+            ax.plot(range(len(y_vel_log)), y_vel_log, color='red')
 
-        pyplot.show()
+            pyplot.show()
 
     def get_youbot_base_pose2d(self, mode):
         if mode == 0:

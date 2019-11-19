@@ -84,7 +84,7 @@ void YoubotInterface::initialise(bool use_standard_gripper, bool use_luh_gripper
 {
     // === GET PARAMETERS ===
     config_.node_handle->param("youBotHasBase", config_.has_base, true);
-    bool youbot_has_arms;
+    bool youbot_has_arms = true;
     config_.node_handle->param("youBotHasArms", youbot_has_arms, true);
 //    node.param("youBotDriverCycleFrequencyInHz", config_.frequency, 200.0);
     config_.config_path = ros::package::getPath("youbot_driver");
@@ -92,6 +92,7 @@ void YoubotInterface::initialise(bool use_standard_gripper, bool use_luh_gripper
     config_.node_handle->param<std::string>("youBotConfigurationFilePath", config_.config_path, config_.config_path);
     config_.node_handle->param("luh_youbot_controller/base_controller_frequency", base_frequency_, 50.0);
     // === CREATE ARMS ===
+    youbot_has_arms = true;
     if(youbot_has_arms)
     {
         int i = 1;

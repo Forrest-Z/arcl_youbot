@@ -7,7 +7,8 @@ import numpy as np
 import pybullet_data
 # import control_msgs.msg.FollowJointTrajectoryActionGoal
 from geometry_msgs.msg import Twist 
-from gazebo_msgs.srv import SpawnModel
+from gazebo_msgs.srv import SpawnModel, SetModelState
+from gazebo_msgs.msg import ModelState
 from geometry_msgs.msg import Pose
 from geometry_msgs.msg import Pose2D
 from std_msgs.msg import String
@@ -225,3 +226,25 @@ def add_near_poly(same_cluster_objs, created_objs, x_min, x_max, y_min, y_max, b
         new_poly = tp
     return new_poly 
 
+def set_obj_pose(obj_name, pose):
+    # change an object's pose in gazebo
+    # INPUT: obj_name, string
+    #        pose, geometry_msgs/Pose
+
+    rospy.wait_for_service('/gazebo/set_model_state')
+    try:
+        set_obj_pose = rospy.ServiceProxy('/gazebo/set_model_state', SetModelState)
+        target_model_state = ModelState()
+        target_model_state.model_name = obj_name
+        target_model_state.reference_frame = "world"
+        target_model_state.pose.position.x = pose.position.x
+        target_model_state.pose.position.y = pose.position.y
+        target_model_state.pose.position.z = pose.position.z
+        target_model_state.pose.orientation.x = pose.orientation.x
+        target_model_state.pose.orientation.y = pose.orientation.y
+        target_model_state.pose.orientation.z = pose.orientation.z
+        target_model_state.pose.orientation.w = pose.orientation.w
+        set_obj_pose(target_model_state)
+        
+    except rospy.ServiceException, e:
+        print "Service call failed: %s"%e

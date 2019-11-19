@@ -12,4 +12,4 @@ if __name__ == "__main__":
     #env = app_util.YoubotEnvironment(-1.5, 1.5, -3.0, 1.0)    
     env = app_util.YoubotEnvironment(-2.5, 2.5, 0.0, 5.0)
     env.mode = 0
-    env.build_roadmap()
+    env.build_arm_roadmap()

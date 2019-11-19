@@ -21,7 +21,7 @@ if __name__ == "__main__":
     # for test_obj in env.object_list:
     #     reserved_object_list.append(test_obj)
     arm_up_joint = [202/180.0*math.pi, 65/180.0*math.pi, -146 / 180.0 * math.pi, 102.5 / 180.0 * math.pi, 172 / 180.0 * math.pi]
-    env.move_arm_to_joint("youbot_0", arm_up_joint)
+    env.move_arm_to_joint_pose("youbot_0", arm_up_joint)
     # sample_num = 1000
     #while True:
         # jnt_pos = []
