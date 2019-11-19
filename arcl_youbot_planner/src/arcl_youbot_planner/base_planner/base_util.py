@@ -19,20 +19,27 @@ import commands
 from shapely.geometry import Polygon, LinearRing, LineString, Point
 from shapely.ops import unary_union
 
-YOUBOT_SHORT_RADIUS = 0.25  # in meters
-YOUBOT_LONG_RADIUS = 0.40  # in meters
-OFFSET = YOUBOT_LONG_RADIUS - YOUBOT_SHORT_RADIUS
-ADJUST_DISTANCE = OFFSET + 0.2
-BACK_DISTANCE = 0.1
-SHORT_ANGLE = -111
-NEAR_RATIO = 0.2
-LENGTH_CHOOSE = 2
+import sys, signal
+def signal_handler(signal, frame):
+    print("\nprogram exiting gracefully")
+    sys.exit(0)
 
-TEST = True
 
-#youbot_name: youbot
+YOUBOT_SHORT_RADIUS = 0.25  # used to dilated obstacles (width / 2)
+YOUBOT_LONG_RADIUS = 0.40   # used to dilated obstacles (diagonal / 2)
+ADJUST_DISTANCE = YOUBOT_LONG_RADIUS - YOUBOT_SHORT_RADIUS + 0.2  # used for new_vg_path to decide use path from small or large dilated obstacles
+BACK_DISTANCE = 0.1         # buffer distance to the final goal pos
+SHORT_ANGLE = -111          # sign to indicate path from small obstacles
+NEAR_RATIO = 0.2            # distance ratio from a large pos to small pos
+LENGTH_CHOOSE = 2           # number of pos tolerance
+
+TEST = False                # multi-core acceleration for visibility graph
+
 
 class BaseController():
+    """ 
+    This is used to publish velocity
+    """
 
     def __init__(self, youbot_name):
         self.is_pose_received = False
@@ -43,44 +50,35 @@ class BaseController():
         rospy.Subscriber('/gazebo/model_states', ModelStates, self.base_pose2d_callback, [youbot_name])
 
     def base_pose2d_callback(self, data, args):
+        """ Gazebo: callback to receive the current youbot position
+        """
         youbot_index = 0
 
         for name, data_index in zip(data.name, range(len(data.name))):
             if name == args[0]:
-                # print(name)
                 youbot_index = data_index
-        # print(args[0])
-        # print(args[1])
-        # print(youbot_index)
-        # print('_______')
-        # print("base_pose2d callback")
-        # print(data.pose)
-        # print(data.name)
-        # print(data.pose[youbot_index].position.x)
-        # print(data.pose[youbot_index].position.y)
         self.current_pose_2d[0] = data.pose[youbot_index].position.x
         self.current_pose_2d[1] = data.pose[youbot_index].position.y
         q = (data.pose[youbot_index].orientation.x,
                 data.pose[youbot_index].orientation.y,
                 data.pose[youbot_index].orientation.z,
                 data.pose[youbot_index].orientation.w)
-        (roll, pitch, yaw) = euler_from_quaternion(q)
+        (_, _, yaw) = euler_from_quaternion(q)
         self.current_pose_2d[2] = yaw
         self.is_pose_received = True
-        # print(args[0])
-        # print(args[1]).
 
-
-
-    # work with velocity_controller.py
     def execute_path_vel_pub(self, final_path, mode):
+        """ compute and publish velocity
+        """
         vc = VelocityController(self.youbot_name)
         vc.set_path(final_path)
         loop_rate = rospy.Rate(100)
         path_completed = False
         
+        # ===== see how the velocity converge =====
         x_vel_log = []
         y_vel_log = []
+        # =========================================
 
         while not rospy.is_shutdown() and not path_completed: 
             current_pose = self.get_youbot_base_pose2d(mode)
@@ -92,25 +90,22 @@ class BaseController():
                 path_completed = True
             loop_rate.sleep()
 
+        # ===== see how the velocity converge =====
         from matplotlib import pyplot
-
         fig = pyplot.figure()
         ax = fig.subplots()
-
         ax.plot(range(len(x_vel_log)), x_vel_log, color='blue')
         ax.plot(range(len(y_vel_log)), y_vel_log, color='red')
-
         pyplot.show()
+        # =========================================
 
     def get_youbot_base_pose2d(self, mode):
+        """ get the current youbot position
+        """
         if mode == 0:
-            # data = rospy.wait_for_message('gazebo/model_states', ModelStates)
             while self.is_pose_received == False:
-                # print("is_pose_received - false")
                 pass
             self.is_pose_received = False
-            # print("current_pose:")
-            # print(self.current_pose_2d)
             return self.current_pose_2d
         elif mode == 1:
             data = rospy.wait_for_message('/vrpn_client_node/' + self.youbot_name + '/pose', PoseStamped)
@@ -122,73 +117,21 @@ class BaseController():
                     data.pose.orientation.y,
                     data.pose.orientation.z,
                     data.pose.orientation.w)
-            (roll, pitch, yaw) = euler_from_quaternion(q)
+            (_, _, yaw) = euler_from_quaternion(q)
             current_pose[2] = yaw
             return current_pose
-
-#youbot_name: youbot
-def get_youbot_base_pose(youbot_name, mode):
-    if mode == 0:
-        data = rospy.wait_for_message('gazebo/model_states', ModelStates)
-        current_position = [0,0,0]
-        current_orientation = [0,0,0,1]
-        youbot_index = 0
-        for name, data_index in zip(data.name, range(len(data.name))):
-            if name == youbot_name:
-                youbot_index = data_index
-
-
-        current_position[0] = data.pose[youbot_index].position.x
-        current_position[1] = data.pose[youbot_index].position.y
-        current_position[2] = data.pose[youbot_index].position.z
-        current_orientation[0] = data.pose[youbot_index].orientation.x
-        current_orientation[1] = data.pose[youbot_index].orientation.y
-        current_orientation[2] = data.pose[youbot_index].orientation.z
-        current_orientation[3] = data.pose[youbot_index].orientation.w    
-        return current_position, current_orientation
-    elif mode == 1:
-        data = rospy.wait_for_message('/vrpn_client_node/' + youbot_name + '/pose', PoseStamped)
-        current_position = [0,0,0]
-        current_orientation = [0,0,0,1]
-        current_position[0] = data.pose.position.x
-        current_position[1] = data.pose.position.y
-        current_position[2] = data.pose.position.z
-        current_orientation[0] = data.pose.orientation.x
-        current_orientation[1] = data.pose.orientation.y
-        current_orientation[2] = data.pose.orientation.z
-        current_orientation[3] = data.pose.orientation.w    
-        return current_position, current_orientation
-# base_action_name:   "youbot_base/move"
-# work with base_controller.cpp updatePositionMode()
-def execute_path(youbot_name, final_path, base_action_name):
-    client = actionlib.SimpleActionClient(youbot_name + base_action_name, MoveBaseAction)
-    client.wait_for_server()
-    goal = MoveBaseGoal()
-    begin_time = 0
-    path = final_path[:]
-    path.append((-111.0, -111.0, 0.0))
-    for pt_index in range(len(path) - 1):
-        goal.x = path[pt_index][0]
-        goal.y = path[pt_index][1]
-        goal.theta = path[pt_index][2]
-        goal.next_x = path[pt_index+1][0]
-        goal.next_y = path[pt_index+1][1]
-        goal.next_theta = path[pt_index+1][2]
-        print('Path', pt_index)
-        print(goal.x, goal.y, goal.theta, goal.next_x, goal.next_y, goal.next_theta)
-        client.send_goal_and_wait(goal, rospy.Duration.from_sec(10.0), rospy.Duration.from_sec(12.0))
-        # client.wait_for_result(rospy.Duration.from_sec(10.0)) 
 
 
 
 # ==================== visibility graph ====================
-def vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles):
-    """
-    Assume obstacles are represent by a list of in-order points
+def vg_find_small_path(start_pos, goal_pos, start_heading, goal_heading, obstacles):
+    """ Use YOUBOT_SHORT_RADIUS to dilate obstacles and find the path based on it
+        We need to care about the rotation, because it might hit obstacles
+        assume obstacles are represent by a list of in-order points
     """
 
     # ===== create free configuration space =====
-    #cpu_cores = int(commands.getstatusoutput('cat /proc/cpuinfo | grep processor | wc -l')[1])
+    cpu_cores = int(commands.getstatusoutput('cat /proc/cpuinfo | grep processor | wc -l')[1])
     # enlarged obstacles based on YOUBOT_SHORT_RADIUS, join_style=2 flat, join_style=1 round
     dilated_obstacles = [Polygon(obs).buffer(YOUBOT_SHORT_RADIUS, join_style=2, mitre_limit=1.5) for obs in obstacles]
     # enlarged obstacles based on YOUBOT_LONG_RADIUS, join_style=2 flat, join_style=1 round
@@ -209,8 +152,7 @@ def vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles):
     if TEST:
         g.build(polygons)
     else:
-        pass
-       # g.build(polygons, workers=cpu_cores)
+       g.build(polygons, workers=cpu_cores)
     path = g.shortest_path(vg.Point(start_pos[0], start_pos[1]), vg.Point(goal_pos[0], goal_pos[1]))
 
     # ===== change orientation of youbot so it can fit in this graph =====
@@ -248,8 +190,6 @@ def vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles):
             # if the intersection comes before next path
             else:
                 path_with_heading.append((intersection[0], intersection[1], current_heading))
-        # else:
-        #     raise ValueError('base_util, BUG: both points of an edge are not the vertex of polygon!!!!!!')
 
     if not intersections.is_empty:
         if not isinstance(intersections, LineString):
@@ -268,13 +208,14 @@ def vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles):
 
     return path_with_heading, g
 
-def vg_large_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles):
-    """
-    Assume obstacles are represent by a list of in-order points
+def vg_find_large_path(start_pos, goal_pos, start_heading, goal_heading, obstacles):
+    """ Use YOUBOT_LONG_RADIUS to dilate obstacles and find the path based on it
+        We do not need to care about the rotation, because it won't hit obstacles
+        Assume obstacles are represent by a list of in-order points
     """
 
     # ===== create free configuration space =====
-    #cpu_cores = int(commands.getstatusoutput('cat /proc/cpuinfo | grep processor | wc -l')[1])
+    cpu_cores = int(commands.getstatusoutput('cat /proc/cpuinfo | grep processor | wc -l')[1])
     # enlarged obstacles based on YOUBOT_SHORT_RADIUS, join_style=2 flat, join_style=1 round
     dilated_obstacles = [Polygon(obs).buffer(YOUBOT_LONG_RADIUS, join_style=2, mitre_limit=1.5) for obs in obstacles]
     # union dialted obstacles
@@ -291,8 +232,7 @@ def vg_large_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacl
     if TEST:
         g.build(polygons)
     else:
-        pass
-       # g.build(polygons, workers=cpu_cores)
+       g.build(polygons, workers=cpu_cores)
     path = g.shortest_path(vg.Point(start_pos[0], start_pos[1]), vg.Point(goal_pos[0], goal_pos[1]))
 
     # ===== change orientation of youbot so it can fit in this graph =====
@@ -318,13 +258,18 @@ def vg_large_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacl
 
     return path_with_heading, g
 
-def new_vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles):
-    """
-    Assume obstacles are represent by a list of in-order points
+def vg_find_combined_path(start_pos, goal_pos, start_heading, goal_heading, obstacles):
+    """ Use YOUBOT_LONG_RADIUS and YOUBOT_SHORT_RADIUS to dilate obstacles and find the path based on them,
+        we use the large path as the first choice, however, if the small path provides 
+        shorter path (evaluate based on LENGTH_CHOOSE and ADJUST_DISTANCE), then, 
+        we switch to the small path (The large path may detour).
+        We will switch back if small path and large path have merged back again
+        
+        Assume obstacles are represent by a list of in-order points
     """
 
     # ===== create free configuration space =====
-    #cpu_cores = int(commands.getstatusoutput('cat /proc/cpuinfo | grep processor | wc -l')[1])
+    cpu_cores = int(commands.getstatusoutput('cat /proc/cpuinfo | grep processor | wc -l')[1])
     # enlarged obstacles based on YOUBOT_SHORT_RADIUS, join_style=2 flat, join_style=1 round
     dilated_obstacles = [Polygon(obs).buffer(YOUBOT_SHORT_RADIUS, join_style=2, mitre_limit=1.5) for obs in obstacles]
     # enlarged obstacles based on YOUBOT_LONG_RADIUS, join_style=2 flat, join_style=1 round
@@ -351,16 +296,14 @@ def new_vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles
     if TEST:
         small_g.build(polygons)
     else:
-        pass
-       # small_g.build(polygons, workers=cpu_cores)
+        small_g.build(polygons, workers=cpu_cores)
     path = small_g.shortest_path(vg.Point(start_pos[0], start_pos[1]), vg.Point(goal_pos[0], goal_pos[1]))
 
     large_g = vg.VisGraph()
     if TEST:
         large_g.build(large_polygons)
     else:
-        pass
-       # large_g.build(polygons, workers=cpu_cores)
+       large_g.build(polygons, workers=cpu_cores)
     large_path = large_g.shortest_path(vg.Point(start_pos[0], start_pos[1]), vg.Point(goal_pos[0], goal_pos[1]))
 
     # ===== group two paths =====
@@ -452,6 +395,9 @@ def new_vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles
     return adjust_path, small_g, large_g
 
 def compute_heading(s, g, i, adjust_path, goal_heading):
+    """ helper for vg_find_combined_path
+        compute heading for small path so it won't hit obstacles
+    """
     while i < len(adjust_path) and adjust_path[i][-1] == SHORT_ANGLE:
         i += 1
     if i < len(adjust_path):
@@ -470,10 +416,14 @@ def compute_heading(s, g, i, adjust_path, goal_heading):
     return current_heading
 
 def point_distance(p, q):
+    """ helper for vg_find_combined_path
+        compute the distance between two points
+    """
     if isinstance(q, list) and isinstance(p, list):
         return math.sqrt((p[0] - q[0])**2 + (p[1] - q[1])**2)
     else:
         return math.sqrt((p.x - q.x)**2 + (p.y - q.y)**2)
+# ===========================================================
 
 def plot_vg_path(obstacles, path, g, large_g=None):
     from matplotlib import pyplot
@@ -525,19 +475,6 @@ def plot_vg_path(obstacles, path, g, large_g=None):
     ax.set_ylim(-5.5, 6.5)
     ax.set_xlim(-4, 4)
     ax.set_aspect("equal")
-
-    # # plot offset
-    # from shapely.figures import plot_line as plotline
-    # for l in pl:
-    #     plotline(ax, l, linewidth=1)
-    # for r in pr:
-    #     plotline(ax, r, linewidth=1)
-
-    # # plot intersection
-    # for l in plp:
-    #     ax.plot(l[0], l[1], marker='o', markersize=10, linestyle='None')
-    # for r in prp:
-    #     ax.plot(r[0], r[1], marker='o', markersize=10, linestyle='None')
     
     pyplot.show()
 
@@ -547,59 +484,6 @@ def plot_line(ax, ob, color='#BDC3C7', zorder=1, linewidth=5, alpha=1):
     
 def plot_edge(ax, x, y, color='gray', zorder=1, linewidth=1, alpha=1):
     ax.plot(x, y, color=color, linewidth=linewidth, solid_capstyle='round', zorder=zorder, alpha=alpha)
-
-
-# ==================== visibility graph ====================
-
-
-
-import sys, signal
-def signal_handler(signal, frame):
-    print("\nprogram exiting gracefully")
-    sys.exit(0)
-
-# signal.signal(signal.SIGINT, signal_handler)
-
-# from geometry_msgs.msg import Twist
-# from pid import PID
-
-# def position_to_velocity(path_with_heading):
-#     print("From position to velocity:")
-
-#     pid_x = PID(Kp=4.0, Ki=0.0, Kd=-0.1, output_limits=(-0.1, 0.1))
-#     pid_y = PID(Kp=4.0, Ki=0.0, Kd=-0.1, output_limits=(-0.1, 0.1))
-#     pid_theta = PID(Kp=2.0, Ki=0.0, Kd=-0.05, output_limits=(-0.1, 0.1))
-#     vel_pub = rospy.Publisher('robot/cmd_vel', Twist, queue_size=1)
-#     loop_rate = rospy.Rate(100)
-
-#     i = 0
-#     while i < len(path_with_heading):
-#         # TODO: filter error
-#         current_pos = get_youbot_base_pose2d("youbot")
-#         target_pos = path_with_heading[i]
-#         error_x = target_pos[0] - current_pos[0]
-#         error_y = target_pos[1] - current_pos[1]
-#         error_yaw = target_pos[2] - current_pos[2]
-#         msg = Twist()
-#         msg.linear.x = pid_x(error_x)
-#         msg.linear.y = pid_y(error_y)
-#         msg.angular.z = pid_theta(error_yaw)
-#         vel_pub.publish(msg)
-#         print(i, "current:",
-#                  "{:.2f}".format(current_pos[0]), 
-#                  "{:.2f}".format(current_pos[1]),
-#                  "{:.2f}".format(current_pos[2]),
-#                  "target:",
-#                  "{:.2f}".format(target_pos[0]),
-#                  "{:.2f}".format(target_pos[1]),
-#                  "{:.2f}".format(target_pos[2]))
-#         print(msg.linear.x, msg.linear.y, msg.angular.z)
-        
-#         if abs(error_x) + abs(error_y) < 0.1 and abs(error_yaw) < 0.174533:
-#             i += 1
-#         loop_rate.sleep()
-
-
 
 
 if __name__ == "__main__":
