@@ -31,11 +31,12 @@ MAX_JOINT_POS = [
     1.6402432236,
     2.6396457936]
 JOINT_OFFSET = [
-    -2.9395372288,
-    -1.124398163,
-    2.532469254,
-    -1.7668361332,
-    -2.8913271881]
+    -2.949606436,
+    -1.1344673701987218,
+     2.5481772172532176,
+    -1.7889600250839740,
+    -3.0019466477485340
+    ]
 
 ARM_JOINT_NUM = 5
 
@@ -70,8 +71,11 @@ def find_nearest_neighbor(query, joint_mat, neighbor_num):
     dist_index = np.argpartition(dist_arr, neighbor_num)
     return dist_index[:neighbor_num]
 
-def set_gripper_width(youbot_name, width):
-    client = actionlib.SimpleActionClient(youbot_name + "/gazebo/arm_1/set_gripper" , SetGripperAction)
+def set_gripper_width(youbot_name, width, mode=0):
+    if mode == 0:
+        client = actionlib.SimpleActionClient(youbot_name + "/gazebo/arm_1/set_gripper" , SetGripperAction)
+    else:
+        client = actionlib.SimpleActionClient(youbot_name + "/arm_1/set_gripper" , SetGripperAction)
     client.wait_for_server()
     goal = SetGripperGoal()
     
@@ -110,9 +114,12 @@ def execute_path(youbot_name, final_path):
 
 
 #return the joint position in the actual range (0,0,-5,0,0) to (5,5,0, 5, 5)
-def get_current_joint_pos(youbot_name):
-    data = rospy.wait_for_message(youbot_name + '/gazebo/joint_states', JointState)
-    
+def get_current_joint_pos(youbot_name, mode):
+    if mode == 0:
+        data = rospy.wait_for_message(youbot_name + '/gazebo/joint_states', JointState)
+    elif mode == 1:
+        data = rospy.wait_for_message(youbot_name + '/arm_1/joint_states', JointState)        
+
     current_joint_pos = []
     current_joint_pos.append(data.position[0])
     current_joint_pos.append(data.position[1])
@@ -120,3 +127,4 @@ def get_current_joint_pos(youbot_name):
     current_joint_pos.append(data.position[3])
     current_joint_pos.append(data.position[4])
     return current_joint_pos
+        

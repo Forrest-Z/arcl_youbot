@@ -125,8 +125,8 @@ void YoubotInterface::initialise(bool use_standard_gripper, bool use_luh_gripper
 
     for(uint i=0; i<arms_.size(); i++)
     {
-       // arms_[i]->initialise(use_standard_gripper,use_luh_gripper_v3);
-       // ROS_ASSERT(arms_[i]->isInitialised());
+       arms_[i]->initialise(use_standard_gripper,use_luh_gripper_v3);
+       ROS_ASSERT(arms_[i]->isInitialised());
     }
 
     base_timer_ = config_.node_handle->createTimer(ros::Duration(1.0/base_frequency_),

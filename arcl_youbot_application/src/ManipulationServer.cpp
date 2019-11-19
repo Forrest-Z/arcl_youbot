@@ -127,7 +127,8 @@ void ManipulationServer::GenerateSamplesForArmConf(geometry_msgs::Pose gripper_p
     double tip_z;
    // 0.067 is the length of the gripper finger
     
-    tip_z = gripper_pose.position.z - normal_z*0.02;
+//    tip_z = gripper_pose.position.z - normal_z*0.02;
+    tip_z = gripper_pose.position.z;
 
     cylin_z = tip_z - ykin::H2 + ykin::L0; // relative to arm_link_0
     
@@ -157,12 +158,11 @@ void ManipulationServer::GenerateSamplesForArmConf(geometry_msgs::Pose gripper_p
     }
     q5_list.push_back(4.57194);
     q5_list.push_back(1.43194);
-    for(q5 = 3.00194; q5 <= 5.84685299418; q5 += 0.3){
+    for(q5 = 3.00194; q5 <= 5.641592441; q5 += 0.15){
         q5_list.push_back(q5);
         q5_list.push_back(3.00194 - q5 + 3.00194);
     }
 }
-
 
 void ManipulationServer::goalCB()
 {
@@ -353,7 +353,7 @@ void ManipulationServer::goalCB()
                             
                             q5 += ykin::JOINT_OFFSETS[4];
                             #ifdef DEBUG_
-                            //ROS_INFO_STREAM("testing with q5 = "<<q5);
+                            ROS_INFO_STREAM("testing with q5 = "<<q5);
                             #endif
                             //q5 = 0 - q5;
                             cylin_test.setQ1(q1);
@@ -370,7 +370,7 @@ void ManipulationServer::goalCB()
                             // === Robot Base collision check with the environment ===
                             FromGraspPoseToBasePose(gripper_pose, gripper_dir, cylin_r, q1, q5, theta, base_pose);
                             #ifdef DEBUG_
-                                ROS_INFO_STREAM("check base_pose:"<<base_pose.position.x<<","<<base_pose.position.y<<","<<base_pose.position.z);
+                                // ROS_INFO_STREAM("check base_pose:"<<base_pose.position.x<<","<<base_pose.position.y<<","<<base_pose.position.z);
                             #endif
                             
                             arc::polygon_2 base_poly;
@@ -481,7 +481,7 @@ void ManipulationServer::goalCB()
 
                     for(int p = 0; p < final_base_pose_list.size(); p++){
                         temp_dist = sqrt((final_base_pose_list[p].position.x - rest_base_pose_.position.x)*(final_base_pose_list[p].position.x - rest_base_pose_.position.x) + (final_base_pose_list[p].position.y - rest_base_pose_.position.y)*(final_base_pose_list[p].position.y - rest_base_pose_.position.y));
-                        ROS_WARN_STREAM("base_pose:"<<final_base_pose_list[p].position.x<<","<<final_base_pose_list[p].position.y<<", temp_dist:"<<temp_dist);
+                        // ROS_WARN_STREAM("base_pose:"<<final_base_pose_list[p].position.x<<","<<final_base_pose_list[p].position.y<<", temp_dist:"<<temp_dist);
                         if(temp_dist < shortest_dist_to_rest){
                             shortest_dist_to_rest = temp_dist;
                             base_pose = final_base_pose_list[p];

@@ -464,6 +464,7 @@ bool YoubotArmInterface::writeCommands()
                 desired_angle.angle = position_command_[i] * radian;
                 try
                 {
+
                     arm_->getArmJoint(i + 1).setData(desired_angle);
                 }
                 catch (std::exception& e)
@@ -605,8 +606,9 @@ void YoubotArmInterface::stop()
 
 //########## SET POSITIONS #############################################################################################
 void YoubotArmInterface::setJointPositions(ykin::JointPosition positions)
-{
+{  
     positions.subtractOffset();
+    
     mode_ = POSITION;
     position_command_ = positions;
     has_new_arm_command_ = true;

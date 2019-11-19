@@ -12,7 +12,7 @@ if __name__ == "__main__":
     rospy.init_node("reachibility")
     #env = app_util.YoubotEnvironment(-1.5, 1.5, -3.0, 1.0)    
     env = app_util.YoubotEnvironment(-2.5, 2.5, 0.0, 5.0)
-    env.mode = 0
+    env.mode = 1
     #import object list from file
     my_path = os.path.abspath(os.path.dirname(__file__))
     # env.import_obj_from_file(os.path.join(my_path, "scatter/new_1.txt"))
@@ -60,7 +60,8 @@ if __name__ == "__main__":
         #     jnt_pos.append( np.random.uniform(arm_util.MIN_JOINT_POS[jnt] - arm_util.JOINT_OFFSET[jnt] ,arm_util.MAX_JOINT_POS[jnt] - arm_util.JOINT_OFFSET[jnt]))
         # jnt_pos = [5.282255649566651, 1.2318736314788064, -2.0795466899871577, 1.6788692474365234, 1.9565308094024658]
     jnt_pos = [3.0895373821258536, 1.6700667142879224, -1.026131987569805, 2.8564229011535645, 1.8807144165039062]
-    env.move_arm_to_joint_pose("youbot_0", jnt_pos)
+    env.move_arm_to_joint_pose("youbot_0", arm_up_joint)
+    
     rospy.spin()
     # env.move_arm_to_joint_pose("youbot_0", arm_up_joint)
     # for index in range(sample_num):

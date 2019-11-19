@@ -172,8 +172,8 @@ import commands
 from shapely.geometry import Polygon, LinearRing, LineString
 from shapely.ops import unary_union
 
-YOUBOT_SHORT_RADIUS = 0.23  # in meters
-YOUBOT_LONG_RADIUS = 0.38  # in meters
+YOUBOT_SHORT_RADIUS = 0.3  # in meters
+YOUBOT_LONG_RADIUS = 0.4  # in meters
 OFFSET = YOUBOT_LONG_RADIUS - YOUBOT_SHORT_RADIUS
 BACK_DISTANCE = 0.1
 
@@ -251,9 +251,9 @@ def vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles):
 
     if not intersections.is_empty:
         if not isinstance(intersections, LineString):
-            intersection = intersections[1].coords[0]
-        # else:
-        #     raise ValueError('base_util, BUG: should have two points!!!!!!')
+            intersection = intersections[-2].coords[-1]
+        else:
+            intersection = intersections.coords[-2]
         # need more time to rotate without collision
         if abs(abs(goal_heading) - abs(current_heading)) > math.pi / 4:
             goal_pos_back_x = intersection[0] - math.cos(current_heading) * BACK_DISTANCE
@@ -262,6 +262,56 @@ def vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles):
             # path_with_heading.append((intersection[0], intersection[1], goal_heading)) 
         else:
             path_with_heading.append((intersection[0], intersection[1], current_heading))
+    path_with_heading.append((path[-1].x, path[-1].y, goal_heading))
+
+    return path_with_heading, g
+
+def vg_large_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles):
+    """
+    Assume obstacles are represent by a list of in-order points
+    """
+
+    # ===== create free configuration space =====
+    #cpu_cores = int(commands.getstatusoutput('cat /proc/cpuinfo | grep processor | wc -l')[1])
+    # enlarged obstacles based on YOUBOT_SHORT_RADIUS, join_style=2 flat, join_style=1 round
+    dilated_obstacles = [Polygon(obs).buffer(YOUBOT_LONG_RADIUS, join_style=2, mitre_limit=1.5) for obs in obstacles]
+    # union dialted obstacles
+    union_dilated_obstacles = unary_union(dilated_obstacles)
+    # unary_union returns Polygon if only one polygon, otherwise, it returns MultiPolygon
+    if not isinstance(union_dilated_obstacles, Polygon):
+        # LinearRing: implicitly closed by copying the first tuple to the last index
+        polygons = [[vg.Point(x, y) for x, y in dilated_obs.exterior.coords[:-1]] for dilated_obs in union_dilated_obstacles]
+    else:
+        polygons = [[vg.Point(x, y) for x, y in union_dilated_obstacles.exterior.coords]]
+
+    # ===== get path from visibility graph =====
+    g = vg.VisGraph()
+    if TEST:
+        g.build(polygons)
+    else:
+        pass
+       # g.build(polygons, workers=cpu_cores)
+    path = g.shortest_path(vg.Point(start_pos[0], start_pos[1]), vg.Point(goal_pos[0], goal_pos[1]))
+
+    # ===== change orientation of youbot so it can fit in this graph =====
+    current_heading = start_heading
+    temp_heading = abs(goal_heading - start_heading)
+    total_distance = 0
+    for i in range(len(path) - 2):
+        total_distance += math.sqrt((path[i+1].x-path[i].x)**2 + (path[i+1].y-path[i].y)**2)
+    if temp_heading > math.pi:
+        if goal_heading - start_heading > 0:
+            delta_heading = -(math.pi*2 - goal_heading + start_heading) / total_distance
+        else:
+            delta_heading = (math.pi*2 + goal_heading - start_heading) / total_distance
+    else:
+        delta_heading = (goal_heading - start_heading) / total_distance
+    path_with_heading = []
+    for i in range(len(path) - 1):
+        # add path
+        path_with_heading.append((path[i].x, path[i].y, current_heading))
+        current_heading += delta_heading * math.sqrt((path[i+1].x-path[i].x)**2 + (path[i+1].y-path[i].y)**2)
+
     path_with_heading.append((path[-1].x, path[-1].y, goal_heading))
 
     return path_with_heading, g
@@ -295,85 +345,93 @@ def new_vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles
         large_polygons = [[vg.Point(x, y) for x, y in union_dilated_large_obstacles.exterior.coords]]
 
     # ===== get path from visibility graph =====
-    g = vg.VisGraph()
+    small_g = vg.VisGraph()
     if TEST:
-        g.build(polygons)
+        small_g.build(polygons)
     else:
         pass
-       # g.build(polygons, workers=cpu_cores)
-    path = g.shortest_path(vg.Point(start_pos[0], start_pos[1]), vg.Point(goal_pos[0], goal_pos[1]))
+       # small_g.build(polygons, workers=cpu_cores)
+    path = small_g.shortest_path(vg.Point(start_pos[0], start_pos[1]), vg.Point(goal_pos[0], goal_pos[1]))
+
     large_g = vg.VisGraph()
     if TEST:
         large_g.build(large_polygons)
     else:
         pass
-       # g.build(polygons, workers=cpu_cores)
+       # large_g.build(polygons, workers=cpu_cores)
     large_path = large_g.shortest_path(vg.Point(start_pos[0], start_pos[1]), vg.Point(goal_pos[0], goal_pos[1]))
 
-    # ===== change orientation of youbot so it can fit in this graph =====
+    # ===== group two paths =====
+    adjust_path = []
+    total_distance = 0
+    li = 0
+    for i in range(len(path)):
+        if point_distance(path[i], large_path[li]) <= ADJUST_DISTANCE:
+            adjust_path.append([large_path[li].x, large_path[li].y, 0])    
+            li += 1
+        else:
+            adjust_path.append([path[i].x, path[i].y, SHORT_ANGLE])
+            temp = li
+            while li < len(large_path) and point_distance(path[i], large_path[li]) > ADJUST_DISTANCE:
+                li += 1
+            if li == len(large_path):
+                li = temp
+    # ===== add heading =====
+    # distance
+    total_distance = 0
+    for i in range(len(adjust_path) - 1):
+        if adjust_path[i][-1] != SHORT_ANGLE and adjust_path[i+1][-1] != SHORT_ANGLE:
+            total_distance += point_distance(adjust_path[i], adjust_path[i+1])
+        elif (adjust_path[i][-1] == SHORT_ANGLE) and (adjust_path[i+1][-1] != SHORT_ANGLE):
+            total_distance += point_distance(adjust_path[i], adjust_path[i+1]) * NEAR_RATIO
+    if total_distance == 0: total_distance = 1
+    # delta rotation
+    temp_heading = abs(goal_heading - start_heading)
+    if temp_heading > math.pi:
+        if goal_heading - start_heading > 0:
+            delta_heading = -(math.pi * 2 - goal_heading + start_heading) / total_distance
+        else:
+            delta_heading = (math.pi * 2 + goal_heading - start_heading) / total_distance
+    else:
+        delta_heading = (goal_heading - start_heading) / total_distance
+    # add heading to large
     current_heading = start_heading
-    path_with_heading = []
-    large_skip = 0
-    for i in range(len(path) - 1):
-        path_vector = (path[i+1].x - path[i].x, path[i+1].y - path[i].y)
-        large_path_vector = (large_path[i+1+large_skip].x - large_path[i+large_skip].x, large_path[i+1+large_skip].y - large_path[i+large_skip].y)
-        if abs(path_vector[0] - large_path_vector[0]) > 0.3 or abs(path_vector[1] - large_path_vector[1]) > 0.3:
-            print("use small one")
-            path_with_heading.append((path[i].x, path[i].y, current_heading))
-            while abs(path_vector[0] - large_path_vector[0]) > 0.3 or abs(path_vector[1] - large_path_vector[1]) > 0.3:
-                large_skip += 1
-                large_path_vector = (large_path[i+1+large_skip].x - large_path[i+large_skip].x, large_path[i+1+large_skip].y - large_path[i+large_skip].y)  
-            # generate a line from current position to next
-            line = LineString([(path[i].x, path[i].y), (path[i+1].x, path[i+1].y)])
-
-            # find intersections & adjust orientation
-            intersections = line.intersection(union_dilated_large_obstacles)
-            if not intersections.is_empty:
-                if not isinstance(intersections, LineString):
-                    intersection = intersections[0].coords[0]
-                else:
-                    intersection = intersections.coords[0]
-                vector = (path[i+1].x - path[i].x, path[i+1].y - path[i].y)
-                current_heading = math.atan2(vector[1], vector[0])
-                if i == 0:
-                    if abs(start_heading - current_heading) > math.pi / 2:
-                        current_heading = current_heading - math.pi
-                else:
-                    if abs(goal_heading - current_heading) > math.pi / 2:
-                        current_heading = current_heading - math.pi
-                if current_heading > math.pi:
-                    current_heading -= 2*math.pi
-                elif current_heading < -math.pi:
-                    current_heading += 2*math.pi
-                # if the vector starts inside a polygon (shapely returns intersection == path[i])
-                if intersection == (path[i].x, path[i].y):
-                    path_with_heading.append((path[i].x, path[i].y, current_heading))
-                # if the intersection comes before next path
-                else:
-                    path_with_heading.append((intersection[0], intersection[1], current_heading))
-            # else:
-            #     raise ValueError('base_util, BUG: both points of an edge are not the vertex of polygon!!!!!!')
+    for i in range(len(adjust_path) - 1):
+        if adjust_path[i][-1] != SHORT_ANGLE:
+            adjust_path[i][-1] = current_heading
+            if adjust_path[i+1][-1] != SHORT_ANGLE:
+                current_heading += delta_heading * point_distance(adjust_path[i+1], adjust_path[i])
         else:
-            path_with_heading.append((large_path[i+large_skip].x, large_path[i+large_skip].y, current_heading))
-
-    line = LineString([(path[i].x, path[i].y), (path[i+1].x, path[i+1].y)])
-    intersections = line.intersection(union_dilated_large_obstacles)
-    if not intersections.is_empty:
-        if not isinstance(intersections, LineString):
-            intersection = intersections[1].coords[0]
-        # else:
-        #     raise ValueError('base_util, BUG: should have two points!!!!!!')
-        # need more time to rotate without collision
-        if abs(abs(goal_heading) - abs(current_heading)) > math.pi / 4:
-            goal_pos_back_x = intersection[0] - math.cos(current_heading) * BACK_DISTANCE
-            goal_pos_back_y = intersection[1] - math.sin(current_heading) * BACK_DISTANCE
-            path_with_heading.append((goal_pos_back_x, goal_pos_back_y, current_heading))   
-            # path_with_heading.append((intersection[0], intersection[1], goal_heading)) 
+            if adjust_path[i+1][-1] != SHORT_ANGLE:
+                current_heading += delta_heading * point_distance(adjust_path[i+1], adjust_path[i]) * NEAR_RATIO
+    # add headding to small
+    i = 0
+    while i < len(adjust_path) - 1:
+        if adjust_path[i][-1] == SHORT_ANGLE:
+            s = adjust_path[i]
+            g = adjust_path[i+1]
+            current_heading = compute_heading(s, g, i, adjust_path, goal_heading)
+            adjust_path[i][-1] = current_heading
+            i += 1
+            if g[-1] == SHORT_ANGLE:
+                adjust_path.insert(i, [g[0], g[1], current_heading])
+            else:
+                adjust_path.insert(i, [(g[0] - s[0]) * (1 - NEAR_RATIO) + s[0], (g[1] - s[1]) * (1 - NEAR_RATIO) + s[1], current_heading])
+            i += 1
         else:
-            path_with_heading.append((intersection[0], intersection[1], current_heading))
-    path_with_heading.append((path[-1].x, path[-1].y, goal_heading))
+            if adjust_path[i+1][-1] == SHORT_ANGLE:
+                s = adjust_path[i]
+                g = adjust_path[i+1]
+                current_heading = compute_heading(s, g, i, adjust_path, goal_heading)
+                i += 1
+                adjust_path.insert(i, [(g[0] - s[0]) * NEAR_RATIO + s[0], (g[1] - s[1]) * NEAR_RATIO + s[1], current_heading])
+                i += 1
+                adjust_path.insert(i, [g[0], g[1], current_heading])
+            i += 1
 
-    return path_with_heading, g
+    adjust_path[-1][-1] = goal_heading
+
+    return adjust_path, small_g
 
 def plot_vg_path(obstacles, path, g):
     from matplotlib import pyplot

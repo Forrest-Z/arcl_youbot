@@ -31,6 +31,7 @@ import arcl_youbot_application.common_util as common_util
 from youbot_forklift_ros_interface.msg import GoToPositionAction, GoToPositionGoal
 import os.path
 from geometry_msgs.msg import PoseStamped
+import re
 
 GAZEBO_COLORS = [ 
 "Gazebo/White",
@@ -46,31 +47,29 @@ GAZEBO_COLORS = [
 ]
 
 WALL = [(2.8, -0.3), (0.7, -0.3), (0.7, 0.0), (2.5, 0.0), (2.5, 5.0), (-2.5, 5.0), (-2.5, 0.0), (-0.7, 0.0), (-0.7, -0.3), (-2.8, -0.3), (-2.8, 5.3), (2.8, 5.3), (2.8, 0.0)]
-OPTI_OBJ_SIZE = [(0.04, 0.04, 0.20), (0.04, 0.04, 0.227), (0.04, 0.04, 0.175), (0.04, 0.04, 0.165), (0.04, 0.04, 0.185)]
+
 
 
 class YoubotEnvironment(): 
-    #example object_list: 
-    #[[(1, 1), (2, 1.5), (1, 2)],
-    #            [(3, 2), (4, 2), (4, 4), (3, 4)],
-    #             [(4, 3), (4.5, 1), (5, 3)]]    
+    
     
     def __init__(self, x_min, x_max, y_min, y_max):
         self.x_min = x_min
         self.x_max = x_max
         self.y_min = y_min
         self.y_max = y_max
-        self.object_list = []
+        self.object_list = {}    #example object_list(contain 3 polygons): [[(1, 1), (2, 1.5), (1, 2)], [(3, 2), (4, 2), (4, 4), (3, 4)], [(4, 3), (4.5, 1), (5, 3)]]    
+        self.obj_name_to_index_dict = {}
         self.planning_scene_msg = PlanningSceneMsg()
         self.reserved_planning_scene_msg = PlanningSceneMsg()
         self.mode = 0
-        self.obj_name_list = ['obj_0', 'obj_3', 'obj_8', 'obj_10', 'obj_12']
         
-    # filename: ffabsolute path for the environment file
     def import_obj_from_file(self, filename):
+        # filename: ffabsolute path for the environment file
+
         f = open(filename, 'r')
         self.object_num = int(f.readline())
-        for _ in range(self.object_num):
+        for obj_index in range(self.object_num):
             vertex_num = int(f.readline())
             current_obj = []
             for _ in range(vertex_num):
@@ -78,17 +77,18 @@ class YoubotEnvironment():
                 point[0] = float(point[0])
                 point[1] = float(point[1])
                 current_obj.append((point[0], point[1]))
-            self.object_list.append(current_obj)
+            self.object_list['obj_'+str(obj_index)] = current_obj
 
-        self.object_list.append(WALL)
+        self.object_list['wall'] = WALL
 
         print len(self.object_list)
 
-    # filename: ffabsolute path for the environment file
     def export_obj_to_file(self, filename):
+        # filename: ffabsolute path for the environment file
+
         f = open(filename, 'w')
         f.write(str(self.object_num)+'\n')
-        for obj in self.object_list[:-1]:
+        for obj_name, obj in self.object_list[:-1].iteritems():
             f.write(str(len(obj)-1)+'\n')
             for v in obj[:-1]:
                 f.write(str(v[0]) + " " + str(v[1])+'\n')
@@ -98,6 +98,12 @@ class YoubotEnvironment():
     
 
     def create_scene(self, object_number, cluster_number):
+        # create random object_list in the current environment
+        # INPUT: 
+            #object_number: total object num 
+            #cluster_number: number of clusters the objects are separated to.
+        # EXAMPLE: create_scene(20, 20) will create 20 scattered objects
+    
         boundary_padding = 0.5
         x_min = self.x_min + boundary_padding
         x_max = self.x_max - boundary_padding
@@ -142,17 +148,28 @@ class YoubotEnvironment():
                     same_cluster_objs.append(tp)
                     created_objs.append(tp)
     
-        list_created_objs = []
-        for obj in created_objs:
-            list_created_objs.append(list(obj.exterior.coords))
+        list_created_objs = {}
+
+        for obj, obj_index in zip(created_objs, range(len(created_objs))):
+            list_created_objs['obj_'+str(obj_index)] = list(obj.exterior.coords)
 
         self.import_obj_from_list(list_created_objs)
         self.object_num = len(self.object_list)
 
-        self.object_list.append(WALL)
+        self.object_list['wall'] = WALL
 
     def import_obj_from_optitrack(self):
-        for obj_name, obj_index in zip(self.obj_name_list, range(len(self.obj_name_list))):
+        #auto detect objects in the optitrack region, generate self.object_list and obj_name_list, and generate planning_scene_msg
+        obj_name_list = []
+        topic_list = rospy.get_published_topics()
+        for [topic_name, topic_type] in topic_list:
+            if re.match(r"/vrpn_client_node/obj_.*", topic_name):
+                obj_name = re.search("obj_\d*", topic_name)
+                print(obj_name.group(0))
+                obj_name_list.append(obj_name.group(0))
+
+
+        for obj_name, obj_index in zip(obj_name_list, range(len(obj_name_list))):
             data = rospy.wait_for_message('/vrpn_client_node/' + obj_name + '/pose', PoseStamped)
             
             current_pose = [0, 0, 0]
@@ -162,20 +179,24 @@ class YoubotEnvironment():
                     data.pose.orientation.y,
                     data.pose.orientation.z,
                     data.pose.orientation.w)
-            (roll, pitch, yaw) = euler_from_quaternion(q)
+            (roll, pitch, yaw) = euler_from_quaternion(q) 
             print('yaw:' + str(yaw))
             current_pose[2] = yaw
-            current_poly = common_util.generate_poly(current_pose[0], current_pose[1], yaw, OPTI_OBJ_SIZE[obj_index][2]/2.0, OPTI_OBJ_SIZE[obj_index][0]/2.0)
+            current_poly = common_util.generate_poly(current_pose[0], current_pose[1], yaw, common_util.CUBE_SIZE_DICT[obj_name][2]/2.0, common_util.CUBE_SIZE_DICT[obj_name][0]/2.0)
             current_poly_list = list(current_poly.exterior.coords)
-            self.object_list.append(current_poly_list)
+            self.object_list[obj_name] = current_poly_list
         self.generate_planning_scene_msg()
 
     def manipulation_action_done_cb(self, goal_state, result):
+        #callback function for grasp planning action request
+
         print("manipulationaction returned")
         print(result)
         self.grasp_plan_result = result
 
     def send_grasp_action(self, manipulation_scene_msg, next_picking_object_name, target_object_pose, last_target_object_name, object_type_name, rest_base_pose, is_synchronize):
+        #prepare grasp action request and send action request
+
         client = actionlib.SimpleActionClient("manipulation_action", ManipulationAction)
         client.wait_for_server()
         goal = ManipulationGoal()
@@ -190,7 +211,9 @@ class YoubotEnvironment():
         client.wait_for_result(rospy.Duration.from_sec(10.0))
 
     def generate_planning_scene_msg(self):
-        for obj, obj_index in zip(self.object_list[:-1], range(len(self.object_list) - 1)):
+        obj_index = 0
+        for obj_name, obj  in self.object_list.iteritems():
+            if obj_name == 'wall': continue
             scene_object = SceneObjectMsg()
             scene_object.object_type.data = "cube"
             scene_object.object_state.data = 0
@@ -238,7 +261,7 @@ class YoubotEnvironment():
             position = [center_x, center_y, short_length / 2.0]
             quaternion = [qx, qy, qz, qw]
             # color = GAZEBO_COLORS[obj_index % len(GAZEBO_COLORS)]
-            object_name = "obj_" + str(obj_index)
+            object_name = obj_name
 
             current_obj_pose = Pose()
             current_obj_2dpose = Pose2D()
@@ -262,11 +285,15 @@ class YoubotEnvironment():
             scene_object.dx = size[0]
             scene_object.dy = size[1]
             scene_object.dz = size[2]
+            self.obj_name_to_index_dict[obj_name] = obj_index
             self.planning_scene_msg.scene_object_list.append(scene_object)
             self.reserved_planning_scene_msg.scene_object_list.append(scene_object)
+            obj_index += 1
 
     def generate_obj_in_gazebo(self):
-        for obj, obj_index in zip(self.object_list[:-1], range(len(self.object_list) - 1)):
+        obj_index = 0
+        for obj_name, obj in self.object_list.iteritems():
+            if obj_name == 'wall': continue
             scene_object = SceneObjectMsg()
             scene_object.object_type.data = "cube"
             scene_object.object_state.data = 0
@@ -315,7 +342,7 @@ class YoubotEnvironment():
             quaternion = [qx, qy, qz, qw]
             # color = GAZEBO_COLORS[obj_index % len(GAZEBO_COLORS)]
             color = GAZEBO_COLORS[0]            
-            object_name = "obj_" + str(obj_index)
+            object_name = obj_name
             common_util.spawnCuboid(size, position, quaternion, color, object_name)
 
             current_obj_pose = Pose()
@@ -342,12 +369,14 @@ class YoubotEnvironment():
             scene_object.dz = size[2]
             self.planning_scene_msg.scene_object_list.append(scene_object)
             self.reserved_planning_scene_msg.scene_object_list.append(scene_object)
+            obj_index += 1
 
     def update_env(self, deleted_obj):
-        print(deleted_obj)
-        deleted_obj_index = self.object_list.index(deleted_obj)        
-        print(self.object_list)
-        self.object_list.remove(deleted_obj)
+        print(deleted_obj) 
+        deleted_obj_index = self.object_list.values().index(deleted_obj)        
+        # print(self.object_list)
+        deleted_obj_key = self.object_list.keys()[deleted_obj_index]
+        self.object_list.pop(deleted_obj_key)
         print("update_env:" + str(deleted_obj_index))
         print("planning_scene_msg size:" + str(len(self.planning_scene_msg.scene_object_list)))
         deleted_obj_msg = self.planning_scene_msg.scene_object_list[deleted_obj_index]
@@ -357,6 +386,12 @@ class YoubotEnvironment():
         # raw_input("wait")
 
     def move_to_target(self, youbot_name, target_pose):
+        # works under gazebo and real world env
+        # INPUT:
+            # youbot_name: the controlled youbot's name (ex: youbot_0)
+            # target_pose: the target pose in global coordinate
+                    # type: geometry_msgs/Pose
+
         base_controller = base_util.BaseController(youbot_name)
         current_pos_2d = base_controller.get_youbot_base_pose2d(self.mode)
         print("current_pos_2d")
@@ -373,7 +408,7 @@ class YoubotEnvironment():
         
         start_pos = (current_pos_2d[0], current_pos_2d[1])
         goal_pos = (target_pos_2d[0], target_pos_2d[1])
-        obstacles = self.object_list
+        obstacles = self.object_list.values()
         start_heading = current_pos_2d[2]
         goal_heading = target_pos_2d[2]
         print("start:")
@@ -382,7 +417,10 @@ class YoubotEnvironment():
         print(goal_pos, goal_heading)
         import time
         start_time = time.time()
-        path_with_heading, g = base_util.vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles)
+        if self.mode == 1:
+            path_with_heading, g = base_util.vg_large_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles)
+        else:
+            path_with_heading, g = base_util.vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles)
         print("time: " + str(time.time() - start_time))
         print("path:")
         print(path_with_heading)
@@ -405,7 +443,7 @@ class YoubotEnvironment():
         
         start_pos = (current_pos_2d[0], current_pos_2d[1])
         goal_pos = (target_pos_2d[0], target_pos_2d[1])
-        obstacles = self.object_list
+        obstacles = self.object_list.values()
         # path, g = vg.vg_youbot_path.vg_find_path(start_pos, goal_pos, obstacles)
         print("start:")
         print(start_pos)
@@ -453,11 +491,11 @@ class YoubotEnvironment():
             return False
         else:
             prmstar_planner.remove_obstacles()
-            prmstar_planner.import_obstacles(self.object_list)
+            prmstar_planner.import_obstacles(self.object_list.values())
             robot_position, robot_orientation = base_util.get_youbot_base_pose(youbot_name, self.mode)
             prmstar_planner.set_robot_pose(robot_position, robot_orientation)
 
-            start = arm_util.get_current_joint_pos(youbot_name)
+            start = arm_util.get_current_joint_pos(youbot_name, self.mode)
                     #plan and move arm to pre_pick_pos
             [final_path, final_cost] = prmstar_planner.path_plan(tuple(start), tuple(joint_target))
             # raw_input("finished path planning, check path")
@@ -488,14 +526,20 @@ class YoubotEnvironment():
         #prmstar.build_roadmap()
 
         prmstar_planner.remove_obstacles()
-        prmstar_planner.import_obstacles(self.object_list)
+        prmstar_planner.import_obstacles(self.object_list.values())
         robot_position, robot_orientation = base_util.get_youbot_base_pose(youbot_name, self.mode)
         prmstar_planner.set_robot_pose(robot_position, robot_orientation)
 
-        start = arm_util.get_current_joint_pos(youbot_name)
+        start = arm_util.get_current_joint_pos(youbot_name, self.mode)
 
-        pick_joint_value[4] = -pick_joint_value[4]
-        pre_pick_joint_value[4] = -pre_pick_joint_value[4]
+        if self.mode == 0 or self.mode == 1:
+            pick_joint_value[4] = -pick_joint_value[4]
+            pre_pick_joint_value[4] = -pre_pick_joint_value[4]
+
+
+
+        print('pick_joint_value:')
+        print(pick_joint_value)
         arm_util.subtract_offset(pick_joint_value)
         arm_util.subtract_offset(pre_pick_joint_value)
 
@@ -504,22 +548,22 @@ class YoubotEnvironment():
 
         arm_util.execute_path(youbot_name, final_path)
 
-        arm_util.set_gripper_width("youbot_0", 0.068)
+        arm_util.set_gripper_width("youbot_0", 0.0, self.mode)
         print("moved to the pre_pick pose")
         #directly move arm to pick_pos
-        start = arm_util.get_current_joint_pos(youbot_name)
+        start = arm_util.get_current_joint_pos(youbot_name, self.mode)
         [final_path, final_cost] = prmstar_planner.direct_path(tuple(start), tuple(pick_joint_value))
         
-        arm_util.execute_path(youbot_name, final_path)
+        #arm_util.execute_path(youbot_name, final_path)
         print("moved to the pick pose")
 
-        arm_util.set_gripper_width("youbot_0", 0.00)
+        arm_util.set_gripper_width("youbot_0", 0.06, self.mode)
         rospy.sleep(rospy.Duration.from_sec(5.0))
 
         #directly retract arm to pre_pick_pos
-        start = arm_util.get_current_joint_pos(youbot_name)
+        start = arm_util.get_current_joint_pos(youbot_name, self.mode)
         [final_path, final_cost] = prmstar_planner.direct_path(tuple(start), tuple(pre_pick_joint_value))
-        arm_util.execute_path(youbot_name, final_path)
+        #arm_util.execute_path(youbot_name, final_path)
         print("moved back to the pre_pick pose")
 
 

@@ -33,7 +33,7 @@ OBJECT_LENGTH_MAX = 0.35
 OBJECT_LENGTH_MIN = 0.15
 USE_GAZEBO = 0
 USE_OPTI = 1
-
+CUBE_SIZE_DICT = {'obj_0': (0.04,0.04,0.20), 'obj_3':(0.04,0.04,0.218), 'obj_8': (0.04,0.04,0.125), 'obj_10': (0.04,0.04,0.165), 'obj_12': (0.04,0.04,0.185)}
 
 
 

@@ -41,7 +41,7 @@ ControllerNode::ControllerNode(ros::NodeHandle &node):
     ros::param::param("luh_youbot_controller/base_controller_frequency", base_frequency_, 50.0);
     ros::param::param("luh_youbot_controller/use_standard_gripper", use_standard_gripper_, true);
     ros::param::param("luh_youbot_controller/use_vrep_simulation", use_vrep_simulation_, false);
-    ros::param::param("luh_youbot_controller/use_gazebo_simulation", use_gazebo_simulation_, true);
+    ros::param::param("luh_youbot_controller/use_gazebo_simulation", use_gazebo_simulation_, false);
     ros::param::param("luh_youbot_controller/use_luh_gripper_v3", use_luh_gripper_v3_, false);
 
     // node_->param("luh_youbot_controller/arm_controller_frequency", arm_frequency_, 200.0);

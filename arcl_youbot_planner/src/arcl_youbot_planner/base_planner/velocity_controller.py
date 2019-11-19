@@ -48,12 +48,15 @@ class VelocityController(object):
         max_velocity_x = rospy.get_param("/module_base_controller/max_velocity_x", 0.3)
         max_velocity_y = rospy.get_param("/module_base_controller/max_velocity_y", 0.3)
         max_velocity_theta = rospy.get_param("/module_base_controller/max_velocity_theta", 0.8)
+        max_velocity_x_approach = rospy.get_param("/module_base_controller/max_velocity_x_approach", 0.3)
+        max_velocity_y_approach = rospy.get_param("/module_base_controller/max_velocity_y_approach", 0.3)
+        max_velocity_theta_approach = rospy.get_param("/module_base_controller/max_velocity_theta_approach", 0.8)
         self.x_pid = PID(Kp=velocity_p_factor_x, Ki=velocity_i_factor_x, Kd=velocity_d_factor_x, output_limits=(-max_velocity_x, max_velocity_x))
         self.y_pid = PID(Kp=velocity_p_factor_y, Ki=velocity_i_factor_y, Kd=velocity_d_factor_y, output_limits=(-max_velocity_y, max_velocity_y))
         self.theta_pid = PID(Kp=velocity_p_factor_theta, Ki=velocity_i_factor_theta, Kd=velocity_d_factor_theta, output_limits=(-max_velocity_theta, max_velocity_theta))
-        self.x_pid_near = PID(Kp=velocity_p_factor_x_near, Ki=velocity_i_factor_x_near, Kd=velocity_d_factor_x_near, output_limits=(-max_velocity_x / 2.0, max_velocity_x / 2.0))
-        self.y_pid_near = PID(Kp=velocity_p_factor_y_near, Ki=velocity_i_factor_y_near, Kd=velocity_d_factor_y_near, output_limits=(-max_velocity_y / 2.0, max_velocity_y / 2.0))
-        self.theta_pid_near = PID(Kp=velocity_p_factor_theta_near, Ki=velocity_i_factor_theta_near, Kd=velocity_d_factor_theta_near, output_limits=(-max_velocity_theta / 2.0, max_velocity_theta / 2.0))
+        self.x_pid_near = PID(Kp=velocity_p_factor_x_near, Ki=velocity_i_factor_x_near, Kd=velocity_d_factor_x_near, output_limits=(-max_velocity_x_approach / 2.0, max_velocity_x_approach / 2.0))
+        self.y_pid_near = PID(Kp=velocity_p_factor_y_near, Ki=velocity_i_factor_y_near, Kd=velocity_d_factor_y_near, output_limits=(-max_velocity_y_approach / 2.0, max_velocity_y_approach / 2.0))
+        self.theta_pid_near = PID(Kp=velocity_p_factor_theta_near, Ki=velocity_i_factor_theta_near, Kd=velocity_d_factor_theta_near, output_limits=(-max_velocity_theta_approach / 2.0, max_velocity_theta_approach / 2.0))
 
         # Parameters for smoothing velocity
         step_reached_threshold_x = rospy.get_param("/module_base_controller/step_reached_threshold_x", 0.15)

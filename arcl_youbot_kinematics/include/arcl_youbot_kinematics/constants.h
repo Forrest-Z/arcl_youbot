@@ -38,14 +38,14 @@ const double MAX_JNT_ACCELERATIONS[] = {2.0, 2.0, 2.0, 2.0, 2.0};
 const double MAX_JNT_VELOCITIES[] = {2.6, 2.6, 2.6, 2.6, 1.3};
 
 /// joint angle offsets (difference between desired and actual zero positions)
-const double JOINT_OFFSETS[] =
-{
-   -2.9395372288,
-    -1.124398163,
-    2.532469254,
-    -1.7668361332,
-    -2.8913271881
-};
+// const double JOINT_OFFSETS[] =
+// {
+//    -2.9395372288,
+//     -1.124398163,
+//     2.532469254,
+//     -1.7668361332,
+//     -2.8913271881
+// };
 
 /// maximum joint positions (in relation to desired zero positions)
 const double MAX_JNT_POSITIONS[] =
@@ -67,14 +67,23 @@ const double MIN_JNT_POSITIONS[] =
     -2.8913271881
 };
 
-// const double JOINT_OFFSETS[] =
-// {
-//      -2.949606436,
-//     -1.1344673701987218,
-//      2.5481772172532176,
-//     -1.7889600250839740,
-//     -3.0019466477485340
-// };
+// 0.0100692 and 5.84014
+// 0.0100692 and 2.61799
+// -5.02655 and -0.015708
+// 0.0221239 and 3.4292
+// 0.110619 and 5.64159
+
+
+
+
+const double JOINT_OFFSETS[] =
+{
+     -2.949606436,
+    -1.1344673701987218,
+     2.5481772172532176,
+    -1.7889600250839740,
+    -3.0019466477485340
+};
 
 // /// maximum joint positions (in relation to desired zero positions)
 // const double MAX_JNT_POSITIONS[] =

@@ -1,4 +1,4 @@
-source ../../devel/setup.sh
+source ../devel/setup.sh
 
 export ROS_IP="$(echo -e "$(hostname -I)" | sed -e 's/[[:space:]]*$//')"
 #export ROS_HOSTNAME=$ROS_IP
