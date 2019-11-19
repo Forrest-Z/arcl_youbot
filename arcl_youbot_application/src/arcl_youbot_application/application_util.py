@@ -180,7 +180,10 @@ class YoubotEnvironment():
                     data.pose.orientation.z,
                     data.pose.orientation.w)
             (roll, pitch, yaw) = euler_from_quaternion(q) 
+            print('obj_name:' + str(obj_name))
             print('yaw:' + str(yaw))
+            print('roll:' + str(roll))
+            print('pitch:' + str(pitch))
             current_pose[2] = yaw
             current_poly = common_util.generate_poly(current_pose[0], current_pose[1], yaw, common_util.CUBE_SIZE_DICT[obj_name][2]/2.0, common_util.CUBE_SIZE_DICT[obj_name][0]/2.0)
             current_poly_list = list(current_poly.exterior.coords)
@@ -536,7 +539,15 @@ class YoubotEnvironment():
             pick_joint_value[4] = -pick_joint_value[4]
             pre_pick_joint_value[4] = -pre_pick_joint_value[4]
 
+        if self.mode == 1:
+            if pick_joint_value[4] + 1.57 > arm_util.MAX_JOINT_POS[4]:
+                pick_joint_value[4] -= 1.57
+                pre_pick_joint_value[4] -= 1.57
+            else:
+                pick_joint_value[4] += 1.57
+                pre_pick_joint_value[4] += 1.57
 
+            
 
         print('pick_joint_value:')
         print(pick_joint_value)
@@ -545,16 +556,16 @@ class YoubotEnvironment():
 
         #plan and move arm to pre_pick_pos
         [final_path, final_cost] = prmstar_planner.path_plan(tuple(start), tuple(pre_pick_joint_value))
+        arm_util.set_gripper_width("youbot_0", 0.0, self.mode)
 
         arm_util.execute_path(youbot_name, final_path)
 
-        arm_util.set_gripper_width("youbot_0", 0.0, self.mode)
         print("moved to the pre_pick pose")
         #directly move arm to pick_pos
         start = arm_util.get_current_joint_pos(youbot_name, self.mode)
         [final_path, final_cost] = prmstar_planner.direct_path(tuple(start), tuple(pick_joint_value))
         
-        #arm_util.execute_path(youbot_name, final_path)
+        arm_util.execute_path(youbot_name, final_path)
         print("moved to the pick pose")
 
         arm_util.set_gripper_width("youbot_0", 0.06, self.mode)
@@ -563,7 +574,7 @@ class YoubotEnvironment():
         #directly retract arm to pre_pick_pos
         start = arm_util.get_current_joint_pos(youbot_name, self.mode)
         [final_path, final_cost] = prmstar_planner.direct_path(tuple(start), tuple(pre_pick_joint_value))
-        #arm_util.execute_path(youbot_name, final_path)
+        arm_util.execute_path(youbot_name, final_path)
         print("moved back to the pre_pick pose")
 
 

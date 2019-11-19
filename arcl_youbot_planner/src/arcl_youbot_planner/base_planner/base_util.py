@@ -13,6 +13,22 @@ from tf.transformations import euler_from_quaternion
 from geometry_msgs.msg import PoseStamped
 from velocity_controller import VelocityController
 from geometry_msgs.msg import Twist
+import arcl_youbot_planner.base_planner.visgraph as vg
+from arcl_youbot_planner.base_planner.visgraph.visible_vertices import edge_distance
+import commands
+from shapely.geometry import Polygon, LinearRing, LineString, Point
+from shapely.ops import unary_union
+
+YOUBOT_SHORT_RADIUS = 0.25  # in meters
+YOUBOT_LONG_RADIUS = 0.40  # in meters
+OFFSET = YOUBOT_LONG_RADIUS - YOUBOT_SHORT_RADIUS
+ADJUST_DISTANCE = OFFSET + 0.2
+BACK_DISTANCE = 0.1
+SHORT_ANGLE = -111
+NEAR_RATIO = 0.2
+LENGTH_CHOOSE = 2
+
+TEST = True
 
 #youbot_name: youbot
 
@@ -166,20 +182,6 @@ def execute_path(youbot_name, final_path, base_action_name):
 
 
 # ==================== visibility graph ====================
-import arcl_youbot_planner.base_planner.visgraph as vg
-from arcl_youbot_planner.base_planner.visgraph.visible_vertices import edge_distance
-import commands
-from shapely.geometry import Polygon, LinearRing, LineString
-from shapely.ops import unary_union
-
-YOUBOT_SHORT_RADIUS = 0.3  # in meters
-YOUBOT_LONG_RADIUS = 0.4  # in meters
-OFFSET = YOUBOT_LONG_RADIUS - YOUBOT_SHORT_RADIUS
-BACK_DISTANCE = 0.1
-
-TEST = True
-
-
 def vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles):
     """
     Assume obstacles are represent by a list of in-order points
@@ -363,19 +365,27 @@ def new_vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles
 
     # ===== group two paths =====
     adjust_path = []
-    total_distance = 0
-    li = 0
-    for i in range(len(path)):
-        if point_distance(path[i], large_path[li]) <= ADJUST_DISTANCE:
-            adjust_path.append([large_path[li].x, large_path[li].y, 0])    
-            li += 1
+    if len(path) + LENGTH_CHOOSE < len(large_path):
+        adjust_path.append([path[0].x, path[0].y, SHORT_ANGLE])  
+        if union_dilated_large_obstacles.intersection(Point(large_path[0].x, large_path[0].y)).is_empty:
+            li = 1
         else:
-            adjust_path.append([path[i].x, path[i].y, SHORT_ANGLE])
-            temp = li
-            while li < len(large_path) and point_distance(path[i], large_path[li]) > ADJUST_DISTANCE:
+            li = 2
+        for i in range(1, len(path)):
+            if point_distance(path[i], large_path[li]) <= ADJUST_DISTANCE:
+                adjust_path.append([large_path[li].x, large_path[li].y, 0])    
                 li += 1
-            if li == len(large_path):
-                li = temp
+            else:
+                adjust_path.append([path[i].x, path[i].y, SHORT_ANGLE])
+                temp = li
+                while li < len(large_path) and point_distance(path[i], large_path[li]) > ADJUST_DISTANCE:
+                    li += 1
+                if li == len(large_path):
+                    li = temp
+    else:
+        for li in range(len(large_path)):
+            adjust_path.append([large_path[li].x, large_path[li].y, 0])    
+    
     # ===== add heading =====
     # distance
     total_distance = 0
@@ -401,9 +411,17 @@ def new_vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles
             adjust_path[i][-1] = current_heading
             if adjust_path[i+1][-1] != SHORT_ANGLE:
                 current_heading += delta_heading * point_distance(adjust_path[i+1], adjust_path[i])
+                if current_heading > math.pi:
+                    current_heading -= 2*math.pi
+                elif current_heading < -math.pi:
+                    current_heading += 2*math.pi
         else:
             if adjust_path[i+1][-1] != SHORT_ANGLE:
                 current_heading += delta_heading * point_distance(adjust_path[i+1], adjust_path[i]) * NEAR_RATIO
+                if current_heading > math.pi:
+                    current_heading -= 2*math.pi
+                elif current_heading < -math.pi:
+                    current_heading += 2*math.pi
     # add headding to small
     i = 0
     while i < len(adjust_path) - 1:
@@ -431,9 +449,33 @@ def new_vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles
 
     adjust_path[-1][-1] = goal_heading
 
-    return adjust_path, small_g
+    return adjust_path, small_g, large_g
 
-def plot_vg_path(obstacles, path, g):
+def compute_heading(s, g, i, adjust_path, goal_heading):
+    while i < len(adjust_path) and adjust_path[i][-1] == SHORT_ANGLE:
+        i += 1
+    if i < len(adjust_path):
+        target_heading = adjust_path[i][-1]
+    else:
+        target_heading = goal_heading
+    vector = (g[0] - s[0], g[1] - s[1])
+    current_heading = math.atan2(vector[1], vector[0])
+    if abs(target_heading - current_heading) > math.pi / 2:
+        current_heading -= math.pi
+    if current_heading > math.pi:
+        current_heading -= 2*math.pi
+    elif current_heading < -math.pi:
+        current_heading += 2*math.pi
+
+    return current_heading
+
+def point_distance(p, q):
+    if isinstance(q, list) and isinstance(p, list):
+        return math.sqrt((p[0] - q[0])**2 + (p[1] - q[1])**2)
+    else:
+        return math.sqrt((p.x - q.x)**2 + (p.y - q.y)**2)
+
+def plot_vg_path(obstacles, path, g, large_g=None):
     from matplotlib import pyplot
 
     fig = pyplot.figure()
@@ -456,6 +498,13 @@ def plot_vg_path(obstacles, path, g):
             x = [edge.p1.x, edge.p2.x]
             y = [edge.p1.y, edge.p2.y]
             plot_edge(ax, x, y, color='black', linewidth=2)
+
+        # plot dilated obstacles
+    for polygon in large_g.graph.polygons.values():
+        for edge in polygon:
+            x = [edge.p1.x, edge.p2.x]
+            y = [edge.p1.y, edge.p2.y]
+            plot_edge(ax, x, y, color='blue', linewidth=2)
 
     # plot points
     for p in g.graph.get_points():

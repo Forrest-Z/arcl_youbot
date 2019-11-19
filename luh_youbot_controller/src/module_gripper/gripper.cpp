@@ -126,19 +126,18 @@ void ModuleGripper::update()
         double delta_t = (ros::Time::now() - start_time_).toSec();
 
 
-
         //check the gripper effort feedback
 
         double current_force = fabs(youbot_->arm()->getGripperEffort());
 
         bool object_is_inside_the_gripper=false;
-        object_is_inside_the_gripper= current_force > 90.0;
-        if(current_force>90.0)
-        {
-            gripper_update_counter_++;
+        //object_is_inside_the_gripper= current_force > 90.0;
+        //if(current_force>90.0)
+        //{
+        //    gripper_update_counter_++;
 //            ROS_INFO("Gripper Update, current forse is: %f", current_force);
 //            ROS_INFO("Gripper Update, object_is_inside_the_gripper is : %i",object_is_inside_the_gripper);
-        }
+        //}
 
 
         if(delta_t < gripping_duration_)
