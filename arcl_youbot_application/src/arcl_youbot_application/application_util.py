@@ -418,7 +418,7 @@ class YoubotEnvironment():
              target_pose.orientation.y,
              target_pose.orientation.z,
              target_pose.orientation.w)
-        (roll, pitch, yaw) = euler_from_quaternion(q)
+        (_, _, yaw) = euler_from_quaternion(q)
         target_pos_2d[2] = yaw
         
         start_pos = (current_pos_2d[0], current_pos_2d[1])
@@ -435,7 +435,7 @@ class YoubotEnvironment():
         if self.mode == 1:  
             path_with_heading, g = base_util.vg_large_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles)
         else:
-            path_with_heading, g = base_util.vg_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles)
+            path_with_heading, g = base_util.vg_find_small_path(start_pos, goal_pos, start_heading, goal_heading, obstacles)
         print("time: " + str(time.time() - start_time))
         print("path:")
         print(path_with_heading)
