@@ -31,7 +31,7 @@ ADJUST_DISTANCE = YOUBOT_LONG_RADIUS - YOUBOT_SHORT_RADIUS + 0.2  # used for new
 BACK_DISTANCE = 0.1         # buffer distance to the final goal pos
 SHORT_ANGLE = -111          # sign to indicate path from small obstacles
 NEAR_RATIO = 0.2            # distance ratio from a large pos to small pos
-LENGTH_CHOOSE = 2           # number of pos tolerance
+LENGTH_TOL = 1.0          # length of path tolerance
 
 TEST = False                # multi-core acceleration for visibility graph
 
@@ -303,17 +303,21 @@ def vg_find_combined_path(start_pos, goal_pos, start_heading, goal_heading, obst
     else:
         small_g.build(polygons, workers=cpu_cores)
     path = small_g.shortest_path(vg.Point(start_pos[0], start_pos[1]), vg.Point(goal_pos[0], goal_pos[1]))
+    print("vg small path", path)
 
     large_g = vg.VisGraph()
     if TEST:
         large_g.build(large_polygons)
     else:
-       large_g.build(polygons, workers=cpu_cores)
+       large_g.build(large_polygons, workers=cpu_cores)
     large_path = large_g.shortest_path(vg.Point(start_pos[0], start_pos[1]), vg.Point(goal_pos[0], goal_pos[1]))
+    print("vg large path", large_path)
 
     # ===== group two paths =====
     adjust_path = []
-    if len(path) + LENGTH_CHOOSE < len(large_path):
+    distance_small_path = vg_path_distance(path)
+    distance_large_path = vg_path_distance(large_path)
+    if distance_large_path > LENGTH_TOL + distance_small_path:
         adjust_path.append([path[0].x, path[0].y, SHORT_ANGLE])  
         if union_dilated_large_obstacles.intersection(Point(large_path[0].x, large_path[0].y)).is_empty:
             li = 1
@@ -326,7 +330,7 @@ def vg_find_combined_path(start_pos, goal_pos, start_heading, goal_heading, obst
             else:
                 adjust_path.append([path[i].x, path[i].y, SHORT_ANGLE])
                 temp = li
-                while li < len(large_path) and point_distance(path[i], large_path[li]) > ADJUST_DISTANCE:
+                while li < len(large_path) and point_distance(path[i+1], large_path[li]) > ADJUST_DISTANCE:
                     li += 1
                 if li == len(large_path):
                     li = temp
@@ -420,11 +424,22 @@ def compute_heading(s, g, i, adjust_path, goal_heading):
 
     return current_heading
 
+def vg_path_distance(path):
+    """ helper for vg_find_combined_path
+        compute the distance of a path from VG
+    """
+    path_distance = 0
+    prev_point = path[0]
+    for point in path[1:]:
+        path_distance += point_distance(prev_point, point)
+        prev_point = point
+    return path_distance
+
 def point_distance(p, q):
     """ helper for vg_find_combined_path
         compute the distance between two points
     """
-    if isinstance(q, list) and isinstance(p, list):
+    if (isinstance(q, list) or isinstance(q, tuple)) and isinstance(p, list):
         return math.sqrt((p[0] - q[0])**2 + (p[1] - q[1])**2)
     else:
         return math.sqrt((p.x - q.x)**2 + (p.y - q.y)**2)
@@ -454,7 +469,7 @@ def plot_vg_path(obstacles, path, g, large_g=None):
             y = [edge.p1.y, edge.p2.y]
             plot_edge(ax, x, y, color='black', linewidth=2)
 
-        # plot dilated obstacles
+    # plot dilated obstacles
     for polygon in large_g.graph.polygons.values():
         for edge in polygon:
             x = [edge.p1.x, edge.p2.x]

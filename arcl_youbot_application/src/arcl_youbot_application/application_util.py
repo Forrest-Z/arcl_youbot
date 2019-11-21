@@ -433,15 +433,15 @@ class YoubotEnvironment():
         import time
         start_time = time.time()
         if self.mode == 1:  
-            path_with_heading, g = base_util.vg_large_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles)
+            path_with_heading, g, large_g = base_util.vg_find_combined_path(start_pos, goal_pos, start_heading, goal_heading, obstacles)
         else:
-            path_with_heading, g = base_util.vg_find_small_path(start_pos, goal_pos, start_heading, goal_heading, obstacles)
+            path_with_heading, g, large_g = base_util.vg_find_combined_path(start_pos, goal_pos, start_heading, goal_heading, obstacles)
         print("time: " + str(time.time() - start_time))
         print("path:")
         print(path_with_heading)
         
 
-        #base_util.plot_vg_path(obstacles, path_with_heading, g)
+        base_util.plot_vg_path(obstacles, path_with_heading, g, large_g)
 
         base_controller.execute_path_vel_pub(path_with_heading, self.mode)
 
