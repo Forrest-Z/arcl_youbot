@@ -25,6 +25,8 @@ def signal_handler(signal, frame):
     sys.exit(0)
 
 
+LOW_SPEED = 0.005           # smaller than this will be considered not moving
+LOW_SPEED_TIMEOUT = 3       # if not moving over seconds, then stop
 YOUBOT_SHORT_RADIUS = 0.25  # used to dilated obstacles (width / 2)
 YOUBOT_LONG_RADIUS = 0.40   # used to dilated obstacles (diagonal / 2)
 ADJUST_DISTANCE = YOUBOT_LONG_RADIUS - YOUBOT_SHORT_RADIUS + 0.2  # used for new_vg_path to decide use path from small or large dilated obstacles
@@ -76,18 +78,26 @@ class BaseController():
         path_completed = False
         
         # ===== see how the velocity converge =====
-        x_vel_log = []
-        y_vel_log = []
+        # x_vel_log = []
+        # y_vel_log = []
         # =========================================
-
+        record_time = -1
         while not rospy.is_shutdown() and not path_completed: 
             current_pose = self.get_youbot_base_pose2d(mode)
             msg = vc.get_velocity(self.youbot_name, current_pose, mode)
             self.vel_pub.publish(msg)
-            x_vel_log.append(msg.linear.x)
-            y_vel_log.append(msg.linear.y)
+            # x_vel_log.append(msg.linear.x)
+            # y_vel_log.append(msg.linear.y)
             if msg.linear.x == 0.0 and msg.linear.y == 0.0 and msg.angular.z == 0.0:
                 path_completed = True
+            if msg.linear.x < LOW_SPEED and msg.linear.y < LOW_SPEED and msg.angular.z < LOW_SPEED:
+                if record_time == -1:
+                    record_time = time.time()
+                elif time.time() - record_time > LOW_SPEED_TIMEOUT:
+                    path_completed = True
+            else:
+                record_time = time.time()
+
             loop_rate.sleep()
 
         # ===== see how the velocity converge =====
