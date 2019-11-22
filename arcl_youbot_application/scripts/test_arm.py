@@ -21,7 +21,7 @@ if __name__ == "__main__":
     # for test_obj in env.object_list:
     #     reserved_object_list.append(test_obj)
     arm_up_joint = [202/180.0*math.pi, 65/180.0*math.pi, -146 / 180.0 * math.pi, 102.5 / 180.0 * math.pi, 172 / 180.0 * math.pi]
-    env.move_arm_to_joint_pose("youbot_0", arm_up_joint)
+    # env.move_arm_to_joint_pose("youbot_0", arm_up_joint)
     # sample_num = 1000
     #while True:
         # jnt_pos = []
@@ -30,10 +30,10 @@ if __name__ == "__main__":
         # jnt_pos = [5.282255649566651, 1.2318736314788064, -2.0795466899871577, 1.6788692474365234, 1.9565308094024658]
     jnt_pos = [3.0895373821258536, 1.6700667142879224, -1.026131987569805, 2.8564229011535645, 1.8807144165039062]
     
-    arm_util.set_gripper_width("youbot_0", 0.06, 1)
+    # arm_util.set_gripper_width("youbot_0", 0.0, 1)
     
     
-    #env.move_arm_to_joint_pose("youbot_0", arm_up_joint)
+    env.move_arm_to_joint_pose("youbot_0", arm_up_joint)
 
     rospy.spin()
    

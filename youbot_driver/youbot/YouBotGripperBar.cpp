@@ -218,6 +218,8 @@ void YouBotGripperBar::getData(GripperSensedBarPosition& barPosition) const {
 void YouBotGripperBar::setData(GripperBarPositionSetPoint& barPosition) {
   // Bouml preserved body begin 000F91F1
 
+
+    cout<<"set bar position:"<<barPosition.barPosition.value()<<", maxdistance:"<<this->maxTravelDistance.value()<<", barspaceoffset:"<<this->barSpacingOffset.value()<<std::endl;
     if (barPosition.barPosition > (this->maxTravelDistance + this->barSpacingOffset) || barPosition.barPosition < this->barSpacingOffset) {
       std::stringstream errorMessageStream;
       errorMessageStream << "The bar position is not allowed to be less than "<< this->barSpacingOffset.value() <<" or higher than " << (this->maxTravelDistance.value() + this->barSpacingOffset.value()) << ". You set " << barPosition.barPosition.value();
@@ -228,6 +230,7 @@ void YouBotGripperBar::setData(GripperBarPositionSetPoint& barPosition) {
     setpoint = (barPosition.barPosition - this->barSpacingOffset);
     
     GripperBarEncoderSetpoint setpointBar;
+    this->maxEncoderValue = 67000;
     setpointBar.barEncoder = setpoint / this->maxTravelDistance * this->maxEncoderValue;
     this->setData(setpointBar);
 

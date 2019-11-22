@@ -91,16 +91,16 @@ class BaseController():
             loop_rate.sleep()
 
         # ===== see how the velocity converge =====
-        if mode == 1:
-            from matplotlib import pyplot
+        # if mode == 1:
+        #     from matplotlib import pyplot
 
-            fig = pyplot.figure()
-            ax = fig.subplots()
+        #     fig = pyplot.figure()
+        #     ax = fig.subplots()
 
-            ax.plot(range(len(x_vel_log)), x_vel_log, color='blue')
-            ax.plot(range(len(y_vel_log)), y_vel_log, color='red')
+        #     ax.plot(range(len(x_vel_log)), x_vel_log, color='blue')
+        #     ax.plot(range(len(y_vel_log)), y_vel_log, color='red')
 
-            pyplot.show()
+        #     pyplot.show()
 
         
 
@@ -126,6 +126,19 @@ class BaseController():
             current_pose[2] = yaw
             return current_pose
 
+    def get_youbot_base_pose(self, mode):
+        """ get the current youbot position
+        """
+        if mode == 0:
+            while self.is_pose_received == False:
+                pass
+            self.is_pose_received = False
+            return self.current_pose_2d
+        elif mode == 1:
+            data = rospy.wait_for_message('/vrpn_client_node/' + self.youbot_name + '/pose', PoseStamped)
+            
+            current_pose = data.pose
+            return current_pose
 
 
 # ==================== visibility graph ====================
@@ -308,7 +321,7 @@ def vg_find_combined_path(start_pos, goal_pos, start_heading, goal_heading, obst
     if TEST:
         large_g.build(large_polygons)
     else:
-       large_g.build(polygons, workers=cpu_cores)
+       large_g.build(large_polygons, workers=cpu_cores)
     large_path = large_g.shortest_path(vg.Point(start_pos[0], start_pos[1]), vg.Point(goal_pos[0], goal_pos[1]))
 
     # ===== group two paths =====

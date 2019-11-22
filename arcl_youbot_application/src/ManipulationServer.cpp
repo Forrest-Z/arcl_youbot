@@ -127,7 +127,7 @@ void ManipulationServer::GenerateSamplesForArmConf(geometry_msgs::Pose gripper_p
     double tip_z;
    // 0.067 is the length of the gripper finger
     
-    tip_z = gripper_pose.position.z - normal_z*0.02;
+    tip_z = gripper_pose.position.z + normal_z*0.035;
     // tip_z = gripper_pose.position.z;
 
     cylin_z = tip_z - ykin::H2 + ykin::L0; // relative to arm_link_0

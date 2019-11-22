@@ -171,6 +171,8 @@ void YouBotGripper::setConfigurationParameter(const CalibrateGripper& parameter)
       bar1->getConfigurationParameter(maxencoder);
       maxencoder.getParameter(maxenc);
 
+
+      cout<<"max encoder:"<<maxenc<<std::endl;
       message.stctOutput.moduleAddress = GRIPPER;
       message.stctOutput.commandNumber = MVP;
       message.stctOutput.typeNumber = 1; //move gripper relative

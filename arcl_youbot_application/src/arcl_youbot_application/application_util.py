@@ -433,15 +433,15 @@ class YoubotEnvironment():
         import time
         start_time = time.time()
         if self.mode == 1:  
-            path_with_heading, g = base_util.vg_large_find_path(start_pos, goal_pos, start_heading, goal_heading, obstacles)
+            path_with_heading, g, large_g = base_util.vg_find_combined_path(start_pos, goal_pos, start_heading, goal_heading, obstacles)
         else:
-            path_with_heading, g = base_util.vg_find_small_path(start_pos, goal_pos, start_heading, goal_heading, obstacles)
+            path_with_heading, g, large_g = base_util.vg_find_combined_path(start_pos, goal_pos, start_heading, goal_heading, obstacles)
         print("time: " + str(time.time() - start_time))
         print("path:")
         print(path_with_heading)
         
 
-        #base_util.plot_vg_path(obstacles, path_with_heading, g)
+        base_util.plot_vg_path(obstacles, path_with_heading, g, large_g)
 
         base_controller.execute_path_vel_pub(path_with_heading, self.mode)
 
@@ -452,7 +452,7 @@ class YoubotEnvironment():
             # target_pos_2d: the target pose in global coordinate
                     # type: [x,y,theta]
         base_controller = base_util.BaseController(youbot_name)
-        current_pos_2d = base_controller.get_youbot_base_pose2d(youbot_name, self.mode)
+        current_pos_2d = base_controller.get_youbot_base_pose2d(self.mode)
         print("current_pos_2d")
         print(current_pos_2d)
         
@@ -495,7 +495,10 @@ class YoubotEnvironment():
         else:
             prmstar_planner.remove_obstacles()
             prmstar_planner.import_obstacles(self.object_list.values())
-            robot_position, robot_orientation = base_util.get_youbot_base_pose(youbot_name, self.mode)
+            base_controller = base_util.BaseController(youbot_name)
+            current_pos_2d = base_controller.get_youbot_base_pose(self.mode)
+            robot_position = [current_pos_2d.position.x, current_pos_2d.position.y, current_pos_2d.position.z]
+            robot_orientation = [current_pos_2d.orientation.x, current_pos_2d.orientation.y, current_pos_2d.orientation.z, current_pos_2d.orientation.w]
             prmstar_planner.set_robot_pose(robot_position, robot_orientation)
 
             start = arm_util.get_current_joint_pos(youbot_name, self.mode)
@@ -526,7 +529,10 @@ class YoubotEnvironment():
 
         prmstar_planner.remove_obstacles()
         prmstar_planner.import_obstacles(self.object_list.values())
-        robot_position, robot_orientation = base_util.get_youbot_base_pose(youbot_name, self.mode)
+        base_controller = base_util.BaseController(youbot_name)
+        current_pos_2d = base_controller.get_youbot_base_pose(self.mode)
+        robot_position = [current_pos_2d.position.x, current_pos_2d.position.y, current_pos_2d.position.z]
+        robot_orientation = [current_pos_2d.orientation.x, current_pos_2d.orientation.y, current_pos_2d.orientation.z, current_pos_2d.orientation.w]
         prmstar_planner.set_robot_pose(robot_position, robot_orientation)
 
         start = arm_util.get_current_joint_pos(youbot_name, self.mode)
@@ -552,7 +558,7 @@ class YoubotEnvironment():
 
         #plan and move arm to pre_pick_pos
         [final_path, final_cost] = prmstar_planner.path_plan(tuple(start), tuple(pre_pick_joint_value))
-        arm_util.set_gripper_width("youbot_0", 0.06, self.mode)
+        arm_util.set_gripper_width("youbot_0", 0.0, self.mode)
 
         arm_util.execute_path(youbot_name, final_path)
 
@@ -564,8 +570,8 @@ class YoubotEnvironment():
         arm_util.execute_path(youbot_name, final_path)
         print("moved to the pick pose")
 
-        arm_util.set_gripper_width("youbot_0", 0.0, self.mode)
-        rospy.sleep(rospy.Duration.from_sec(5.0))
+        # arm_util.set_gripper_width("youbot_0", 0.06, self.mode)
+        # rospy.sleep(rospy.Duration.from_sec(5.0))
 
         #directly retract arm to pre_pick_pos
         start = arm_util.get_current_joint_pos(youbot_name, self.mode)
@@ -575,17 +581,21 @@ class YoubotEnvironment():
 
 
     def drop_object(self, obj_name):
-        arm_util.set_gripper_width("youbot_0", 0.068, self.mode)
-        deserted_pose = Pose()
-        deserted_pose.position.x = 0
-        deserted_pose.position.y = -10
-        deserted_pose.position.z = 0.1
-        deserted_pose.orientation.x = 0
-        deserted_pose.orientation.y = 0
-        deserted_pose.orientation.z = 0
-        deserted_pose.orientation.w = 1
-        rospy.sleep(rospy.Duration(3, 0))
-        common_util.set_obj_pose(obj_name, deserted_pose)
+        if self.mode == 0:
+
+            arm_util.set_gripper_width("youbot_0", 0.068, self.mode)
+            deserted_pose = Pose()
+            deserted_pose.position.x = 0
+            deserted_pose.position.y = -10
+            deserted_pose.position.z = 0.1
+            deserted_pose.orientation.x = 0
+            deserted_pose.orientation.y = 0
+            deserted_pose.orientation.z = 0
+            deserted_pose.orientation.w = 1
+            rospy.sleep(rospy.Duration(3, 0))
+            common_util.set_obj_pose(obj_name, deserted_pose)
+        else:
+            arm_util.set_gripper_width("youbot_0", 0.0, self.mode)
 
     def forklift_done_cb(self, goal_state, result):
         print("Fork Lift GoToPosition returned")
@@ -627,7 +637,12 @@ class YoubotEnvironment():
         my_path = os.path.join(my_path, "../../../luh_youbot_description/robots/youbot_0.urdf")
         print(my_path)
         prmstar_planner = prmstar.PRMStarPlanner(p, my_path)
-        robot_position, robot_orientation = base_util.get_youbot_base_pose("youbot_0", 0)
+
+        base_controller = base_util.BaseController("youbot_0")
+        current_pos_2d = base_controller.get_youbot_base_pose(0)
+        robot_position = [current_pos_2d.position.x, current_pos_2d.position.y, current_pos_2d.position.z]
+        robot_orientation = [current_pos_2d.orientation.x, current_pos_2d.orientation.y, current_pos_2d.orientation.z, current_pos_2d.orientation.w]
+        
         prmstar_planner.generate_reachibility(robot_position, robot_orientation)
 
     def build_arm_roadmap(self):

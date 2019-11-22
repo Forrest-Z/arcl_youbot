@@ -533,7 +533,8 @@ bool YoubotArmInterface::writeCommands()
 
         rightGripperFingerPosition.barPosition = gripper_command_[RIGHT_FINGER_INDEX] * meter;
         leftGripperFingerPosition.barPosition = gripper_command_[LEFT_FINGER_INDEX] * meter;
-
+        ROS_WARN_STREAM("left_gripper:"<<gripper_command_[LEFT_FINGER_INDEX]<<", right gripper:"<<gripper_command_[RIGHT_FINGER_INDEX]);
+        
         try
         {
             arm_->getArmGripper().getGripperBar1().setData(leftGripperFingerPosition);
