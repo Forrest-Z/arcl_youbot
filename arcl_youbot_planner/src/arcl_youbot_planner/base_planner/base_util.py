@@ -10,7 +10,7 @@ from control_msgs.msg import FollowJointTrajectoryAction, FollowJointTrajectoryG
 from arcl_youbot_msgs.msg import MoveBaseAction, MoveBaseGoal
 from gazebo_msgs.msg import ModelStates
 from tf.transformations import euler_from_quaternion
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped, Pose
 from velocity_controller import VelocityController
 from geometry_msgs.msg import Twist
 import arcl_youbot_planner.base_planner.visgraph as vg
@@ -49,7 +49,7 @@ class BaseController():
         self.is_pose_received = False
         self.current_pose_2d = [0,0,0]
         self.youbot_name = youbot_name
-
+        self.current_pose_ = Pose()
         self.vel_pub = rospy.Publisher('/' + youbot_name + '/robot/cmd_vel', Twist, queue_size=1)
         if mode == 0:
             rospy.Subscriber('/gazebo/model_states', ModelStates, self.base_pose2d_callback, [youbot_name])
@@ -62,6 +62,7 @@ class BaseController():
         for name, data_index in zip(data.name, range(len(data.name))):
             if name == args[0]:
                 youbot_index = data_index
+        self.current_pose_ = data.pose[youbot_index]
         self.current_pose_2d[0] = data.pose[youbot_index].position.x
         self.current_pose_2d[1] = data.pose[youbot_index].position.y
         q = (data.pose[youbot_index].orientation.x,
@@ -145,7 +146,7 @@ class BaseController():
             while self.is_pose_received == False:
                 pass
             self.is_pose_received = False
-            return self.current_pose_2d
+            return self.current_pose_
         elif self.mode == 1:
             data = rospy.wait_for_message('/vrpn_client_node/' + self.youbot_name + '/pose', PoseStamped)
             

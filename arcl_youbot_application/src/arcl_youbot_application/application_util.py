@@ -622,8 +622,10 @@ class YoubotEnvironment():
 
         #plan and move arm to pre_pick_pos
         [final_path, final_cost] = prmstar_planner.path_plan(tuple(start), tuple(pre_pick_joint_value))
-        arm_util.set_gripper_width("youbot_0", 0.0, self.mode)
-
+        if self.mode == 0:
+            arm_util.set_gripper_width("youbot_0", 0.06, self.mode)
+        else:
+            arm_util.set_gripper_width("youbot_0", 0.0, self.mode)
         arm_util.execute_path(youbot_name, final_path)
 
         print("moved to the pre_pick pose")
@@ -633,9 +635,12 @@ class YoubotEnvironment():
         
         arm_util.execute_path(youbot_name, final_path)
         print("moved to the pick pose")
+        if self.mode == 0:
+            arm_util.set_gripper_width("youbot_0", 0.0, self.mode)
+            rospy.sleep(rospy.Duration.from_sec(5.0))
+        else:
+            arm_util.set_gripper_width("youbot_0", 0.06, self.mode)
 
-        # arm_util.set_gripper_width("youbot_0", 0.06, self.mode)
-        # rospy.sleep(rospy.Duration.from_sec(5.0))
 
         #directly retract arm to pre_pick_pos
         start = arm_util.get_current_joint_pos(youbot_name, self.mode)
