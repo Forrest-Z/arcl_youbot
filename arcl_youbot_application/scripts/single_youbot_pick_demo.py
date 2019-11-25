@@ -58,7 +58,7 @@ if __name__ == "__main__":
 
     # while True:
     #     from arcl_youbot_planner.base_planner.base_util import get_youbot_base_pose2d
-    #     pose2d = get_youbot_base_pose2d('youbot_0', 1)
+    #     pose2d = get_youbot_base_pose2d('youbot_0')
     #     print(str(pose2d[0]) + "," + str(pose2d[1]) + "," + str(pose2d[2]))
     # env.move_to_target("youbot_0", target_base_pose)
     
