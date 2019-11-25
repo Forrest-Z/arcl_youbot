@@ -18,6 +18,7 @@ from arcl_youbot_planner.base_planner.visgraph.visible_vertices import edge_dist
 import commands
 from shapely.geometry import Polygon, LinearRing, LineString, Point
 from shapely.ops import unary_union
+import rvo2
 
 import sys, signal
 def signal_handler(signal, frame):
@@ -43,13 +44,15 @@ class BaseController():
     This is used to publish velocity
     """
 
-    def __init__(self, youbot_name):
+    def __init__(self, youbot_name, mode):
+        self.mode = mode
         self.is_pose_received = False
         self.current_pose_2d = [0,0,0]
         self.youbot_name = youbot_name
 
         self.vel_pub = rospy.Publisher('/' + youbot_name + '/robot/cmd_vel', Twist, queue_size=1)
-        rospy.Subscriber('/gazebo/model_states', ModelStates, self.base_pose2d_callback, [youbot_name])
+        if mode == 0:
+            rospy.Subscriber('/gazebo/model_states', ModelStates, self.base_pose2d_callback, [youbot_name])
 
     def base_pose2d_callback(self, data, args):
         """ Gazebo: callback to receive the current youbot position
@@ -69,7 +72,7 @@ class BaseController():
         self.current_pose_2d[2] = yaw
         self.is_pose_received = True
 
-    def execute_path_vel_pub(self, final_path, mode):
+    def execute_path_vel_pub(self, final_path):
         """ compute and publish velocity
         """
         vc = VelocityController(self.youbot_name)
@@ -83,8 +86,8 @@ class BaseController():
         # =========================================
         record_time = -1
         while not rospy.is_shutdown() and not path_completed: 
-            current_pose = self.get_youbot_base_pose2d(mode)
-            msg = vc.get_velocity(self.youbot_name, current_pose, mode)
+            current_pose = self.get_youbot_base_pose2d()
+            msg = vc.get_velocity(self.youbot_name, current_pose, self.mode)
             self.vel_pub.publish(msg)
             # x_vel_log.append(msg.linear.x)
             # y_vel_log.append(msg.linear.y)
@@ -112,17 +115,16 @@ class BaseController():
 
         #     pyplot.show()
 
-        
 
-    def get_youbot_base_pose2d(self, mode):
+    def get_youbot_base_pose2d(self):
         """ get the current youbot position
         """
-        if mode == 0:
+        if self.mode == 0:
             while self.is_pose_received == False:
                 pass
             self.is_pose_received = False
             return self.current_pose_2d
-        elif mode == 1:
+        elif self.mode == 1:
             data = rospy.wait_for_message('/vrpn_client_node/' + self.youbot_name + '/pose', PoseStamped)
             
             current_pose = [0, 0, 0]
@@ -136,19 +138,86 @@ class BaseController():
             current_pose[2] = yaw
             return current_pose
 
-    def get_youbot_base_pose(self, mode):
+    def get_youbot_base_pose(self):
         """ get the current youbot position
         """
-        if mode == 0:
+        if self.mode == 0:
             while self.is_pose_received == False:
                 pass
             self.is_pose_received = False
             return self.current_pose_2d
-        elif mode == 1:
+        elif self.mode == 1:
             data = rospy.wait_for_message('/vrpn_client_node/' + self.youbot_name + '/pose', PoseStamped)
             
             current_pose = data.pose
             return current_pose
+
+
+class MultiBaseController():
+    """ 
+    This is used to publish velocity for multi-YouBot system
+    """
+    def __init__(self, youbot_names, mode):
+        self.youbot_names = youbot_names
+        self.mode = mode
+        self.base_controllers = [None] * len(youbot_names)
+        for name in youbot_names:
+            self.base_controllers = BaseController(name, mode)
+
+    def pub_all_vel(self, final_paths, object_list):
+        # TODO: assume vg_find_large_path for now
+        vcs = [None] * len(final_paths)
+        paths_completed = [False] * len(final_paths)
+        record_times = [-1] * len(final_paths)
+        # loop_rate = rospy.Rate(100)
+        for index, final_path in enumerate(final_paths):
+            vc = VelocityController(self.youbot_names[index])
+            vc.set_path(final_path)
+            vcs[index] = (vc)
+
+        # timeStep, neighborDist, maxNeighbors, timeHorizon, timeHorizonObst, radius, maxSpeed
+        sim = rvo2.PyRVOSimulator(1/100., 2 * YOUBOT_LONG_RADIUS, 5, 1.0, 0.5, YOUBOT_LONG_RADIUS, vcs[0].x_pid._max_output)
+        agents = [None] * len(final_paths)
+        for index, final_path in enumerate(final_paths):
+            current_pose = self.base_controllers[index].get_youbot_base_pose2d()
+            a = sim.addAgent((current_pose[0], current_pose[1]))
+            agents[index] = (a)
+        for obs in object_list:
+            sim.addObstacle(obs)
+        sim.processObstacles()
+        print('Simulation has %i agents and %i obstacle vertices in it.' % (sim.getNumAgents(), sim.getNumObstacleVertices()))
+        
+
+
+        msgs = [None] * len(final_paths)
+        while not rospy.is_shutdown() and all(paths_completed): 
+            for index, agent in enumerate(agents):
+                current_pose = self.base_controllers[index].get_youbot_base_pose2d()
+                vel = vc.get_velocity(self.youbot_names[index], current_pose, self.mode)
+                if vel.linear.x == 0.0 and vel.linear.y == 0.0 and vel.angular.z == 0.0:
+                    paths_completed[index] = True
+                if vel.linear.x < LOW_SPEED and vel.linear.y < LOW_SPEED and vel.angular.z < LOW_SPEED:
+                    if record_times[index] == -1:
+                        record_times[index] = time.time()
+                    elif time.time() - record_times[index] > LOW_SPEED_TIMEOUT:
+                        paths_completed[index] = True
+                else:
+                    record_times[index] = time.time()
+                msgs[index] = vel
+
+                sim.setAgentPosition(agent, (current_pose[0], current_pose[1]))
+                sim.setAgentPrefVelocity(agent, (vel.linear.x, vel.linear.y))
+            
+            sim.doStep()
+
+            for index, base_controller in enumerate(self.base_controllers):
+                vel = sim.getAgentVelocity(agents[index])
+                msgs[index].linear.x = vel[0]
+                msgs[index].linear.y = vel[1]
+                base_controller.vel_pub.publish(msgs[index])
+
+            # TODO: probably we don't need the sleep, because rvo2 takes times
+            # loop_rate.sleep()
 
 
 # ==================== visibility graph ====================
