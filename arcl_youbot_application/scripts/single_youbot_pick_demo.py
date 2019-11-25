@@ -40,15 +40,9 @@ if __name__ == "__main__":
 
 
     # arm_util.set_gripper_width('youbot_0', 0.06, 1)
-<<<<<<< HEAD
     pick_obj_seq = ['obj_0', 'obj_0', 'obj_0', 'obj_0', 'obj_0']
     # pick_obj_seq = ['obj_12', 'obj_3', 'obj_8', 'obj_10', 'obj_0']
     # pick_obj_seq = ['obj_10']
-=======
-
-    # pick_obj_seq = ['obj_0', 'obj_3', 'obj_8', 'obj_10', 'obj_12']
-    pick_obj_seq = ['obj_4']
->>>>>>> f2c059b83ea65dea45a11d0b21e1eb225cd2f477
     # env.move_to_target("youbot_0", rest_base_pose)
     for obj_name in pick_obj_seq:
         env.send_grasp_action(env.planning_scene_msg, obj_name, env.planning_scene_msg.scene_object_list[env.obj_name_to_index_dict[obj_name]].object_pose, " ", "cube", rest_base_pose, True)
