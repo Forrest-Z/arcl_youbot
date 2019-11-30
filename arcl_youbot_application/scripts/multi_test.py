@@ -97,11 +97,8 @@ if __name__ == "__main__":
 
 
         thr1 = threading.Thread(target=env.thread_move_to_target, args=("youbot_0", target_base_pose1)) 
-        thr1.daemon = True
         thr2 = threading.Thread(target=env.thread_move_to_target, args=("youbot_1", target_base_pose2)) 
-        thr2.daemon = True
         thr3 = threading.Thread(target=env.thread_move_to_target, args=("youbot_2", target_base_pose3)) 
-        thr3.daemon = True
         # thr3 = threading.Thread(target=env.thread_move_to_target, args=("youbot_2", rest_base_pose3)) 
 
         # env.multi_move_to_target(youbot_names, {youbot_names[0]: target_base_pose1, youbot_names[1]: target_base_pose2, youbot_names[2]: target_base_pose3})
@@ -122,14 +119,11 @@ if __name__ == "__main__":
         # env.update_env('obj_2')
         # env.update_env('obj_1')
         # env.update_env('obj_5')
-
+        print("back!!!!!!!!!!!!!!!!!!")
         # env.multi_move_to_target(youbot_names, {youbot_names[0]: rest_base_pose1, youbot_names[1]: rest_base_pose2, youbot_names[2]: rest_base_pose3})
         thr1 = threading.Thread(target=env.thread_move_to_target, args=("youbot_0", rest_base_pose1)) 
-        thr1.daemon = True
         thr2 = threading.Thread(target=env.thread_move_to_target, args=("youbot_1", rest_base_pose2)) 
-        thr2.daemon = True
         thr3 = threading.Thread(target=env.thread_move_to_target, args=("youbot_2", rest_base_pose3)) 
-        thr3.daemon = True
         thr1.start()
         thr2.start()
         thr3.start()

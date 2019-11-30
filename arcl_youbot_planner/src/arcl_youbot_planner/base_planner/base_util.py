@@ -94,8 +94,7 @@ class BaseController():
             # x_vel_log.append(msg.linear.x)
             # y_vel_log.append(msg.linear.y)
             if msg.linear.x == 0.0 and msg.linear.y == 0.0 and msg.angular.z == 0.0:
-                if single:
-                    self.path_completed = True
+                self.path_completed = True
                 self.current_vel = msg
             if abs(msg.linear.x) < LOW_SPEED and abs(msg.linear.y) < LOW_SPEED and abs(msg.angular.z) < LOW_SPEED:
                 if record_time == -1:
@@ -104,8 +103,7 @@ class BaseController():
                     msg.linear.x == 0.0
                     msg.linear.y == 0.0
                     msg.angular.z == 0.0
-                    if single:
-                        self.path_completed = True
+                    self.path_completed = True
                     self.current_vel = msg
             else:
                 record_time = time.time()
@@ -122,7 +120,7 @@ class BaseController():
                 temp_vel_msg.header.stamp = pose_msg.header.stamp
                 temp_vel_msg.twist = msg
                 # if it's the last step
-                if self.vc.step == len(self.path) - 1 and abs(self.current_pose_2d[0] - self.path[-1][0]) < YOUBOT_LONG_RADIUS and abs(self.current_pose_2d[1] - self.path[-1][1]) < YOUBOT_LONG_RADIUS:
+                if (self.vc.step == len(self.path) - 1 or self.vc.step == len(self.path)) and abs(self.current_pose_2d[0] - self.path[-1][0]) < YOUBOT_LONG_RADIUS and abs(self.current_pose_2d[1] - self.path[-1][1]) < YOUBOT_LONG_RADIUS:
                     temp_vel_msg.header.frame_id = 'final'
                 self.pose_pub.publish(pose_msg)
                 self.temp_vel_pub.publish(temp_vel_msg)

@@ -553,9 +553,8 @@ class YoubotEnvironment():
         print("path:")
         print(path_with_heading)
         
-        # base_util.plot_vg_path(obstacles, path_with_heading, g)
-
         base_controller.execute_path_vel_pub(path_with_heading, False)
+
 
     def multi_move_to_target(self, youbot_names, target_poses):
         # TODO: assume vg_find_large_path for now
