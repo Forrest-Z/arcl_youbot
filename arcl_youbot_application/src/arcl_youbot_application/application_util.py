@@ -32,6 +32,11 @@ from youbot_forklift_ros_interface.msg import GoToPositionAction, GoToPositionGo
 import os.path
 from geometry_msgs.msg import PoseStamped
 import re
+import threading
+from multiprocessing import Process
+import signal
+import sys
+
 
 GAZEBO_COLORS = [ 
 "Gazebo/White",
@@ -46,7 +51,14 @@ GAZEBO_COLORS = [
 "Gazebo/FlatBlack"
 ]
 
-WALL = [(2.8, -0.3), (0.7, -0.3), (0.7, 0.0), (2.5, 0.0), (2.5, 5.0), (-2.5, 5.0), (-2.5, 0.0), (-0.7, 0.0), (-0.7, -0.3), (-2.8, -0.3), (-2.8, 5.3), (2.8, 5.3), (2.8, 0.0)]
+# clock-wise
+WALL = [(2.8, -0.3), (0.7, -0.3), (0.7, 0.0), (2.5, 0.0), (2.5, 5.0), (-2.5, 5.0), (-2.5, 0.0), (-0.7, 0.0), (-0.7, -0.3), (-2.8, -0.3), (-2.8, 5.3), (2.8, 5.3)]
+WALL.reverse()
+
+def ctrl_c_handler(signal, frame):
+    """Gracefully quit the infrared_pub node"""
+    print "\nCaught ctrl-c! Stopping node."
+    sys.exit()
 
 
 
@@ -494,12 +506,8 @@ class YoubotEnvironment():
         print(start_pos, start_heading)
         print("goal:")
         print(goal_pos, goal_heading)
-        import time
         start_time = time.time()
-        if self.mode == 1:  
-            path_with_heading, g, large_g = base_util.vg_find_combined_path(start_pos, goal_pos, start_heading, goal_heading, obstacles)
-        else:
-            path_with_heading, g, large_g = base_util.vg_find_combined_path(start_pos, goal_pos, start_heading, goal_heading, obstacles)
+        path_with_heading, g, large_g = base_util.vg_find_combined_path(start_pos, goal_pos, start_heading, goal_heading, obstacles)
         print("time: " + str(time.time() - start_time))
         print("path:")
         print(path_with_heading)
@@ -507,7 +515,103 @@ class YoubotEnvironment():
 
         base_util.plot_vg_path(obstacles, path_with_heading, g, large_g)
 
-        base_controller.execute_path_vel_pub(path_with_heading)
+        base_controller.execute_path_vel_pub(path_with_heading, True)
+
+    def thread_move_to_target(self, youbot_name, target_pose):
+        # works under gazebo and real world env
+        # INPUT:
+            # youbot_name: the controlled youbot's name (ex: youbot_0)
+            # target_pose: the target pose in global coordinate
+                    # type: geometry_msgs/Pose
+
+        base_controller = base_util.BaseController(youbot_name, self.mode)
+        current_pos_2d = base_controller.get_youbot_base_pose2d()
+        print("current_pos_2d")
+        print(current_pos_2d)
+        target_pos_2d = [0, 0, 0]
+        target_pos_2d[0] = target_pose.position.x
+        target_pos_2d[1] = target_pose.position.y
+        q = (target_pose.orientation.x,
+             target_pose.orientation.y,
+             target_pose.orientation.z,
+             target_pose.orientation.w)
+        (_, _, yaw) = euler_from_quaternion(q)
+        target_pos_2d[2] = yaw
+        
+        start_pos = (current_pos_2d[0], current_pos_2d[1])
+        goal_pos = (target_pos_2d[0], target_pos_2d[1])
+        obstacles = self.object_list.values()
+        start_heading = current_pos_2d[2]
+        goal_heading = target_pos_2d[2]
+        print("start:")
+        print(start_pos, start_heading)
+        print("goal:")
+        print(goal_pos, goal_heading)
+        start_time = time.time()
+        path_with_heading, g = base_util.vg_find_large_path(start_pos, goal_pos, start_heading, goal_heading, obstacles)
+        print("time: " + str(time.time() - start_time))
+        print("path:")
+        print(path_with_heading)
+        
+        # base_util.plot_vg_path(obstacles, path_with_heading, g)
+
+        base_controller.execute_path_vel_pub(path_with_heading, False)
+
+    def multi_move_to_target(self, youbot_names, target_poses):
+        # TODO: assume vg_find_large_path for now
+        # works under gazebo and real world env
+        # INPUT:
+            # youbot_name: the controlled youbot's name (ex: youbot_0)
+            # target_pose: the target pose in global coordinate
+                    # type: geometry_msgs/Pose
+        signal.signal(signal.SIGINT, ctrl_c_handler)
+        obstacles = self.object_list.values()
+        mbc = base_util.MultiBaseController(youbot_names, self.mode, obstacles)
+        threads = {}
+
+        for name in youbot_names:
+            print('===== ' + name + ' =====')
+            current_pos_2d = mbc.base_controllers[name].get_youbot_base_pose2d()
+            print("current_pos_2d")
+            print(current_pos_2d)
+            target_pos_2d = [0, 0, 0]
+            target_pos_2d[0] = target_poses[name].position.x
+            target_pos_2d[1] = target_poses[name].position.y
+            q = (target_poses[name].orientation.x,
+                target_poses[name].orientation.y,
+                target_poses[name].orientation.z,
+                target_poses[name].orientation.w)
+            (_, _, yaw) = euler_from_quaternion(q)
+            target_pos_2d[2] = yaw
+        
+            start_pos = (current_pos_2d[0], current_pos_2d[1])
+            goal_pos = (target_pos_2d[0], target_pos_2d[1])
+            
+            start_heading = current_pos_2d[2]
+            goal_heading = target_pos_2d[2]
+            print("start:")
+            print(start_pos, start_heading)
+            print("goal:")
+            print(goal_pos, goal_heading)
+            start_time = time.time()
+            path_with_heading, g = base_util.vg_find_large_path(start_pos, goal_pos, start_heading, goal_heading, obstacles)
+            print("time: " + str(time.time() - start_time))
+            print("path:")
+            print(path_with_heading)
+
+            # base_util.plot_vg_path(obstacles, path_with_heading, g, g)
+            
+            thr = threading.Thread(target=mbc.base_controllers[name].execute_path_vel_pub, args=(path_with_heading,)) 
+            threads[name] = thr
+
+        for thr_name in threads:
+            threads[thr_name].start()
+        r = rospy.Rate(30)
+        r.sleep()
+        while not rospy.is_shutdown() and not mbc.all_completed:
+            mbc.publish_vels()
+            r.sleep()
+        print("All YouBots have reached target positions!")
 
     def move_to_target_2d(self, youbot_name, target_pos_2d):
         # works under gazebo and real world env

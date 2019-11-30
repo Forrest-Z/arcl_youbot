@@ -12,7 +12,7 @@ from gazebo_msgs.msg import ModelStates
 from tf.transformations import euler_from_quaternion
 from geometry_msgs.msg import PoseStamped, Pose
 from velocity_controller import VelocityController
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import Twist, TwistStamped, PointStamped
 import arcl_youbot_planner.base_planner.visgraph as vg
 from arcl_youbot_planner.base_planner.visgraph.visible_vertices import edge_distance
 import commands
@@ -20,21 +20,18 @@ from shapely.geometry import Polygon, LinearRing, LineString, Point
 from shapely.ops import unary_union
 import rvo2
 
-import sys, signal
-def signal_handler(signal, frame):
-    print("\nprogram exiting gracefully")
-    sys.exit(0)
-
 
 LOW_SPEED = 0.005           # smaller than this will be considered not moving
 LOW_SPEED_TIMEOUT = 3       # if not moving over seconds, then stop
 YOUBOT_SHORT_RADIUS = 0.25  # used to dilated obstacles (width / 2)
-YOUBOT_LONG_RADIUS = 0.40   # used to dilated obstacles (diagonal / 2)
+YOUBOT_LONG_RADIUS = 0.4   # used to dilated obstacles (diagonal / 2)
+# YOUBOT_LONG_RADIUS = 0.35
+# YOUBOT_RVO2_RADIUS = 0.5
 ADJUST_DISTANCE = YOUBOT_LONG_RADIUS - YOUBOT_SHORT_RADIUS + 0.2  # used for new_vg_path to decide use path from small or large dilated obstacles
 BACK_DISTANCE = 0.1         # buffer distance to the final goal pos
 SHORT_ANGLE = -111          # sign to indicate path from small obstacles
 NEAR_RATIO = 0.2            # distance ratio from a large pos to small pos
-LENGTH_TOL = 1.0          # length of path tolerance
+LENGTH_TOL = 1.0            # length of path tolerance
 
 TEST = False                # multi-core acceleration for visibility graph
 
@@ -47,18 +44,22 @@ class BaseController():
     def __init__(self, youbot_name, mode):
         self.mode = mode
         self.is_pose_received = False
+        self.path_completed = False
         self.current_pose_2d = [0,0,0]
         self.youbot_name = youbot_name
         self.current_pose_ = Pose()
+        self.current_vel = Twist()
         self.vel_pub = rospy.Publisher('/' + youbot_name + '/robot/cmd_vel', Twist, queue_size=1)
+        self.temp_vel_pub = rospy.Publisher('/' + youbot_name + '/robot/temp_vel', TwistStamped, queue_size=1)
+        self.pose_pub = rospy.Publisher('/' + youbot_name + '/robot/pose', PointStamped, queue_size=1)
+        self.vc = VelocityController(self.youbot_name)
         if mode == 0:
             rospy.Subscriber('/gazebo/model_states', ModelStates, self.base_pose2d_callback, [youbot_name])
+        self.path = None
 
     def base_pose2d_callback(self, data, args):
         """ Gazebo: callback to receive the current youbot position
         """
-        youbot_index = 0
-
         for name, data_index in zip(data.name, range(len(data.name))):
             if name == args[0]:
                 youbot_index = data_index
@@ -73,34 +74,58 @@ class BaseController():
         self.current_pose_2d[2] = yaw
         self.is_pose_received = True
 
-    def execute_path_vel_pub(self, final_path):
+    def execute_path_vel_pub(self, final_path, single):
         """ compute and publish velocity
         """
-        vc = VelocityController(self.youbot_name)
-        vc.set_path(final_path)
-        loop_rate = rospy.Rate(100)
-        path_completed = False
+        
+        self.vc.set_path(final_path)
+        loop_rate = rospy.Rate(60)
+        self.path_completed = False
+        self.path = final_path
         
         # ===== see how the velocity converge =====
         # x_vel_log = []
         # y_vel_log = []
         # =========================================
         record_time = -1
-        while not rospy.is_shutdown() and not path_completed: 
-            current_pose = self.get_youbot_base_pose2d()
-            msg = vc.get_velocity(self.youbot_name, current_pose, self.mode)
-            self.vel_pub.publish(msg)
+        while not rospy.is_shutdown() and not self.path_completed: 
+            self.current_pose_2d = self.get_youbot_base_pose2d()
+            msg = self.vc.get_velocity(self.current_pose_2d)
             # x_vel_log.append(msg.linear.x)
             # y_vel_log.append(msg.linear.y)
             if msg.linear.x == 0.0 and msg.linear.y == 0.0 and msg.angular.z == 0.0:
-                path_completed = True
-            if msg.linear.x < LOW_SPEED and msg.linear.y < LOW_SPEED and msg.angular.z < LOW_SPEED:
+                if single:
+                    self.path_completed = True
+                self.current_vel = msg
+            if abs(msg.linear.x) < LOW_SPEED and abs(msg.linear.y) < LOW_SPEED and abs(msg.angular.z) < LOW_SPEED:
                 if record_time == -1:
                     record_time = time.time()
                 elif time.time() - record_time > LOW_SPEED_TIMEOUT:
-                    path_completed = True
+                    msg.linear.x == 0.0
+                    msg.linear.y == 0.0
+                    msg.angular.z == 0.0
+                    if single:
+                        self.path_completed = True
+                    self.current_vel = msg
             else:
                 record_time = time.time()
+
+            if single:
+                self.vel_pub.publish(msg)
+            else:
+                pose_msg = PointStamped()
+                pose_msg.header.stamp = rospy.Time.now()
+                pose_msg.point.x = self.current_pose_2d[0]
+                pose_msg.point.y = self.current_pose_2d[1]
+                pose_msg.point.z = self.current_pose_2d[2]
+                temp_vel_msg = TwistStamped()
+                temp_vel_msg.header.stamp = pose_msg.header.stamp
+                temp_vel_msg.twist = msg
+                # if it's the last step
+                if self.vc.step == len(self.path) - 1 and abs(self.current_pose_2d[0] - self.path[-1][0]) < YOUBOT_LONG_RADIUS and abs(self.current_pose_2d[1] - self.path[-1][1]) < YOUBOT_LONG_RADIUS:
+                    temp_vel_msg.header.frame_id = 'final'
+                self.pose_pub.publish(pose_msg)
+                self.temp_vel_pub.publish(temp_vel_msg)
 
             loop_rate.sleep()
 
@@ -116,6 +141,9 @@ class BaseController():
 
         #     pyplot.show()
 
+
+    def get_youbot_base_vel(self):
+        return self.current_vel
 
     def get_youbot_base_pose2d(self):
         """ get the current youbot position
@@ -158,68 +186,79 @@ class MultiBaseController():
     """ 
     This is used to publish velocity for multi-YouBot system
     """
-    def __init__(self, youbot_names, mode):
+
+    def __init__(self, youbot_names, mode, obstacles):
         self.youbot_names = youbot_names
         self.mode = mode
-        self.base_controllers = [None] * len(youbot_names)
+        self.base_controllers = {}
+        self.vel_pubs = {}
         for name in youbot_names:
-            self.base_controllers = BaseController(name, mode)
+            self.base_controllers[name] = BaseController(name, mode)
+            self.vel_pubs[name] = rospy.Publisher('/' + name + '/robot/cmd_vel', Twist, queue_size=1)
+        self.max_velocity = rospy.get_param("/module_base_controller/max_velocity_x", 0.3)
+        self.set_sim_environment(obstacles)
+        self.all_completed = False
 
-    def pub_all_vel(self, final_paths, object_list):
-        # TODO: assume vg_find_large_path for now
-        vcs = [None] * len(final_paths)
-        paths_completed = [False] * len(final_paths)
-        record_times = [-1] * len(final_paths)
-        # loop_rate = rospy.Rate(100)
-        for index, final_path in enumerate(final_paths):
-            vc = VelocityController(self.youbot_names[index])
-            vc.set_path(final_path)
-            vcs[index] = (vc)
+    def set_sim_environment(self, obstacles):
+        """
+        set sim in RVO2
 
-        # timeStep, neighborDist, maxNeighbors, timeHorizon, timeHorizonObst, radius, maxSpeed
-        sim = rvo2.PyRVOSimulator(1/100., 2 * YOUBOT_LONG_RADIUS, 5, 1.0, 0.5, YOUBOT_LONG_RADIUS, vcs[0].x_pid._max_output)
-        agents = [None] * len(final_paths)
-        for index, final_path in enumerate(final_paths):
-            current_pose = self.base_controllers[index].get_youbot_base_pose2d()
-            a = sim.addAgent((current_pose[0], current_pose[1]))
-            agents[index] = (a)
-        for obs in object_list:
-            sim.addObstacle(obs)
-        sim.processObstacles()
-        print('Simulation has %i agents and %i obstacle vertices in it.' % (sim.getNumAgents(), sim.getNumObstacleVertices()))
-        
+        obstacles should be in counter-clock wise
+        """
+        self.sim = rvo2.PyRVOSimulator(1/30., 3 * YOUBOT_LONG_RADIUS, 5, 5.0, 5.0, YOUBOT_LONG_RADIUS + 0.1, self.max_velocity)
 
+        dilated_obstacles = [Polygon(obs).buffer(0.1, join_style=2, mitre_limit=1.5) for obs in obstacles]
+        union_dilated_obstacles = unary_union(dilated_obstacles)
+        if not isinstance(union_dilated_obstacles, Polygon):
+            polygons = [[(x, y) for x, y in dilated_obs.exterior.coords[:-1]] for dilated_obs in union_dilated_obstacles]
+        else:
+            polygons = [[(x, y) for x, y in union_dilated_obstacles.exterior.coords]]
+        for obs in polygons:
+            self.sim.addObstacle(obs)
+        self.sim.processObstacles()
+        # for obs in obstacles:
+        #     self.sim.addObstacle(obs)
+        # self.sim.processObstacles()
 
-        msgs = [None] * len(final_paths)
-        while not rospy.is_shutdown() and all(paths_completed): 
-            for index, agent in enumerate(agents):
-                current_pose = self.base_controllers[index].get_youbot_base_pose2d()
-                vel = vc.get_velocity(self.youbot_names[index], current_pose, self.mode)
-                if vel.linear.x == 0.0 and vel.linear.y == 0.0 and vel.angular.z == 0.0:
-                    paths_completed[index] = True
-                if vel.linear.x < LOW_SPEED and vel.linear.y < LOW_SPEED and vel.angular.z < LOW_SPEED:
-                    if record_times[index] == -1:
-                        record_times[index] = time.time()
-                    elif time.time() - record_times[index] > LOW_SPEED_TIMEOUT:
-                        paths_completed[index] = True
-                else:
-                    record_times[index] = time.time()
-                msgs[index] = vel
+        self.agents = {}
+        for name in self.youbot_names:
+            current_pos = self.base_controllers[name].get_youbot_base_pose2d()
+            self.agents[name] = self.sim.addAgent((current_pos[0], current_pos[1]))
 
-                sim.setAgentPosition(agent, (current_pose[0], current_pose[1]))
-                sim.setAgentPrefVelocity(agent, (vel.linear.x, vel.linear.y))
-            
-            sim.doStep()
+        print('Simulation has %i agents and %i obstacle vertices in it.' % (self.sim.getNumAgents(), self.sim.getNumObstacleVertices()))
 
-            for index, base_controller in enumerate(self.base_controllers):
-                vel = sim.getAgentVelocity(agents[index])
-                msgs[index].linear.x = vel[0]
-                msgs[index].linear.y = vel[1]
-                base_controller.vel_pub.publish(msgs[index])
+    def publish_vels(self):
+        all_completed = True
+        poses = {}
+        vels = {}
+        for name in self.youbot_names:
+            pos = self.base_controllers[name].get_youbot_base_pose2d()
+            poses[name] = pos
+            theta = poses[name][2]
+            self.sim.setAgentPosition(self.agents[name], (pos[0], pos[1]))
+            vel = self.base_controllers[name].get_youbot_base_vel()
+            vels[name] = vel
+            # local to global
+            global_vel = (vel.linear.x * math.cos(theta) + vel.linear.y * -math.sin(theta), vel.linear.x * math.sin(theta) + vel.linear.y * math.cos(theta))
+            self.sim.setAgentPrefVelocity(self.agents[name], global_vel)
+            all_completed = (all_completed and self.base_controllers[name].path_completed)
+        self.all_completed = all_completed
 
-            # TODO: probably we don't need the sleep, because rvo2 takes times
-            # loop_rate.sleep()
-
+        if not self.all_completed:
+            self.sim.doStep()
+            msgs = {}
+            for name in self.youbot_names:
+                theta = poses[name][2]
+                msg = vels[name]
+                if not self.base_controllers[name].path_completed:
+                    multi_vel = self.sim.getAgentVelocity(self.agents[name])
+                    # global to local
+                    if not (abs(poses[name][0] - self.base_controllers[name].path[-1][0]) < YOUBOT_LONG_RADIUS and abs(poses[name][1] - self.base_controllers[name].path[-1][1]) < YOUBOT_LONG_RADIUS):
+                        msg.linear.x = multi_vel[0] * math.cos(theta) + multi_vel[1] * math.sin(theta)
+                        msg.linear.y = multi_vel[0] * -math.sin(theta) + multi_vel[1] * math.cos(theta)
+                msgs[name] = msg
+            for name in self.youbot_names:
+                self.vel_pubs[name].publish(msgs[name])
 
 # ==================== visibility graph ====================
 def vg_find_small_path(start_pos, goal_pos, start_heading, goal_heading, obstacles):
@@ -339,13 +378,16 @@ def vg_find_large_path(start_pos, goal_pos, start_heading, goal_heading, obstacl
     total_distance = 0
     for i in range(len(path) - 2):
         total_distance += math.sqrt((path[i+1].x-path[i].x)**2 + (path[i+1].y-path[i].y)**2)
-    if temp_heading > math.pi:
-        if goal_heading - start_heading > 0:
-            delta_heading = -(math.pi*2 - goal_heading + start_heading) / total_distance
-        else:
-            delta_heading = (math.pi*2 + goal_heading - start_heading) / total_distance
+    if total_distance == 0:
+        delta_heading = 0
     else:
-        delta_heading = (goal_heading - start_heading) / total_distance
+        if temp_heading > math.pi:
+            if goal_heading - start_heading > 0:
+                delta_heading = -(math.pi*2 - goal_heading + start_heading) / total_distance
+            else:
+                delta_heading = (math.pi*2 + goal_heading - start_heading) / total_distance
+        else:
+            delta_heading = (goal_heading - start_heading) / total_distance
     path_with_heading = []
     for i in range(len(path) - 1):
         # add path
@@ -420,6 +462,8 @@ def vg_find_combined_path(start_pos, goal_pos, start_heading, goal_heading, obst
             if point_distance(path[i], large_path[li]) <= ADJUST_DISTANCE:
                 adjust_path.append([large_path[li].x, large_path[li].y, 0])    
                 li += 1
+                if li == len(large_path):
+                    break
             else:
                 adjust_path.append([path[i].x, path[i].y, SHORT_ANGLE])
                 temp = li
@@ -430,7 +474,6 @@ def vg_find_combined_path(start_pos, goal_pos, start_heading, goal_heading, obst
     else:
         for li in range(len(large_path)):
             adjust_path.append([large_path[li].x, large_path[li].y, 0])    
-    
     # ===== add heading =====
     # distance
     total_distance = 0
@@ -441,8 +484,7 @@ def vg_find_combined_path(start_pos, goal_pos, start_heading, goal_heading, obst
             total_distance += point_distance(adjust_path[i], adjust_path[i+1]) * NEAR_RATIO
     if total_distance == 0: total_distance = 1
     # delta rotation
-    temp_heading = abs(goal_heading - start_heading)
-    if temp_heading > math.pi:
+    if abs(goal_heading - start_heading) > math.pi:
         if goal_heading - start_heading > 0:
             delta_heading = -(math.pi * 2 - goal_heading + start_heading) / total_distance
         else:
@@ -467,6 +509,8 @@ def vg_find_combined_path(start_pos, goal_pos, start_heading, goal_heading, obst
                     current_heading -= 2*math.pi
                 elif current_heading < -math.pi:
                     current_heading += 2*math.pi
+    # the last heading is goal_heading
+    adjust_path[-1][-1] = goal_heading
     # add headding to small
     i = 0
     while i < len(adjust_path) - 1:
@@ -492,8 +536,6 @@ def vg_find_combined_path(start_pos, goal_pos, start_heading, goal_heading, obst
                 adjust_path.insert(i, [g[0], g[1], current_heading])
             i += 1
 
-    adjust_path[-1][-1] = goal_heading
-
     return adjust_path, small_g, large_g
 
 def compute_heading(s, g, i, adjust_path, goal_heading):
@@ -508,7 +550,7 @@ def compute_heading(s, g, i, adjust_path, goal_heading):
         target_heading = goal_heading
     vector = (g[0] - s[0], g[1] - s[1])
     current_heading = math.atan2(vector[1], vector[0])
-    if abs(target_heading - current_heading) > math.pi / 2:
+    if abs(target_heading - current_heading) > math.pi / 2 and abs(target_heading - current_heading) < 3 * math.pi / 2:
         current_heading -= math.pi
     if current_heading > math.pi:
         current_heading -= 2*math.pi
@@ -545,7 +587,6 @@ def plot_vg_path(obstacles, path, g, large_g=None):
     ax = fig.subplots()
 
     # plot obstacles
-    print(len(obstacles))
     for o in obstacles:
         plot_line(ax, LinearRing(o), linewidth=1.5)
           
@@ -602,10 +643,7 @@ def plot_edge(ax, x, y, color='gray', zorder=1, linewidth=1, alpha=1):
 if __name__ == "__main__":
     from arcl_youbot_application.application_util import YoubotEnvironment
 
-    signal.signal(signal.SIGINT, signal_handler)
-
     # y = YoubotEnvironment(0, 5, 0, 5)
-    import time
 
     start_pos = (4, 2)
     goal_pos = (10, 9)

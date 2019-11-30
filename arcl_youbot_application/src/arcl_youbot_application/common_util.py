@@ -170,7 +170,7 @@ def generate_poly(center_x, center_y, yaw, length, width):
     # x = -length
     # y = -width
     # p3 = (center_x + math.cos(yaw)*x - math.sin(yaw)*y, center_y - (math.sin(yaw)*x + math.cos(yaw)*y))
-
+    
     x = length
     y = width
     p0 = (center_x + math.cos(yaw)*x - math.sin(yaw)*y, center_y + (math.sin(yaw)*x + math.cos(yaw)*y))
@@ -183,7 +183,9 @@ def generate_poly(center_x, center_y, yaw, length, width):
     x = -length
     y = width
     p3 = (center_x + math.cos(yaw)*x - math.sin(yaw)*y, center_y + (math.sin(yaw)*x + math.cos(yaw)*y))
-    poly = Polygon([p0, p1, p2, p3])
+    po = [p0, p1, p2, p3]
+    po.reverse()
+    poly = Polygon(po)
     return poly
 
 
