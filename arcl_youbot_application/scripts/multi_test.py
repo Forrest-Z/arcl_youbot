@@ -61,8 +61,8 @@ if __name__ == "__main__":
     rest_base_pose3.orientation.w = 1
 
     pick_obj_seq1 = ['obj_5']
-    pick_obj_seq2 = ['obj_0']
-    pick_obj_seq3 = ['obj_2']
+    pick_obj_seq2 = ['obj_2']
+    pick_obj_seq3 = ['obj_0']
     youbot_names = ['youbot_0', 'youbot_1', 'youbot_2']
     rest_base_poses = [rest_base_pose1, rest_base_pose2, rest_base_pose3]
 

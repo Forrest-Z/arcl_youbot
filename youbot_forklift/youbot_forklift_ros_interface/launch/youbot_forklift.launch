@@ -1,0 +1,38 @@
+<launch>
+
+    <arg name="youBotHasBase" default="true"/>
+	<arg name="youBotHasArm" default="false"/>
+
+	
+        <!-- LOAD DEFAULT DRIVER PARAMETERS -->
+        <include file="$(find luh_youbot_driver_api)/launch/load_default_parameters.launch">
+                <arg name="youBotHasArm" value="$(arg youBotHasArm)"/>
+                <arg name="youBotHasBase" value="$(arg youBotHasBase)"/>
+        </include>
+
+	<!-- LOAD DEFAULT MANIPULATION PARAMETERS -->
+	<include file="$(find luh_youbot_controller)/launch/load_default_parameters.launch" />
+
+        <!-- LAUNCH STATE PUBLISHER -->
+        <include file="$(find luh_youbot_controller)/launch/youbot_state_publisher.launch">
+                <arg name="youBotHasArm" value="$(arg youBotHasArm)"/>
+                <arg name="youBotHasBase" value="$(arg youBotHasBase)"/>
+        </include>
+
+       	<!-- LAUNCH DRIVER NODE -->
+	<node name="controller_node" pkg="luh_youbot_controller" type="controller_node" output="screen" args="youbot_2"/>
+
+  <param name="robot_description" command="$(find xacro)/xacro.py $(find youbot_forklift_description)/robots/youbot_with_forklift.urdf.xacro" />
+
+
+	<node name="forklift" pkg="youbot_forklift_ros_interface" type="youbot_forklift_ros_interface" output="screen">
+		<remap from="forklift/joint_states" to="/joint_states"/> 
+	
+	</node>
+
+
+	<node pkg="robot_state_publisher" type="state_publisher" name="robot_state_publisher" output="screen"/>
+
+
+
+</launch>

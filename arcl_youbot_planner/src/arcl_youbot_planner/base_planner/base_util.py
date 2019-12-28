@@ -444,6 +444,8 @@ def vg_find_combined_path(start_pos, goal_pos, start_heading, goal_heading, obst
     else:
        large_g.build(large_polygons, workers=cpu_cores)
     large_path = large_g.shortest_path(vg.Point(start_pos[0], start_pos[1]), vg.Point(goal_pos[0], goal_pos[1]))
+    if len(large_path) == 3 and Point(large_path[0].x, large_path[0].y).within(union_dilated_large_obstacles):
+        large_path.pop(1)
     print("vg large path", large_path)
 
     # ===== group two paths =====

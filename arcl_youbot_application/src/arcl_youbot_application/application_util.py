@@ -269,6 +269,27 @@ class YoubotEnvironment():
             self.object_list[obj_name] = current_poly_list
         self.generate_planning_scene_msg()
 
+    def import_obj_from_optitrack_forklift(self, obj_name_list):
+        for obj_name, obj_index in zip(obj_name_list, range(len(obj_name_list))):
+            data = rospy.wait_for_message('/vrpn_client_node/' + obj_name + '/pose', PoseStamped)
+            
+            current_pose = [0, 0, 0]
+            current_pose[0] = data.pose.position.x
+            current_pose[1] = data.pose.position.y
+            q = (data.pose.orientation.x,
+                    data.pose.orientation.y,
+                    data.pose.orientation.z,
+                    data.pose.orientation.w)
+            (roll, pitch, yaw) = euler_from_quaternion(q) 
+            print('obj_name:' + str(obj_name))
+            print('yaw:' + str(yaw))
+            print('roll:' + str(roll))
+            print('pitch:' + str(pitch))
+            current_pose[2] = yaw
+            current_poly = common_util.generate_poly(current_pose[0], current_pose[1], yaw, common_util.CUBE_SIZE_DICT[obj_name][2]/2.0, common_util.CUBE_SIZE_DICT[obj_name][0]/2.0)
+            current_poly_list = list(current_poly.exterior.coords)
+            self.object_list[obj_name] = current_poly_list
+
     def manipulation_action_done_cb(self, goal_state, result):
         #callback function for grasp planning action request
 
@@ -460,6 +481,31 @@ class YoubotEnvironment():
         print("scene_object_list:")
         print(self.reserved_planning_scene_msg.scene_object_list)   
 
+    def update_env_add(self, added_obj):
+        print("add object " + added_obj)
+        data = rospy.wait_for_message('/vrpn_client_node/' + added_obj + '/pose', PoseStamped)
+            
+        current_pose = [0, 0, 0]
+        current_pose[0] = data.pose.position.x
+        current_pose[1] = data.pose.position.y
+        q = (data.pose.orientation.x,
+                data.pose.orientation.y,
+                data.pose.orientation.z,
+                data.pose.orientation.w)
+        (roll, pitch, yaw) = euler_from_quaternion(q) 
+        print('obj_name:' + str(added_obj))
+        print('yaw:' + str(yaw))
+        print('roll:' + str(roll))
+        print('pitch:' + str(pitch))
+        current_pose[2] = yaw
+        current_poly = common_util.generate_poly(current_pose[0], current_pose[1], yaw, common_util.CUBE_SIZE_DICT[added_obj][2]/2.0, common_util.CUBE_SIZE_DICT[added_obj][0]/2.0)
+        current_poly_list = list(current_poly.exterior.coords)
+        self.object_list[added_obj] = current_poly_list
+
+    def update_env_del(self, deleted_obj):
+        print("delete object " + deleted_obj)
+        del self.object_list[deleted_obj]
+
     def update_env(self, deleted_obj):
         # when deleted_obj is removed from the scene, this function updates the self.object_list and self.planning_scene_msg
 
@@ -513,7 +559,7 @@ class YoubotEnvironment():
         print(path_with_heading)
         
 
-        base_util.plot_vg_path(obstacles, path_with_heading, g, large_g)
+        # base_util.plot_vg_path(obstacles, path_with_heading, g, large_g)
 
         base_controller.execute_path_vel_pub(path_with_heading, True)
 
@@ -775,7 +821,7 @@ class YoubotEnvironment():
 
     def set_forklift_position(self, youbot_name, position, position_reached=None, position_error=None):
         #for controlling real robot 
-
+        print("go to " + str(position))
         client = actionlib.SimpleActionClient("goToPosAction", GoToPositionAction)
         client.wait_for_server()
         goal = GoToPositionGoal()
