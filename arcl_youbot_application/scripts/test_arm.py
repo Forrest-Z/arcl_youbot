@@ -33,7 +33,7 @@ if __name__ == "__main__":
     # arm_util.set_gripper_width("youbot_0", 0.0, 1)
     
     
-    env.move_arm_to_joint_pose("youbot_0", arm_up_joint)
+    env.move_arm_to_joint_pose("youbot_1", arm_up_joint)
 
     rospy.spin()
    

@@ -17,7 +17,7 @@ JOINT_4_INDEX = 11
 JOINT_5_INDEX = 12
 
 SAMPLE_NUM = 500
-PATH_INTERPOLATE_NUM=7
+PATH_INTERPOLATE_NUM=10
 MIN_JOINT_POS = [
     -2.9395372288,
     -1.124398163,
@@ -111,7 +111,7 @@ def execute_path(youbot_name, final_path):
             traj_pt.time_from_start = rospy.Duration.from_sec(begin_time)
             goal.trajectory.points.append(traj_pt)
     goal.goal_time_tolerance = rospy.Duration.from_sec(10)
-    print(goal)
+    # print(goal)
     client.send_goal_and_wait(goal)
     print("finished current path")
 

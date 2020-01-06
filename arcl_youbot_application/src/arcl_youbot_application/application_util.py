@@ -290,6 +290,9 @@ class YoubotEnvironment():
             current_poly_list = list(current_poly.exterior.coords)
             self.object_list[obj_name] = current_poly_list
 
+    def export_objects_poly_list(self):
+        return self.object_list
+
     def manipulation_action_done_cb(self, goal_state, result):
         #callback function for grasp planning action request
 
@@ -553,13 +556,14 @@ class YoubotEnvironment():
         print("goal:")
         print(goal_pos, goal_heading)
         start_time = time.time()
-        path_with_heading, g, large_g = base_util.vg_find_combined_path(start_pos, goal_pos, start_heading, goal_heading, obstacles)
+        # path_with_heading, g, large_g = base_util.vg_find_combined_path(start_pos, goal_pos, start_heading, goal_heading, obstacles)
+        path_with_heading, g = base_util.vg_find_large_path(start_pos, goal_pos, start_heading, goal_heading, obstacles)
         print("time: " + str(time.time() - start_time))
         print("path:")
         print(path_with_heading)
         
-
         # base_util.plot_vg_path(obstacles, path_with_heading, g, large_g)
+        base_util.plot_vg_path(obstacles, path_with_heading, g)
 
         base_controller.execute_path_vel_pub(path_with_heading, True)
 
@@ -772,9 +776,9 @@ class YoubotEnvironment():
         #plan and move arm to pre_pick_pos
         [final_path, final_cost] = prmstar_planner.path_plan(tuple(start), tuple(pre_pick_joint_value))
         if self.mode == 0:
-            arm_util.set_gripper_width("youbot_0", 0.06, self.mode)
+            arm_util.set_gripper_width(youbot_name, 0.06, self.mode)
         else:
-            arm_util.set_gripper_width("youbot_0", 0.0, self.mode)
+            arm_util.set_gripper_width(youbot_name, 0.0, self.mode)
         arm_util.execute_path(youbot_name, final_path)
 
         print("moved to the pre_pick pose")
@@ -785,12 +789,14 @@ class YoubotEnvironment():
         arm_util.execute_path(youbot_name, final_path)
         print("moved to the pick pose")
         if self.mode == 0:
-            arm_util.set_gripper_width("youbot_0", 0.0, self.mode)
+            arm_util.set_gripper_width(youbot_name, 0.0, self.mode)
             rospy.sleep(rospy.Duration.from_sec(5.0))
         else:
-            arm_util.set_gripper_width("youbot_0", 0.06, self.mode)
-
-
+            arm_util.set_gripper_width(youbot_name, 0.06, self.mode)
+            time.sleep(1.5)
+        
+        
+        
         #directly retract arm to pre_pick_pos
         start = arm_util.get_current_joint_pos(youbot_name, self.mode)
         [final_path, final_cost] = prmstar_planner.direct_path(tuple(start), tuple(pre_pick_joint_value))

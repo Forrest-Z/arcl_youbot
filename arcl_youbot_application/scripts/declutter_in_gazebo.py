@@ -23,7 +23,7 @@ if __name__ == "__main__":
     # pick_index_list = [3, 4, 1, 0, 2]
     # pick_index_list = [3, 1, 0, 2]
     # pick_index_list = [0, 1]
-    # pick_index_list = [0]
+    # pick_index_list = [8]
 
 
     #spawn the objects in gazebo, and generate the planningscene msg 

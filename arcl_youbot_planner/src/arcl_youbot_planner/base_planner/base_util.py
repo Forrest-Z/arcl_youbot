@@ -17,8 +17,11 @@ import arcl_youbot_planner.base_planner.visgraph as vg
 from arcl_youbot_planner.base_planner.visgraph.visible_vertices import edge_distance
 import commands
 from shapely.geometry import Polygon, LinearRing, LineString, Point
-from shapely.ops import unary_union
+from shapely.ops import unary_union, nearest_points
 import rvo2
+import matplotlib
+matplotlib.use('Qt4Agg')
+from matplotlib import pyplot
 
 
 LOW_SPEED = 0.005           # smaller than this will be considered not moving
@@ -28,7 +31,7 @@ YOUBOT_LONG_RADIUS = 0.4   # used to dilated obstacles (diagonal / 2)
 # YOUBOT_LONG_RADIUS = 0.35
 # YOUBOT_RVO2_RADIUS = 0.5
 ADJUST_DISTANCE = YOUBOT_LONG_RADIUS - YOUBOT_SHORT_RADIUS + 0.2  # used for new_vg_path to decide use path from small or large dilated obstacles
-BACK_DISTANCE = 0.1         # buffer distance to the final goal pos
+BACK_DISTANCE = 0.05         # buffer distance to the final goal pos
 SHORT_ANGLE = -111          # sign to indicate path from small obstacles
 NEAR_RATIO = 0.2            # distance ratio from a large pos to small pos
 LENGTH_TOL = 1.0            # length of path tolerance
@@ -368,7 +371,13 @@ def vg_find_large_path(start_pos, goal_pos, start_heading, goal_heading, obstacl
         g.build(polygons)
     else:
        g.build(polygons, workers=cpu_cores)
-    path = g.shortest_path(vg.Point(start_pos[0], start_pos[1]), vg.Point(goal_pos[0], goal_pos[1]))
+    if Point(start_pos[0], start_pos[1]).within(union_dilated_obstacles):
+        adjust_start_pose = nearest_points(Point(start_pos[0], start_pos[1]), union_dilated_obstacles.boundary)[1]
+        adjust_start_pose = Point(adjust_start_pose.x + (adjust_start_pose.x - start_pos[0]) * 0.1, adjust_start_pose.y + (adjust_start_pose.y - start_pos[1]) * 0.1)
+        path = g.shortest_path(vg.Point(adjust_start_pose.x, adjust_start_pose.y), vg.Point(goal_pos[0], goal_pos[1]))
+        path.insert(0, vg.Point(start_pos[0], start_pos[1]))
+    else:
+        path = g.shortest_path(vg.Point(start_pos[0], start_pos[1]), vg.Point(goal_pos[0], goal_pos[1]))
 
     # ===== change orientation of youbot so it can fit in this graph =====
     current_heading = start_heading
@@ -435,7 +444,13 @@ def vg_find_combined_path(start_pos, goal_pos, start_heading, goal_heading, obst
         small_g.build(polygons)
     else:
         small_g.build(polygons, workers=cpu_cores)
-    path = small_g.shortest_path(vg.Point(start_pos[0], start_pos[1]), vg.Point(goal_pos[0], goal_pos[1]))
+    if Point(start_pos[0], start_pos[1]).within(union_dilated_obstacles):
+        adjust_start_pose = nearest_points(Point(start_pos[0], start_pos[1]), union_dilated_obstacles.boundary)[1]
+        adjust_start_pose = Point(adjust_start_pose.x + (adjust_start_pose.x - start_pos[0]) * 0.1, adjust_start_pose.y + (adjust_start_pose.y - start_pos[1]) * 0.1)
+        path = small_g.shortest_path(vg.Point(adjust_start_pose.x, adjust_start_pose.y), vg.Point(goal_pos[0], goal_pos[1]))
+        path.insert(0, vg.Point(start_pos[0], start_pos[1]))
+    else:
+        path = small_g.shortest_path(vg.Point(start_pos[0], start_pos[1]), vg.Point(goal_pos[0], goal_pos[1]))
     print("vg small path", path)
 
     large_g = vg.VisGraph()
@@ -443,9 +458,16 @@ def vg_find_combined_path(start_pos, goal_pos, start_heading, goal_heading, obst
         large_g.build(large_polygons)
     else:
        large_g.build(large_polygons, workers=cpu_cores)
-    large_path = large_g.shortest_path(vg.Point(start_pos[0], start_pos[1]), vg.Point(goal_pos[0], goal_pos[1]))
-    if len(large_path) == 3 and Point(large_path[0].x, large_path[0].y).within(union_dilated_large_obstacles):
-        large_path.pop(1)
+    if Point(start_pos[0], start_pos[1]).within(union_dilated_large_obstacles):
+        adjust_start_pose = nearest_points(Point(start_pos[0], start_pos[1]), union_dilated_large_obstacles.boundary)[1]
+        print(adjust_start_pose.x, adjust_start_pose.y)
+        adjust_start_pose = Point(adjust_start_pose.x + (adjust_start_pose.x - start_pos[0]) * 0.1, adjust_start_pose.y + (adjust_start_pose.y - start_pos[1]) * 0.1)
+        large_path = large_g.shortest_path(vg.Point(adjust_start_pose.x, adjust_start_pose.y), vg.Point(goal_pos[0], goal_pos[1]))
+        large_path.insert(0, vg.Point(start_pos[0], start_pos[1]))
+    else:
+        large_path = large_g.shortest_path(vg.Point(start_pos[0], start_pos[1]), vg.Point(goal_pos[0], goal_pos[1]))
+        if len(large_path) == 3 and Point(large_path[0].x, large_path[0].y).within(union_dilated_large_obstacles):
+            large_path.pop(1)
     print("vg large path", large_path)
 
     # ===== group two paths =====
@@ -581,8 +603,6 @@ def point_distance(p, q):
 # ===========================================================
 
 def plot_vg_path(obstacles, path, g, large_g=None):
-    from matplotlib import pyplot
-
     fig = pyplot.figure()
     ax = fig.subplots()
 
@@ -604,11 +624,12 @@ def plot_vg_path(obstacles, path, g, large_g=None):
             plot_edge(ax, x, y, color='black', linewidth=2)
 
     # plot dilated obstacles
-    for polygon in large_g.graph.polygons.values():
-        for edge in polygon:
-            x = [edge.p1.x, edge.p2.x]
-            y = [edge.p1.y, edge.p2.y]
-            plot_edge(ax, x, y, color='blue', linewidth=2)
+    if large_g is not None:
+        for polygon in large_g.graph.polygons.values():
+            for edge in polygon:
+                x = [edge.p1.x, edge.p2.x]
+                y = [edge.p1.y, edge.p2.y]
+                plot_edge(ax, x, y, color='blue', linewidth=2)
 
     # plot points
     for p in g.graph.get_points():
@@ -631,6 +652,9 @@ def plot_vg_path(obstacles, path, g, large_g=None):
     ax.set_aspect("equal")
     
     pyplot.show()
+
+    fig.clear()
+    pyplot.close(fig)
 
 def plot_line(ax, ob, color='#BDC3C7', zorder=1, linewidth=5, alpha=1):
     x, y = ob.xy
