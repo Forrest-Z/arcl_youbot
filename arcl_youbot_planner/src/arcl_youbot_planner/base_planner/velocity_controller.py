@@ -7,7 +7,6 @@ from tf.transformations import euler_from_quaternion
 from gazebo_msgs.msg import ModelStates
 
 ALPHA = 0.2
-VEL_MAX = 0.42426
 
 class VelocityController(object):
     """ Send velocity command to follow a path based on current youbot position. """
@@ -47,17 +46,17 @@ class VelocityController(object):
         velocity_d_factor_theta_near = rospy.get_param("/module_base_controller/velocity_d_factor_theta_near", 0.01)
         max_velocity_x = rospy.get_param("/module_base_controller/max_velocity_x", 0.3)
         max_velocity_y = rospy.get_param("/module_base_controller/max_velocity_y", 0.3)
-        max_velocity_theta = rospy.get_param("/module_base_controller/max_velocity_theta", 0.8)
+        max_velocity_theta = rospy.get_param("/module_base_controller/max_velocity_theta", 0.4)
         max_velocity_x_approach = rospy.get_param("/module_base_controller/max_velocity_x_approach", 0.3)
         max_velocity_y_approach = rospy.get_param("/module_base_controller/max_velocity_y_approach", 0.3)
-        max_velocity_theta_approach = rospy.get_param("/module_base_controller/max_velocity_theta_approach", 0.8)
+        max_velocity_theta_approach = rospy.get_param("/module_base_controller/max_velocity_theta_approach", 0.4)
         self.x_pid = PID(Kp=velocity_p_factor_x, Ki=velocity_i_factor_x, Kd=velocity_d_factor_x, output_limits=(-max_velocity_x, max_velocity_x))
         self.y_pid = PID(Kp=velocity_p_factor_y, Ki=velocity_i_factor_y, Kd=velocity_d_factor_y, output_limits=(-max_velocity_y, max_velocity_y))
         self.theta_pid = PID(Kp=velocity_p_factor_theta, Ki=velocity_i_factor_theta, Kd=velocity_d_factor_theta, output_limits=(-max_velocity_theta, max_velocity_theta))
         self.x_pid_near = PID(Kp=velocity_p_factor_x_near, Ki=velocity_i_factor_x_near, Kd=velocity_d_factor_x_near, output_limits=(-max_velocity_x_approach / 2.0, max_velocity_x_approach / 2.0))
         self.y_pid_near = PID(Kp=velocity_p_factor_y_near, Ki=velocity_i_factor_y_near, Kd=velocity_d_factor_y_near, output_limits=(-max_velocity_y_approach / 2.0, max_velocity_y_approach / 2.0))
         self.theta_pid_near = PID(Kp=velocity_p_factor_theta_near, Ki=velocity_i_factor_theta_near, Kd=velocity_d_factor_theta_near, output_limits=(-max_velocity_theta_approach / 2.0, max_velocity_theta_approach / 2.0))
-
+   
         # Parameters for smoothing velocity
         step_reached_threshold_x = rospy.get_param("/module_base_controller/step_reached_threshold_x", 0.15)
         step_reached_threshold_y = rospy.get_param("/module_base_controller/step_reached_threshold_y", 0.15)
@@ -76,13 +75,14 @@ class VelocityController(object):
     def set_path(self, path):
         """ Have a new path to follow. Reset everything """
         self.path = path
-        self.step = 1
+        self.step = 0
         self.x_pid.reset()
         self.y_pid.reset()
         self.theta_pid.reset()
         self.x_pid_near.reset()
         self.y_pid_near.reset()
         self.theta_pid_near.reset()
+
         self.velocity.linear.x = 0
         self.velocity.linear.y = 0
         self.velocity.angular.z = 0
@@ -92,7 +92,7 @@ class VelocityController(object):
             self.use_goal_reached_threshold = False
         # self.smooth_velocity = [0, 0, 0]
 
-    def get_velocity(self, youbot_name, current_pos, mode):
+    def get_velocity(self, current_pos):
         """ Output velocity based the current position and next target position from the path """
         if self.step < len(self.path):
             self.current_pos = current_pos
@@ -122,30 +122,35 @@ class VelocityController(object):
             
             
             # normalization, because we limited velocity
-            if velocity[0] != 0 and velocity[1] != 0 and diff_pos[0] != 0 and diff_pos[1] != 0:
-                if abs(velocity[0] / velocity[1] - diff_pos[0] / diff_pos[1]) > 0.01:
-                    if abs(velocity[0]) == self.x_pid.output_limits[1] and abs(velocity[1]) == self.y_pid.output_limits[1]:
-                        # diff_pos_norm = sqrt(diff_pos[0]**2 + diff_pos[1]**2)
-                        if abs(diff_pos[0]) > abs(diff_pos[1]):
-                            temp = (velocity[0], velocity[1])
-                            velocity[1] = velocity[0] / diff_pos[0] * diff_pos[1]
-                        else:
-                            temp = (velocity[0], velocity[1])
-                            velocity[0] = diff_pos[0] / diff_pos[1] * velocity[1]
-                        # velocity[0] = diff_pos[0] / diff_pos_norm * VEL_MAX
-                        # velocity[1] = diff_pos[1] / diff_pos_norm * VEL_MAX
-                    elif abs(velocity[0]) == self.x_pid.output_limits[1]:
-                        temp = (velocity[0], velocity[1])
-                        velocity[1] = velocity[0] / diff_pos[0] * diff_pos[1]
-                    elif abs(velocity[1]) == self.y_pid.output_limits[1]:
-                        temp = (velocity[0], velocity[1])
-                        velocity[0] = diff_pos[0] / diff_pos[1] * velocity[1]
-            if abs(velocity[0]) > self.x_pid.output_limits[1]:
-                velocity[1] = velocity[1] * self.x_pid.output_limits[1] / velocity[0]
-                velocity[0] = self.x_pid.output_limits[1]
-            if abs(velocity[1]) > self.y_pid.output_limits[1]:
-                velocity[0] = velocity[0] * self.y_pid.output_limits[1] / velocity[1]
-                velocity[1] = self.x_pid.output_limits[0]
+            self.normalization(velocity, diff_pos, self.x_pid.output_limits[1], self.y_pid.output_limits[1])
+            # if velocity[0] != 0 and velocity[1] != 0 and diff_pos[0] != 0 and diff_pos[1] != 0:
+            #     if abs(velocity[0] / velocity[1] - diff_pos[0] / diff_pos[1]) > 0.01:
+            #         if abs(velocity[0]) == self.x_pid.output_limits[1] and abs(velocity[1]) == self.y_pid.output_limits[1]:
+            #             if abs(diff_pos[0]) > abs(diff_pos[1]):
+            #                 velocity[1] = velocity[0] / diff_pos[0] * diff_pos[1]
+            #             else:
+            #                 velocity[0] = diff_pos[0] / diff_pos[1] * velocity[1]
+            #         elif abs(velocity[0]) == self.x_pid.output_limits[1]:
+            #             velocity[1] = velocity[0] / diff_pos[0] * diff_pos[1]
+            #         elif abs(velocity[1]) == self.y_pid.output_limits[1]:
+            #             velocity[0] = diff_pos[0] / diff_pos[1] * velocity[1]
+            # if abs(velocity[0]) > self.x_pid.output_limits[1]:
+            #     if velocity[0] > 0:
+            #         velocity[1] = velocity[1] * self.x_pid.output_limits[1] / velocity[0]
+            #         velocity[0] = self.x_pid.output_limits[1]
+            #     else:
+            #         velocity[1] = velocity[1] * self.x_pid.output_limits[0] / velocity[0]
+            #         velocity[0] = self.x_pid.output_limits[0]
+            # if abs(velocity[1]) > self.y_pid.output_limits[1]:
+            #     if velocity[1] > 0:
+            #         velocity[0] = velocity[0] * self.y_pid.output_limits[1] / velocity[1]
+            #         velocity[1] = self.y_pid.output_limits[1]
+            #     else:
+            #         velocity[0] = velocity[0] * self.y_pid.output_limits[0] / velocity[1]
+            #         velocity[1] = self.y_pid.output_limits[0]
+
+
+
             # velocity[0] = 0
             # velocity[2] = 0
             # print("-----global vel:" + str(self.step) + "-----")
@@ -160,15 +165,10 @@ class VelocityController(object):
             #     velocity[0] = yt
             #     velocity[1] = 0-xt
 
-            #self.velocity.linear.x = 0
             self.velocity.linear.x = velocity[0]
             self.velocity.linear.y = velocity[1]
-            #self.velocity.angular.z = 0
-
             self.velocity.angular.z = velocity[2]
             
-            
-        
             # print("-----local vel:" + str(self.step) + " / " + str(len(self.path)) + "-----")
             # print(self.current_pos)
             # print(current_step_pos)
@@ -179,6 +179,25 @@ class VelocityController(object):
             self.velocity.angular.z = 0
 
         return self.velocity
+
+    def normalization(self, velocity, diff_pos, x_max_velocity, y_max_velocity):
+        if velocity[0] != 0 and velocity[1] != 0 and diff_pos[0] != 0 and diff_pos[1] != 0:
+            if abs(velocity[0] / velocity[1] - diff_pos[0] / diff_pos[1]) > 0.01:
+                if abs(velocity[0]) == x_max_velocity and abs(velocity[1]) == y_max_velocity:
+                    if abs(diff_pos[0]) > abs(diff_pos[1]):
+                        velocity[1] = velocity[0] / diff_pos[0] * diff_pos[1]
+                    else:
+                        velocity[0] = diff_pos[0] / diff_pos[1] * velocity[1]
+                elif abs(velocity[0]) == x_max_velocity:
+                    velocity[1] = velocity[0] / diff_pos[0] * diff_pos[1]
+                elif abs(velocity[1]) == y_max_velocity:
+                    velocity[0] = diff_pos[0] / diff_pos[1] * velocity[1]
+        if abs(velocity[0]) > x_max_velocity:
+            velocity[1] = velocity[1] * x_max_velocity / velocity[0]
+            velocity[0] = x_max_velocity if velocity[0] > 0 else -x_max_velocity
+        if abs(velocity[1]) > y_max_velocity:
+            velocity[0] = velocity[0] * y_max_velocity / velocity[1]
+            velocity[1] = y_max_velocity if velocity[1] > 0 else -y_max_velocity 
     
     def is_goal_near(self, diff_pos):
         if (abs(diff_pos[0]) < self.goal_near_threshold[0] 
@@ -209,7 +228,7 @@ class VelocityController(object):
         diff_x = ((current_step_pos[0] - current_pos[0]) * cos(current_pos[2]) 
                 + (current_step_pos[1] - current_pos[1]) * sin(current_pos[2]))
         diff_y = (-(current_step_pos[0] - current_pos[0]) * sin(current_pos[2]) 
-				+ (current_step_pos[1] - current_pos[1]) * cos(current_pos[2]))
+                + (current_step_pos[1] - current_pos[1]) * cos(current_pos[2]))
         diff_theta = current_step_pos[2] - current_pos[2]
         diff_theta = self.adjust_diff_theta(diff_theta)
         return (diff_x, diff_y, diff_theta)
@@ -227,3 +246,4 @@ class VelocityController(object):
 
     def compute_near_velocity(self, diff_pos):
         return [self.x_pid_near(diff_pos[0]), self.y_pid_near(diff_pos[1]), self.theta_pid_near(diff_pos[2])]
+

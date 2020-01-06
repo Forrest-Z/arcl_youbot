@@ -30,6 +30,8 @@ Test base_controller in gazebo
 ### Base Planner:
 `pip install shapley`
 
+install https://github.com/sybrenstuvel/Python-RVO2
+
 
 # Tweaks for Luh-youbot-os
 ## YouBot - Robot - Lubuntu 18.04
