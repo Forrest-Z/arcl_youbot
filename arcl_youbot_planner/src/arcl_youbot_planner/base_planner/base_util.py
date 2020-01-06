@@ -50,7 +50,10 @@ class BaseController():
         self.current_pose_2d = [0,0,0]
         self.youbot_name = youbot_name
         self.current_pose_ = Pose()
-        self.vel_pub = rospy.Publisher('/' + youbot_name + '/robot/cmd_vel', Twist, queue_size=1)
+        # self.vel_pub = rospy.Publisher('/' + youbot_name + '/robot/cmd_vel', Twist, queue_size=1)
+        #DEBUG
+        self.vel_pub = rospy.Publisher('/robot/cmd_vel', Twist, queue_size=1)
+        #DEBUG
         if mode == 0:
             rospy.Subscriber('/gazebo/model_states', ModelStates, self.base_pose2d_callback, [youbot_name])
 
@@ -126,8 +129,9 @@ class BaseController():
             self.is_pose_received = False
             return self.current_pose_2d
         elif self.mode == 1:
+            print('....................................................')
             data = rospy.wait_for_message('/vrpn_client_node/' + self.youbot_name + '/pose', PoseStamped)
-            
+            print('===============================================')
             current_pose = [0, 0, 0]
             current_pose[0] = data.pose.position.x
             current_pose[1] = data.pose.position.y

@@ -42,11 +42,20 @@ if __name__ == "__main__":
     # arm_util.set_gripper_width('youbot_0', 0.06, 1)
     # pick_obj_seq = [ 'obj_12', 'obj_3', 'obj_8','obj_10']
     # pick_obj_seq = [ 'obj_10']
-    pick_obj_seq = ['obj_10', 'obj_3', 'obj_12', 'obj_8', 'obj_0']
+    # pick_obj_seq = ['obj_10', 'obj_3', 'obj_12', 'obj_8', 'obj_0']
 
     # pick_obj_seq = ['obj_8', 'obj_3', 'obj_0', 'obj_12', 'obj_0']
-    # pick_obj_seq = ['obj_10']
+    pick_obj_seq = ['obj_3']
     # env.move_to_target("youbot_0", rest_base_pose)
+
+    # greedy_pick_seq = ['', '', '', '']
+
+
+
+
+
+
+
     for obj_name in pick_obj_seq:
         env.send_grasp_action(env.planning_scene_msg, obj_name, env.planning_scene_msg.scene_object_list[env.obj_name_to_index_dict[obj_name]].object_pose, " ", "cube", rest_base_pose, True)
         target_base_pose = env.grasp_plan_result.final_base_pose    
@@ -58,6 +67,16 @@ if __name__ == "__main__":
         env.pick_object_old("youbot_0", pick_joint_value, pre_pick_joint_value)
         env.move_to_target("youbot_0", rest_base_pose)
         env.drop_object(obj_name)
+
+
+
+
+
+
+
+
+
+
 
     # while True:
     #     from arcl_youbot_planner.base_planner.base_util import get_youbot_base_pose2d

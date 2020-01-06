@@ -72,7 +72,7 @@ class YouBotJointStorage {
 
     long upperLimit;
 
-    long alowerLimit;
+    long lowerLimit;
 
     bool areLimitsActive;
 

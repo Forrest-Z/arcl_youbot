@@ -8,7 +8,7 @@ import actionlib
 from trajectory_msgs.msg import JointTrajectoryPoint
 from control_msgs.msg import FollowJointTrajectoryAction, FollowJointTrajectoryGoal
 from sensor_msgs.msg import JointState
-from arcl_youbot_msgs.msg import SetGripperAction, SetGripperGoal
+from arcl_youbot_msgs.msg import SetGripperAction, SetGripperGoal, MoveToJointPoseGoal
 
 JOINT_1_INDEX = 8
 JOINT_2_INDEX = 9
@@ -17,7 +17,7 @@ JOINT_4_INDEX = 11
 JOINT_5_INDEX = 12
 
 SAMPLE_NUM = 500
-PATH_INTERPOLATE_NUM=7
+PATH_INTERPOLATE_NUM=6
 MIN_JOINT_POS = [
     -2.9395372288,
     -1.124398163,
@@ -81,7 +81,7 @@ def set_gripper_width(youbot_name, width, mode=0):
     
     goal.gripper_width = width
     goal.is_relative = False
-    client.send_goal_and_wait(goal, rospy.Duration.from_sec(10.0), rospy.Duration.from_sec(10.0))
+    client.send_goal_and_wait(goal, rospy.Duration.from_sec(2.0), rospy.Duration.from_sec(2.0))
     # client.wait_for_result(rospy.Duration.from_sec(10.0))
 
 def execute_path(youbot_name, final_path):
@@ -116,18 +116,41 @@ def execute_path(youbot_name, final_path):
     print("finished current path")
 
 
-#return the joint position in the actual range (0,0,-5,0,0) to (5,5,0, 5, 5)
-def get_current_joint_pos(youbot_name, mode):
-    if mode == 0:
-        data = rospy.wait_for_message(youbot_name + '/gazebo/joint_states', JointState)
-    elif mode == 1:
-        data = rospy.wait_for_message(youbot_name + '/arm_1/joint_states', JointState)        
+class ArmController():
+    """ 
+    This is used to publish velocity
+    """
 
-    current_joint_pos = []
-    current_joint_pos.append(data.position[0])
-    current_joint_pos.append(data.position[1])
-    current_joint_pos.append(data.position[2])
-    current_joint_pos.append(data.position[3])
-    current_joint_pos.append(data.position[4])
-    return current_joint_pos
+    def __init__(self, youbot_name, mode):
+        self.mode = mode
+        self.is_joint_state_received = False
+        self.youbot_name = youbot_name
+        self.current_joint_state_ = []
+        if mode == 0:
+            rospy.Subscriber(youbot_name + '/gazebo/joint_states', JointState, self.arm_joint_state_callback, [youbot_name])
+        else:
+            rospy.Subscriber(youbot_name + '/arm_1/joint_states', JointState, self.arm_joint_state_callback, [youbot_name])
+
+    def arm_joint_state_callback(self, data, args):
+        """ Gazebo: callback to receive the current youbot position
+        """
+        self.current_joint_state_ = []
+        self.current_joint_state_.append(data.position[0])
+        self.current_joint_state_.append(data.position[1])
+        self.current_joint_state_.append(data.position[2])
+        self.current_joint_state_.append(data.position[3])
+        self.current_joint_state_.append(data.position[4])
+        self.is_joint_state_received = True
+
+
+
+
+
+#return the joint position in the actual range (0,0,-5,0,0) to (5,5,0, 5, 5)
+    def get_current_joint_pos(self):
+        while self.is_joint_state_received == False:
+            pass
+        self.is_joint_state_received = False
+        return self.current_joint_state_
+        
         

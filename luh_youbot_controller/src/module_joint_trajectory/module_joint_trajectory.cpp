@@ -317,4 +317,7 @@ void ModuleJointTrajectory::goalCallback()
     trajectory_ended_ = false;
 
     ROS_INFO("Received trajectory with %d valid points. Starting movement...", (int)trajectory_.size());
+    for(int i = 0; i < (int)trajectory_.size(); i++){
+        ROS_WARN_STREAM(trajectory_[i].position.q1()<<","<<trajectory_[i].position.q2()<<","<<trajectory_[i].position.q3()<<","<<trajectory_[i].position.q4()<<","<<trajectory_[i].position.q5());
+    }
 }
