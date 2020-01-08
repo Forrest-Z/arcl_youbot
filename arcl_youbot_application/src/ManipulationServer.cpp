@@ -127,7 +127,7 @@ void ManipulationServer::GenerateSamplesForArmConf(geometry_msgs::Pose gripper_p
     double tip_z;
    // 0.067 is the length of the gripper finger
     
-    tip_z = gripper_pose.position.z + normal_z*0.035;
+    tip_z = gripper_pose.position.z + normal_z*0.035 - 0.06;  // -0.06 only for gazebo
     // tip_z = gripper_pose.position.z;
 
     cylin_z = tip_z - ykin::H2 + ykin::L0; // relative to arm_link_0
@@ -141,7 +141,7 @@ void ManipulationServer::GenerateSamplesForArmConf(geometry_msgs::Pose gripper_p
     
     
     if(theta - M_PI < 0.1 && theta - M_PI > -0.1){
-        min_cylin_r = 0.24*sin(theta) + 0.033 + 0.2;
+        min_cylin_r = 0.24*sin(theta) + 0.033 + 0.2;  // 0.2 this is the pick distance 
     }else{
         min_cylin_r = 0.24*sin(theta) + 0.033 + 0.14; //+ sqrt(pow(normal_x,2)+pow(normal_y,2));
     }

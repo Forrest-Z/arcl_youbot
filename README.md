@@ -1,5 +1,11 @@
 # arcl_youbot
 
+## WARNING
+
+To run youbot in real world, please see ManipulationServer.cpp line 130.
+
+The distance between pick and youbot, please see ManipulationServer.cpp line 144.
+
 ## INSTALL
 
 1. `git clone https://github.com/wt160/arcl_youbot.git`

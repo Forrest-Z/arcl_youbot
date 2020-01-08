@@ -52,7 +52,7 @@ if __name__ == "__main__":
 
         reserved_object_list[obj_name] = test_obj
     arm_up_joint = [202/180.0*math.pi, 65/180.0*math.pi, -146 / 180.0 * math.pi, 102.5 / 180.0 * math.pi, 172 / 180.0 * math.pi]
-    env.move_arm_to_joint_pose("youbot_0", arm_up_joint)
+    # env.move_arm_to_joint_pose("youbot_0", arm_up_joint)
     for index in pick_index_list:
         print("pick " + str(index))
         obj_name = "obj_" + str(index)
@@ -65,7 +65,7 @@ if __name__ == "__main__":
         env.pick_object("youbot_0", pick_joint_value, pre_pick_joint_value)
         env.update_env(reserved_object_list[obj_name])
 
-        env.move_to_target("youbot_0", rest_base_pose)
-        env.drop_object('obj_' + str(index))
-        env.move_arm_to_joint_pose("youbot_0", arm_up_joint)
+        # env.move_to_target("youbot_0", rest_base_pose)
+        env.drop_object('youbot_0', 'obj_' + str(index))
+        # env.move_arm_to_joint_pose("youbot_0", arm_up_joint)
         # raw_input("wait")

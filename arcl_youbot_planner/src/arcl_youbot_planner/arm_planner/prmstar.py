@@ -236,7 +236,7 @@ class PRMStarPlanner():
                     self.p_client.stepSimulation()
                     self_collision_list = self.p_client.getContactPoints(self.robot_id, self.robot_id)
                     for self_contact in self_collision_list:
-                        if (self_contact[3] == 12 and self_contact[4] == 15) or (self_contact[3] == 12 and self_contact[4] == 14) or (self_contact[3] == 14 and self_contact[4] == 15) or (self_contact[3] == 15 and self_contact[4] == 0):
+                        if (self_contact[3] == 12 and self_contact[4] == 15) or (self_contact[3] == 12 and self_contact[4] == 14) or (self_contact[3] == 14 and self_contact[4] == 15) or (self_contact[3] == 15 and self_contact[4] == 0) or (self_contact[3] == 14 and self_contact[4] == 0):
                             pass
                         else:
                             print("self-collision:")

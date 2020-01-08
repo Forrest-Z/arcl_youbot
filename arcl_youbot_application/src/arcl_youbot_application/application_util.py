@@ -579,14 +579,14 @@ class YoubotEnvironment():
         print("goal:")
         print(goal_pos, goal_heading)
         start_time = time.time()
-        # path_with_heading, g, large_g = base_util.vg_find_combined_path(start_pos, goal_pos, start_heading, goal_heading, obstacles)
-        path_with_heading, g = base_util.vg_find_large_path(start_pos, goal_pos, start_heading, goal_heading, obstacles)
+        path_with_heading, g, large_g = base_util.vg_find_combined_path(start_pos, goal_pos, start_heading, goal_heading, obstacles)
+        # path_with_heading, g = base_util.vg_find_large_path(start_pos, goal_pos, start_heading, goal_heading, obstacles)
         print("time: " + str(time.time() - start_time))
         print("path:")
         print(path_with_heading)
         
-        # base_util.plot_vg_path(obstacles, path_with_heading, g, large_g)
-        base_util.plot_vg_path(obstacles, path_with_heading, g)
+        base_util.plot_vg_path(obstacles, path_with_heading, g, large_g)
+        # base_util.plot_vg_path(obstacles, path_with_heading, g)
 
         base_controller.execute_path_vel_pub(path_with_heading, True)
 
@@ -880,7 +880,7 @@ class YoubotEnvironment():
         robot_orientation = [current_pos_2d.orientation.x, current_pos_2d.orientation.y, current_pos_2d.orientation.z, current_pos_2d.orientation.w]
         # prmstar_planner.set_robot_pose(robot_position, robot_orientation)
 
-        arm_controller = arm_util.ArmController("", self.mode)
+        arm_controller = arm_util.ArmController(youbot_name, self.mode)
         start = arm_controller.get_current_joint_pos()
         if self.mode == 0 or self.mode == 1:
             pick_joint_value[4] = -pick_joint_value[4]
@@ -954,13 +954,10 @@ class YoubotEnvironment():
 
 
         print("moved back to the pre_pick pose")
-    def drop_object(self, obj_name):
+    def drop_object(self, youbot_name, obj_name):
         if self.mode == 0:
+            arm_util.set_gripper_width(youbot_name, 0.06, self.mode)
 
-            # arm_util.set_gripper_width("youbot_0", 0.068, self.mode)
-            #DEBUG
-            arm_util.set_gripper_width("", 0.068, self.mode)
-            #DEBUG
             deserted_pose = Pose()
             deserted_pose.position.x = 0
             deserted_pose.position.y = -10
@@ -972,9 +969,7 @@ class YoubotEnvironment():
             rospy.sleep(rospy.Duration(3, 0))
             common_util.set_obj_pose(obj_name, deserted_pose)
         else:
-            # arm_util.set_gripper_width("youbot_0", 0.0, self.mode)
-
-            arm_util.set_gripper_width("", 0.0, self.mode)
+            arm_util.set_gripper_width(youbot_name, 0.0, self.mode)
 
     def forklift_done_cb(self, goal_state, result):
         print("Fork Lift GoToPosition returned")

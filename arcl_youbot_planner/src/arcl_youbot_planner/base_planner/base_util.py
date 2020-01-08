@@ -51,18 +51,11 @@ class BaseController():
         self.current_pose_2d = [0,0,0]
         self.youbot_name = youbot_name
         self.current_pose_ = Pose()
-<<<<<<< HEAD
-        # self.vel_pub = rospy.Publisher('/' + youbot_name + '/robot/cmd_vel', Twist, queue_size=1)
-        #DEBUG
-        self.vel_pub = rospy.Publisher('/robot/cmd_vel', Twist, queue_size=1)
-        #DEBUG
-=======
         self.current_vel = Twist()
         self.vel_pub = rospy.Publisher('/' + youbot_name + '/robot/cmd_vel', Twist, queue_size=1)
         self.temp_vel_pub = rospy.Publisher('/' + youbot_name + '/robot/temp_vel', TwistStamped, queue_size=1)
         self.pose_pub = rospy.Publisher('/' + youbot_name + '/robot/pose', PointStamped, queue_size=1)
         self.vc = VelocityController(self.youbot_name)
->>>>>>> f80766de4c7ebd69d49bd350b553bd822291a9a4
         if mode == 0:
             rospy.Subscriber('/gazebo/model_states', ModelStates, self.base_pose2d_callback, [youbot_name])
         self.path = None

@@ -747,17 +747,17 @@ class DP_solver(object):
 
     def point2property(self, obj):
         length_1 = math.sqrt((obj[0][0] - obj[1][0])**2 + (obj[0][1] - obj[1][1])**2)
-        length_2 = math.sqrt((obj[0][0] - obj[2][0])**2 + (obj[0][1] - obj[2][1])**2)
-        print "length", length_1, length_2
+        length_2 = math.sqrt((obj[0][0] - obj[3][0])**2 + (obj[0][1] - obj[3][1])**2)
+        # print "length", length_1, length_2
         p1 = vg.Point(obj[0][0], obj[0][1])
         if length_1 > length_2:
             p2 = vg.Point(obj[1][0], obj[1][1])
-            p4 = vg.Point(obj[2][0], obj[2][1])
-            p3 = vg.Point(obj[3][0], obj[3][1])
+            p3 = vg.Point(obj[2][0], obj[2][1])
+            p4 = vg.Point(obj[3][0], obj[3][1])
         else:
             p4 = vg.Point(obj[1][0], obj[1][1])
-            p2 = vg.Point(obj[2][0], obj[2][1])
-            p3 = vg.Point(obj[3][0], obj[3][1])
+            p3 = vg.Point(obj[2][0], obj[2][1])
+            p2 = vg.Point(obj[3][0], obj[3][1])
         x_min = min((p1.x+p4.x)/2.0, (p2.x+p3.x)/2.0)
         x_max = max((p1.x+p4.x)/2.0, (p2.x+p3.x)/2.0)
         a = (p2.y-p1.y)/((p2.x-p1.x))
