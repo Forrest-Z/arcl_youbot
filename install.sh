@@ -6,3 +6,4 @@ catkin_make youbot_grasp_gencpp  arcl_youbot_msgs_gencpp
 
 catkin_make
 
+sudo ldconfig /opt/ros/melodic/lib
