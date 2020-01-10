@@ -63,6 +63,9 @@ def get_yaw_from_polygon(obj):
         temp_length = long_length
         long_length = short_length
         short_length = temp_length
+
+    if long_x == 0.0:
+        long_x = 0.0001
     return math.atan(float(long_y/long_x))
 
 #return information from a cube, defined as [[x0,y0], [x1,y1], [x2,y2], [x3,y3]]
@@ -173,6 +176,10 @@ def generate_poly(center_x, center_y, yaw, length, width):
     # y = -width
     # p3 = (center_x + math.cos(yaw)*x - math.sin(yaw)*y, center_y - (math.sin(yaw)*x + math.cos(yaw)*y))
     
+    temp = width
+    width = length
+    length = temp
+
     x = length
     y = width
     p0 = (center_x + math.cos(yaw)*x - math.sin(yaw)*y, center_y + (math.sin(yaw)*x + math.cos(yaw)*y))

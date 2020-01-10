@@ -37,6 +37,7 @@ import threading
 from multiprocessing import Process
 import signal
 import sys
+import copy
 
 
 GAZEBO_COLORS = [ 
@@ -101,7 +102,11 @@ class YoubotEnvironment():
 
         f = open(filename, 'w')
         f.write(str(self.object_num)+'\n')
-        for obj_name, obj in self.object_list[:-1].iteritems():
+
+        output = copy.deepcopy(self.object_list)
+        del output['wall']
+
+        for obj in output.values():
             f.write(str(len(obj)-1)+'\n')
             for v in obj[:-1]:
                 f.write(str(v[0]) + " " + str(v[1])+'\n')
@@ -140,7 +145,7 @@ class YoubotEnvironment():
                 is_valid = True
                 center_x = random.random() * (x_max - x_min) + x_min
                 center_y = random.random() * (y_max - y_min) + y_min
-                yaw = random.random() * 3.14159
+                yaw = random.random() * math.pi
 
                 length = random.random() * (common_util.OBJECT_LENGTH_MAX - common_util.OBJECT_LENGTH_MIN) + common_util.OBJECT_LENGTH_MIN
                 width = common_util.OBJECT_WIDTH
@@ -173,70 +178,6 @@ class YoubotEnvironment():
 
         #add the environemnt wall at last
         self.object_list['wall'] = WALL
-
-    def create_forklift_environment(self, object_number, cluster_number):
-            # create random object_list in the current environment
-            # INPUT: 
-                #object_number: total object num 
-                #cluster_number: number of clusters the objects are separated to.
-            # EXAMPLE: create_environment(20, 20) will create 20 scattered objects
-        
-            boundary_padding = 0.5
-            x_min = self.x_min + boundary_padding
-            x_max = self.x_max - boundary_padding
-            y_min = self.y_min + boundary_padding
-            y_max = self.y_max - boundary_padding
-
-            created_objs = []
-            each_cluster_obj_num = 0
-            each_cluster_obj_num = int(math.ceil(object_number / cluster_number))
-            cluster_obj_num_list = []
-            for i in range(cluster_number-1):
-                cluster_obj_num_list.append(each_cluster_obj_num)
-            cluster_obj_num_list.append(object_number - (cluster_number-1)*each_cluster_obj_num)
-
-            for i in range(cluster_number):
-                #generate objects per cluster
-
-                is_valid = False
-                random.seed()
-                while not is_valid:  
-                    is_valid = True
-                    center_x = random.random() * (x_max - x_min) + x_min
-                    center_y = random.random() * (y_max - y_min) + y_min
-                    yaw = random.random() * 3.14159
-
-                    length = random.random() * (common_util.OBJECT_LENGTH_MAX - common_util.OBJECT_LENGTH_MIN) + common_util.OBJECT_LENGTH_MIN
-                    width = common_util.OBJECT_WIDTH
-                    new_poly = common_util.generate_poly(center_x, center_y, yaw, length, width)
-
-                    for exist_obj in created_objs:
-                        if not exist_obj.equals(new_poly):
-                            if exist_obj.intersects(new_poly):
-                                is_valid = False
-                                break
-                    
-                    if not is_valid:
-                        continue
-
-                    created_objs.append(new_poly)
-                    same_cluster_objs = []
-                    same_cluster_objs.append(new_poly)
-                    for j in range(cluster_obj_num_list[i]-1):
-                        tp = common_util.add_near_poly(same_cluster_objs, created_objs, x_min, x_max, y_min, y_max, boundary_padding) 
-                        same_cluster_objs.append(tp)
-                        created_objs.append(tp)
-        
-            list_created_objs = {}
-
-            for obj, obj_index in zip(created_objs, range(len(created_objs))):
-                list_created_objs['obj_'+str(obj_index)] = list(obj.exterior.coords)
-
-            self.import_obj_from_list(list_created_objs)
-            self.object_num = len(self.object_list)
-
-            #add the environemnt wall at last
-            self.object_list['wall'] = WALL
 
     def import_obj_from_optitrack(self):
         #auto detect objects in the optitrack region, generate self.object_list and obj_name_list, and generate planning_scene_msg

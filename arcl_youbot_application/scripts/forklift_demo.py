@@ -17,6 +17,10 @@ second_height = 0.05
 load_height = 0.05
 unload_height = 0.02
 
+
+UNLOAD_HEIGHT = [0.0, 0.085, 0.17]
+LOAD_HEIGHT = [0.03, 0.115, 0.2]
+
 def load(env, obj_name, height):
     # object
     obj_data = rospy.wait_for_message('/vrpn_client_node/' + obj_name + '/pose', PoseStamped)
@@ -116,7 +120,7 @@ if __name__ == "__main__":
     rospy.init_node("forklift_demo")
     env = app_util.YoubotEnvironment(-1.5, 1.5, -3.0, 1.0)    
     env.mode = 1
-    env.import_obj_from_optitrack_forklift(['obj_50', 'obj_51'])
+    # env.import_obj_from_optitrack_forklift(['obj_50', 'obj_51'])
 
     rest_base_pose = Pose()
     rest_base_pose.position.x = 0
@@ -139,14 +143,14 @@ if __name__ == "__main__":
     # TASK: lift target 1 (two levels), then, put target 1 on the top of target 2 (one level)
 
     # load target 1
-    end_pose = load(env, 'obj_51', first_height)
-    # unload target 1 on the top of target 2
-    unload_on_object(env, 'obj_50', second_height)
+    # end_pose = load(env, 'obj_51', first_height)
+    # # unload target 1 on the top of target 2
+    # unload_on_object(env, 'obj_50', second_height)
 
-    # load all of them back to target_base_pose
-    env.update_env_add('obj_51')
-    load(env, 'obj_51', first_height)
-    unload_on_pose(env, end_pose)
+    # # load all of them back to target_base_pose
+    # env.update_env_add('obj_51')
+    # load(env, 'obj_51', first_height)
+    # unload_on_pose(env, end_pose)
 
     # env.move_to_target("youbot_2", rest_base_pose)
-    # env.set_forklift_position('youbot_2', 0.05)
+    env.set_forklift_position('youbot_2', 0.0)

@@ -23,18 +23,40 @@ if __name__ == "__main__":
     rospy.init_node("single_youbot_pick_demo")
     rospy.Subscriber('/youbot_0/robot/pose', PointStamped, position_callback)
 
-    env = app_util.YoubotEnvironment(-1.5, 1.5, -3.0, 1.0)    
-    # env = app_util.YoubotEnvironment(-2.5, 2.5, 0.0, 5.0)
+    
+    
+    
+    # env = app_util.YoubotEnvironment(-1.5, 1.5, -3.0, 1.0)    
+    env = app_util.YoubotEnvironment(-2.5, 2.5, 0.0, 5.0)
     env.mode = 0
-    #import object list from file
     my_path = os.path.abspath(os.path.dirname(__file__))
-    env.import_obj_from_file(os.path.join(my_path, "scatter/new_4.txt"))
-    # env.create_environment(15, 5)
-    # print(env.object_list)
+
+    
+    #import object list from file
+    env.import_obj_from_file(os.path.join(my_path, "scatter/new_12.txt"))
+    
+
+
+    
+    # export object
+    # env.create_environment(12, 12)
     # env.export_obj_to_file(os.path.join(my_path, "scatter/new_12.txt"))
+    
+
+    print(env.object_list)
+    
+
+
+
+
 
     #spawn the objects in gazebo, and generate the planningscene msg 
-    env.generate_obj_in_gazebo()
+    env.generate_obj_in_gazebo() ############ comment it and type "roscore" when gazebo is useless
+
+
+
+
+
 
     rest_base_pose = Pose()
     rest_base_pose.position.x = 0
@@ -59,9 +81,18 @@ if __name__ == "__main__":
     env_obj_list = deepcopy(env.object_list)
     del env_obj_list['wall']
     print(env_obj_list)
+
+
+
+    '''
+    # Calculation
     DP = TSP_DP.DP_solver(env_obj_list)
     DP.experiment()
+    '''
 
+
+    '''
+    # Generate DP Lists
     pick_list = DP.DP_obj_order
     pick_rounds_index_list = []
     for one_round in pick_list:
@@ -72,7 +103,6 @@ if __name__ == "__main__":
     
     print('=========')
     print(pick_rounds_index_list)
-
     pick_list_pose = DP.DP_robot_locations
     pick_rounds_pose_list = []
     for one_round in pick_list_pose:
@@ -83,18 +113,66 @@ if __name__ == "__main__":
             pose.position.y = p[1]
             pick_pose_list.append(pose)
         pick_rounds_pose_list.append(pick_pose_list)   
-
     print('=========')
     print('[', end="")
+    
     for i in pick_rounds_pose_list:
         print('[', end="")
         for j in i:
             print("Pose(Point({},{},0),Quaternion(0,0,0,0))".format(j.position.x, j.position.y), end=",")
         print(']', end=",")
     print(']')
-    # pick_rounds_index_list = [[4, 5], [5], [5], [5], [5], [5]]
-    # pick_rounds_pose_list = [[Pose(Point(0.110073603033,1.93999787971,0),Quaternion(0,0,0,0)),Pose(Point(0.141308147373,2.3796050782,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.568841216735,3.13117400211,0),Quaternion(0,0,0,0)),],[Pose(Point(0.551076652833,2.03347117204,0),Quaternion(0,0,0,0)),],[Pose(Point(-1.50341119192,2.14773027418,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.428179910782,2.78099270254,0),Quaternion(0,0,0,0)),],[Pose(Point(0.757132313206,2.43490669277,0),Quaternion(0,0,0,0))]]
+    # Finish Generating DP Lists
+    '''
+    
+    # test01 DP
+    pick_rounds_index_list = [[1, 4], [8], [7], [6, 5], [0, 11], [3], [9, 2], [10]]
+    pick_rounds_pose_list = [[Pose(Point(-0.122104774778,0.193825253911,0),Quaternion(0,0,0,0)),Pose(Point(1.34098977641,1.35963644417,0),Quaternion(0,0,0,0)),],[Pose(Point(-1.23870887891,2.39183031963,0),Quaternion(0,0,0,0)),],[Pose(Point(0.0973516758403,0.152432230202,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.616806667224,0.990746754209,0),Quaternion(0,0,0,0)),Pose(Point(-0.308077836218,3.36753804127,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.134824064551,2.06497851283,0),Quaternion(0,0,0,0)),Pose(Point(0.308816681871,2.66101344687,0),Quaternion(0,0,0,0)),],[Pose(Point(1.69441548259,2.84184930193,0),Quaternion(0,0,0,0)),],[Pose(Point(0.19294262408,1.97973167766,0),Quaternion(0,0,0,0)),Pose(Point(1.11718525121,3.39195106367,0),Quaternion(0,0,0,0)),],[Pose(Point(-1.20620150007,1.59266874834,0),Quaternion(0,0,0,0)),],]
+    
+    '''
+    # test02 Greedy
+    pick_rounds_index_list = [[7, 1], [6, 9], [4, 0], [10], [11], [8], [3], [5], [2]]
+    pick_rounds_pose_list = [[Pose(Point(0.0257430720617,0.211774081541,0),Quaternion(0,0,0,0)),Pose(Point(0.078846220153,0.531629861229,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.468082668307,0.0204410384512,0),Quaternion(0,0,0,0)),Pose(Point(-0.0819101375602,2.00782546733,0),Quaternion(0,0,0,0)),],[Pose(Point(1.42650784669,1.24072790743,0),Quaternion(0,0,0,0)),Pose(Point(0.222309888616,2.30185703351,0),Quaternion(0,0,0,0)),],[Pose(Point(-1.150787692,1.6427049884,0),Quaternion(0,0,0,0)),],[Pose(Point(0.622390570734,2.38253728428,0),Quaternion(0,0,0,0)),],[Pose(Point(-1.24655696595,2.38837646244,0),Quaternion(0,0,0,0)),],[Pose(Point(1.69541548259,2.84284930193,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.500431008682,3.47998772411,0),Quaternion(0,0,0,0)),],[Pose(Point(1.25310607939,3.31091412478,0),Quaternion(0,0,0,0)),],]
+    '''
+    '''
+    # Generate Greedy Lists
+    pick_list = DP.greedy_obj_order
+    pick_rounds_index_list = []
+    for one_round in pick_list:
+        pick_index_list = []
+        for obj in one_round:
+            pick_index_list.append(obj)
+        pick_rounds_index_list.append(pick_index_list)
+    
+    print('=========')
+    print(pick_rounds_index_list)
 
+    
+    pick_list_pose = DP.greedy_robot_locations
+    pick_rounds_pose_list = []
+    for one_round in pick_list_pose:
+        pick_pose_list = []
+        for p in one_round:
+            pose = Pose()
+            pose.position.x = p[0]
+            pose.position.y = p[1]
+            pick_pose_list.append(pose)
+        pick_rounds_pose_list.append(pick_pose_list)   
+    
+    print('=========')
+    print('[', end="")
+    
+    for i in pick_rounds_pose_list:
+        print('[', end="")
+        for j in i:
+            print("Pose(Point({},{},0),Quaternion(0,0,0,0))".format(j.position.x, j.position.y), end=",")
+        print(']', end=",")
+    print(']')
+    # Finish Generate Greedy Lists
+    '''
+
+
+    # No Change below
     for i, pick_index_list in enumerate(pick_rounds_index_list):
 
         reserved_object_list = {}
