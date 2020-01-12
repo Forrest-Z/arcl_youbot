@@ -536,7 +536,7 @@ class YoubotEnvironment():
         print("path:")
         print(path_with_heading)
         
-        base_util.plot_vg_path(obstacles, path_with_heading, g, large_g)
+        # base_util.plot_vg_path(obstacles, path_with_heading, g, large_g)
         # base_util.plot_vg_path(obstacles, path_with_heading, g)
 
         self.base_controller.execute_path_vel_pub(path_with_heading, True)
@@ -921,8 +921,9 @@ class YoubotEnvironment():
             deserted_pose.orientation.w = 1
             rospy.sleep(rospy.Duration(3, 0))
             common_util.set_obj_pose(obj_name, deserted_pose)
-            time.sleep(0.1)
+            rospy.sleep(rospy.Duration(1, 0))
             common_util.set_obj_pose(obj_name, deserted_pose)
+            print('drop object', obj_name, deserted_pose)
         else:
             arm_util.set_gripper_width(youbot_name, 0.0, self.mode)
 

@@ -22,6 +22,8 @@ import rvo2
 import matplotlib
 matplotlib.use('Qt4Agg')
 from matplotlib import pyplot
+import traceback
+from nav_msgs.msg import Odometry
 
 
 LOW_SPEED = 0.005           # smaller than this will be considered not moving
@@ -150,9 +152,38 @@ class BaseController():
         """ get the current youbot position
         """
         if self.mode == 0:
-            while self.is_pose_received == False:
-                pass
-            self.is_pose_received = False
+            current_pose_2d = None
+            while current_pose_2d is None:
+                try:
+                    data = rospy.wait_for_message('/youbot_0/gazebo/odom', Odometry, timeout=0.15)
+                    data = data.pose
+                    self.current_pose_ = data.pose
+                    self.current_pose_2d[0] = data.pose.position.x
+                    self.current_pose_2d[1] = data.pose.position.y
+                    q = (data.pose.orientation.x,
+                            data.pose.orientation.y,
+                            data.pose.orientation.z,
+                            data.pose.orientation.w)
+                    (_, _, yaw) = euler_from_quaternion(q)
+                    self.current_pose_2d[2] = yaw
+                    current_pose_2d = self.current_pose_2d
+                    # data = rospy.wait_for_message('/gazebo/model_states', ModelStates, timeout=0.1)
+                    # for name, data_index in zip(data.name, range(len(data.name))):
+                    #     if name == self.youbot_name:
+                    #         youbot_index = data_index
+                    # self.current_pose_ = data.pose[youbot_index]
+                    # self.current_pose_2d[0] = data.pose[youbot_index].position.x
+                    # self.current_pose_2d[1] = data.pose[youbot_index].position.y
+                    # q = (data.pose[youbot_index].orientation.x,
+                    #         data.pose[youbot_index].orientation.y,
+                    #         data.pose[youbot_index].orientation.z,
+                    #         data.pose[youbot_index].orientation.w)
+                    # (_, _, yaw) = euler_from_quaternion(q)
+                    # self.current_pose_2d[2] = yaw
+                    # current_pose_2d = self.current_pose_2d
+                except:
+                    # traceback.print_exc()
+                    rospy.loginfo("cannot get pose!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             return self.current_pose_2d
         elif self.mode == 1:
             data = rospy.wait_for_message('/vrpn_client_node/' + self.youbot_name + '/pose', PoseStamped)

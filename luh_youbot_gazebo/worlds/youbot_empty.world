@@ -729,7 +729,7 @@
           </geometry>
           <material>
             <script>
-              <uri>file:///home/wei/catkin_gazebo_ws/src/luh_youbot_gazebo/worlds/materials/scripts/gazebo.material</uri>
+              <uri>file:///home/youbot/ws/src/arcl_youbot/luh_youbot_gazebo/worlds/materials/scripts/gazebo.material</uri>
               <name>Gazebo/WoodFloor</name>
             </script>
           </material>

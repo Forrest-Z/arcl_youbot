@@ -170,9 +170,18 @@ if __name__ == "__main__":
     '''
     # No Change below
 
+    # env.update_env('obj_11')
+    # env.drop_object("youbot_0", 'obj_11')
+    # env.update_env('obj_4')
+    # env.drop_object("youbot_0", 'obj_4')
+    # env.update_env('obj_2')
+    # env.drop_object("youbot_0", 'obj_2')
+    # env.update_env('obj_8')
+    # env.drop_object("youbot_0", 'obj_8')
+    # env.update_env('obj_7')
+    # env.drop_object("youbot_0", 'obj_7')
+
     for i, pick_index_list in enumerate(pick_rounds_index_list):
-        if i < 6:
-            continue
 
         for j, index in enumerate(pick_index_list):
             print("pick " + str(index))
