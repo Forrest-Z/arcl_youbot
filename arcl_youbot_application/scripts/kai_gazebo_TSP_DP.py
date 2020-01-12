@@ -27,8 +27,7 @@ if __name__ == "__main__":
     
     
     # env = app_util.YoubotEnvironment(-1.5, 1.5, -3.0, 1.0)    
-    env = app_util.YoubotEnvironment(-2.5, 2.5, 0.0, 5.0)
-    env.mode = 0
+    env = app_util.YoubotEnvironment(-2.5, 2.5, 0.0, 5.0, 'youbot_0', 0)
     my_path = os.path.abspath(os.path.dirname(__file__))
 
     
@@ -126,9 +125,8 @@ if __name__ == "__main__":
     '''
     
     # test01 DP
-    pick_rounds_index_list = [[1, 4], [8], [7], [6, 5], [0, 11], [3], [9, 2], [10]]
-    pick_rounds_pose_list = [[Pose(Point(-0.122104774778,0.193825253911,0),Quaternion(0,0,0,0)),Pose(Point(1.34098977641,1.35963644417,0),Quaternion(0,0,0,0)),],[Pose(Point(-1.23870887891,2.39183031963,0),Quaternion(0,0,0,0)),],[Pose(Point(0.0973516758403,0.152432230202,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.616806667224,0.990746754209,0),Quaternion(0,0,0,0)),Pose(Point(-0.308077836218,3.36753804127,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.134824064551,2.06497851283,0),Quaternion(0,0,0,0)),Pose(Point(0.308816681871,2.66101344687,0),Quaternion(0,0,0,0)),],[Pose(Point(1.69441548259,2.84184930193,0),Quaternion(0,0,0,0)),],[Pose(Point(0.19294262408,1.97973167766,0),Quaternion(0,0,0,0)),Pose(Point(1.11718525121,3.39195106367,0),Quaternion(0,0,0,0)),],[Pose(Point(-1.20620150007,1.59266874834,0),Quaternion(0,0,0,0)),],]
-    
+    pick_rounds_index_list = [[11, 4], [2, 8], [5], [1], [0], [10, 3], [9], [6], [7]]
+    pick_rounds_pose_list = [[Pose(Point(-1.36966551903,2.67661788095,0),Quaternion(0,0,0,0)),Pose(Point(-1.31235395001,3.0563780111,0),Quaternion(0,0,0,0)),],[Pose(Point(1.42974166644,1.257625297,0),Quaternion(0,0,0,0)),Pose(Point(1.73132265387,1.58661806475,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.645789244145,1.23750732606,0),Quaternion(0,0,0,0)),],[Pose(Point(0.238576149994,1.33695897234,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.796306242369,1.10730953555,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.00827344024391,3.01839653092,0),Quaternion(0,0,0,0)),Pose(Point(-0.0345655851531,3.56548463888,0),Quaternion(0,0,0,0)),],[Pose(Point(0.763295278464,2.39576355583,0),Quaternion(0,0,0,0)),],[Pose(Point(1.32617180839,3.64663108252,0),Quaternion(0,0,0,0)),],[Pose(Point(0.658004563047,0.336543156788,0),Quaternion(0,0,0,0)),],]    
     '''
     # test02 Greedy
     pick_rounds_index_list = [[7, 1], [6, 9], [4, 0], [10], [11], [8], [3], [5], [2]]
@@ -170,14 +168,11 @@ if __name__ == "__main__":
     print(']')
     # Finish Generate Greedy Lists
     '''
-
-
     # No Change below
-    for i, pick_index_list in enumerate(pick_rounds_index_list):
 
-        reserved_object_list = {}
-        for obj_name, test_obj  in env_obj_list.iteritems():
-            reserved_object_list[obj_name] = test_obj
+    for i, pick_index_list in enumerate(pick_rounds_index_list):
+        if i < 6:
+            continue
 
         for j, index in enumerate(pick_index_list):
             print("pick " + str(index))
@@ -189,7 +184,7 @@ if __name__ == "__main__":
             pick_joint_value = [env.grasp_plan_result.q1, env.grasp_plan_result.q2, env.grasp_plan_result.q3, env.grasp_plan_result.q4, env.grasp_plan_result.q5]
             pre_pick_joint_value = [env.grasp_plan_result.q1_pre, env.grasp_plan_result.q2_pre, env.grasp_plan_result.q3_pre, env.grasp_plan_result.q4_pre, env.grasp_plan_result.q5_pre]    
             env.pick_object("youbot_0", pick_joint_value, pre_pick_joint_value)
-            env.update_env(reserved_object_list[obj_name])
+            env.update_env(obj_name)
             env.move_arm_to_joint_pose("youbot_0", arm_drop_joint)
             time.sleep(1.5)
             env.drop_object("youbot_0", obj_name)

@@ -20,9 +20,8 @@ if __name__ == "__main__":
     rospy.init_node("single_youbot_pick_demo")
     rospy.Subscriber('/youbot_0/robot/pose', PointStamped, position_callback)
 
-    env = app_util.YoubotEnvironment(-1.5, 1.5, -3.0, 1.0)    
+    env = app_util.YoubotEnvironment(-1.5, 1.5, -3.0, 1.0, 'youbot_0', 1)    
     # env = app_util.YoubotEnvironment(-2.5, 2.5, 0.0, 5.0)
-    env.mode = 1
     #import object list from file
     my_path = os.path.abspath(os.path.dirname(__file__))
     # env.import_obj_from_file(os.path.join(my_path, "scatter/new_11.txt"))
@@ -85,11 +84,6 @@ if __name__ == "__main__":
     print(pick_rounds_pose_list)
 
     for i, pick_index_list in enumerate(pick_rounds_index_list):
-
-        reserved_object_list = {}
-        for obj_name, test_obj  in env.object_list.iteritems():
-            reserved_object_list[obj_name] = test_obj
-
         for j, index in enumerate(pick_index_list):
             print("pick " + str(index))
             obj_name = "obj_" + str(index)
@@ -100,10 +94,9 @@ if __name__ == "__main__":
             pick_joint_value = [env.grasp_plan_result.q1, env.grasp_plan_result.q2, env.grasp_plan_result.q3, env.grasp_plan_result.q4, env.grasp_plan_result.q5]
             pre_pick_joint_value = [env.grasp_plan_result.q1_pre, env.grasp_plan_result.q2_pre, env.grasp_plan_result.q3_pre, env.grasp_plan_result.q4_pre, env.grasp_plan_result.q5_pre]    
             env.pick_object("youbot_0", pick_joint_value, pre_pick_joint_value)
-            env.update_env(reserved_object_list[obj_name])
-            # env.move_arm_to_joint_pose("youbot_0", arm_up_joint)
+            env.update_env(obj_name)
             env.move_arm_to_joint_pose("youbot_0", arm_drop_joint)
             time.sleep(1.5)
-            env.drop_object(obj_name)
+            env.drop_object("youbot_0", obj_name)
 
         env.move_to_target("youbot_0", rest_base_pose)

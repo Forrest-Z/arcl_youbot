@@ -67,7 +67,7 @@ def ctrl_c_handler(signal, frame):
 class YoubotEnvironment(): 
     
     
-    def __init__(self, x_min, x_max, y_min, y_max):
+    def __init__(self, x_min, x_max, y_min, y_max, youbot_name="", mode=0):
         self.x_min = x_min
         self.x_max = x_max
         self.y_min = y_min
@@ -76,7 +76,8 @@ class YoubotEnvironment():
         self.obj_name_to_index_dict = {}
         self.planning_scene_msg = PlanningSceneMsg()
         self.reserved_planning_scene_msg = PlanningSceneMsg()
-        self.mode = 0
+        self.mode = mode
+        self.base_controller = base_util.BaseController(youbot_name, self.mode)
         
     def import_obj_from_file(self, filename):
         # filename: ffabsolute path for the environment file
@@ -476,18 +477,29 @@ class YoubotEnvironment():
     def update_env(self, deleted_obj):
         # when deleted_obj is removed from the scene, this function updates the self.object_list and self.planning_scene_msg
 
-        print(deleted_obj) 
-        deleted_obj_index = self.object_list.values().index(deleted_obj)        
-        # print(self.object_list)
-        deleted_obj_key = self.object_list.keys()[deleted_obj_index]
-        self.object_list.pop(deleted_obj_key)
-        print("update_env:" + str(deleted_obj_index))
+        # print(deleted_obj) 
+        # deleted_obj_index = self.object_list.values().index(deleted_obj)        
+        # # print(self.object_list)
+        # deleted_obj_key = self.object_list.keys()[deleted_obj_index]
+        # self.object_list.pop(deleted_obj_key)
+        # print("update_env:" + str(deleted_obj_index))
+        # print("planning_scene_msg size:" + str(len(self.planning_scene_msg.scene_object_list)))
+        # deleted_obj_msg = self.planning_scene_msg.scene_object_list[deleted_obj_index]
+        # print("planning_scene_msg size:" + str(len(self.planning_scene_msg.scene_object_list)))
+        # self.planning_scene_msg.scene_object_list.remove(deleted_obj_msg)
+        # print("planning_scene_msg size:" + str(len(self.planning_scene_msg.scene_object_list)))
+        # # raw_input("wait")
+
+        print("delete", deleted_obj) 
+        self.object_list.pop(deleted_obj)
         print("planning_scene_msg size:" + str(len(self.planning_scene_msg.scene_object_list)))
-        deleted_obj_msg = self.planning_scene_msg.scene_object_list[deleted_obj_index]
+        for index, obj in enumerate(self.planning_scene_msg.scene_object_list):
+            if obj.object_name.data == deleted_obj:
+                deleted_index = index
+                break
+        self.planning_scene_msg.scene_object_list.pop(deleted_index)
         print("planning_scene_msg size:" + str(len(self.planning_scene_msg.scene_object_list)))
-        self.planning_scene_msg.scene_object_list.remove(deleted_obj_msg)
-        print("planning_scene_msg size:" + str(len(self.planning_scene_msg.scene_object_list)))
-        # raw_input("wait")
+
 
     def move_to_target(self, youbot_name, target_pose):
         # works under gazebo and real world env
@@ -495,9 +507,7 @@ class YoubotEnvironment():
             # youbot_name: the controlled youbot's name (ex: youbot_0)
             # target_pose: the target pose in global coordinate
                     # type: geometry_msgs/Pose
-
-        base_controller = base_util.BaseController(youbot_name, self.mode)
-        current_pos_2d = base_controller.get_youbot_base_pose2d()
+        current_pos_2d = self.base_controller.get_youbot_base_pose2d()
         print("current_pos_2d")
         print(current_pos_2d)
         target_pos_2d = [0, 0, 0]
@@ -529,7 +539,7 @@ class YoubotEnvironment():
         base_util.plot_vg_path(obstacles, path_with_heading, g, large_g)
         # base_util.plot_vg_path(obstacles, path_with_heading, g)
 
-        base_controller.execute_path_vel_pub(path_with_heading, True)
+        self.base_controller.execute_path_vel_pub(path_with_heading, True)
 
     def thread_move_to_target(self, youbot_name, target_pose):
         # works under gazebo and real world env
@@ -899,15 +909,19 @@ class YoubotEnvironment():
         if self.mode == 0:
             arm_util.set_gripper_width(youbot_name, 0.06, self.mode)
 
+            offset = float(obj_name.split('_')[1]) / 10.0
+
             deserted_pose = Pose()
             deserted_pose.position.x = 0
-            deserted_pose.position.y = -10
+            deserted_pose.position.y = -10 + offset
             deserted_pose.position.z = 0.1
             deserted_pose.orientation.x = 0
             deserted_pose.orientation.y = 0
             deserted_pose.orientation.z = 0
             deserted_pose.orientation.w = 1
             rospy.sleep(rospy.Duration(3, 0))
+            common_util.set_obj_pose(obj_name, deserted_pose)
+            time.sleep(0.1)
             common_util.set_obj_pose(obj_name, deserted_pose)
         else:
             arm_util.set_gripper_width(youbot_name, 0.0, self.mode)

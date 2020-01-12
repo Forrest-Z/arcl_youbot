@@ -35,8 +35,8 @@ class VelocityController(object):
         velocity_d_factor_x = rospy.get_param("/module_base_controller/velocity_d_factor_x", 0.1)
         velocity_d_factor_y = rospy.get_param("/module_base_controller/velocity_d_factor_y", 0.1)
         velocity_d_factor_theta = rospy.get_param("/module_base_controller/velocity_d_factor_theta", 0.01)
-        velocity_p_factor_x_near = rospy.get_param("/module_base_controller/velocity_p_factor_x_near", 2)
-        velocity_p_factor_y_near = rospy.get_param("/module_base_controller/velocity_p_factor_y_near", 2)
+        velocity_p_factor_x_near = rospy.get_param("/module_base_controller/velocity_p_factor_x_near", 1)
+        velocity_p_factor_y_near = rospy.get_param("/module_base_controller/velocity_p_factor_y_near", 1)
         velocity_p_factor_theta_near = rospy.get_param("/module_base_controller/velocity_p_factor_theta_near", 1.5)
         velocity_i_factor_x_near = rospy.get_param("/module_base_controller/velocity_i_factor_x_near", 0.0)
         velocity_i_factor_y_near = rospy.get_param("/module_base_controller/velocity_i_factor_y_near", 0.0)
@@ -83,9 +83,7 @@ class VelocityController(object):
         self.y_pid_near.reset()
         self.theta_pid_near.reset()
 
-        self.velocity.linear.x = 0
-        self.velocity.linear.y = 0
-        self.velocity.angular.z = 0
+        self.velocity = Twist()
         if len(self.path) == 2:
             self.use_goal_reached_threshold = True
         else:

@@ -155,9 +155,7 @@ class BaseController():
             self.is_pose_received = False
             return self.current_pose_2d
         elif self.mode == 1:
-            print('....................................................')
             data = rospy.wait_for_message('/vrpn_client_node/' + self.youbot_name + '/pose', PoseStamped)
-            print('===============================================')
             current_pose = [0, 0, 0]
             current_pose[0] = data.pose.position.x
             current_pose[1] = data.pose.position.y
