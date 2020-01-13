@@ -671,8 +671,8 @@ class DP_solver(object):
         return obj_list
 
     def experiment(self):
-        self.dynamic_programming()
-        self.construct_paths()
+        # self.dynamic_programming()
+        # self.construct_paths()
         self.greedy_heuristics()
         
         # modify obj_order

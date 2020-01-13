@@ -4,6 +4,8 @@
 
 To run youbot in real world, please see ManipulationServer.cpp line 130.
 
+To run youbot in real world, please see luh_youbot_controller/cfg/cmodule_base_controller/params.yaml
+
 The distance between pick and youbot, please see ManipulationServer.cpp line 144.
 
 ## INSTALL
@@ -23,11 +25,13 @@ Command:
 
 1. `roslaunch luh_youbot_gazebo youbot.launch`
 
-2. `rosrun youbot_grasp youbot_grasp_planning_service`
+2. `roslaunch luh_youbot_controller gazebo_controller.launch`
 
-3. `rosrun arcl_youbot_application manipulation_server`
+3. `rosrun youbot_grasp youbot_grasp_planning_service`
 
-4. `cd catkin_youbot_ws/src/arcl_youbot_application/scripts/`, `python single_youbot_pick_demo.py`
+4. `rosrun arcl_youbot_application manipulation_server`
+
+5. `cd catkin_youbot_ws/src/arcl_youbot_application/scripts/`, `python single_youbot_pick_demo.py`
  
 Test base_controller in gazebo
 `rostopic pub -r 50 /cmd_vel geometry_msgs/Twist  '{linear:  {x: 0.1, y: 0.0, z: 0.0}, angular: {x: 0.0,y: 0.0,z: 0.0}}'`
@@ -35,7 +39,7 @@ Test base_controller in gazebo
 ## Dependency:
 ### Base Planner:
 `pip install shapley`
-
+`apt install ros-melodic-pybin11-catkin`
 install https://github.com/sybrenstuvel/Python-RVO2
 
 
@@ -64,8 +68,3 @@ install https://github.com/sybrenstuvel/Python-RVO2
 2. `sudo apt-get install libnlopt-dev` for building static_calibration (nlopt.hpp)
 
 3. change gksudo to sudo under `luh_youbot_controller/CMakeLists.txt`
-
-# Install dependency
-## Pybin11
-`apt install ros-melodic-pybin11-catkin`
-
