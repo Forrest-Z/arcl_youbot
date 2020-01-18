@@ -6,6 +6,8 @@ To run youbot in real world, please see ManipulationServer.cpp line 130.
 
 To run youbot in real world, please see luh_youbot_controller/cfg/cmodule_base_controller/params.yaml
 
+The orientation of objects should be adjusted for gazebo or real world, please see common_util.py line 179.
+
 The distance between pick and youbot, please see ManipulationServer.cpp line 144.
 
 ## INSTALL
