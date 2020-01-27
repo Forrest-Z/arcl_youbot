@@ -152,13 +152,6 @@ class BaseController():
         """ get the current youbot position
         """
         if self.mode == 0:
-<<<<<<< HEAD
-            # while self.is_pose_received == False:
-            #     pass
-            # self.is_pose_received = False
-            # return self.current_pose_2d
-=======
->>>>>>> 3bb2a6a8afb213f373a36e480cfdb8474ba10266
             current_pose_2d = None
             while current_pose_2d is None:
                 try:
@@ -174,9 +167,6 @@ class BaseController():
                     (_, _, yaw) = euler_from_quaternion(q)
                     self.current_pose_2d[2] = yaw
                     current_pose_2d = self.current_pose_2d
-<<<<<<< HEAD
-                except:
-=======
                     # data = rospy.wait_for_message('/gazebo/model_states', ModelStates, timeout=0.1)
                     # for name, data_index in zip(data.name, range(len(data.name))):
                     #     if name == self.youbot_name:
@@ -193,7 +183,6 @@ class BaseController():
                     # current_pose_2d = self.current_pose_2d
                 except:
                     # traceback.print_exc()
->>>>>>> 3bb2a6a8afb213f373a36e480cfdb8474ba10266
                     rospy.loginfo("cannot get pose!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             return self.current_pose_2d
         elif self.mode == 1:
