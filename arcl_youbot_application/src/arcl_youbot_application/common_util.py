@@ -176,9 +176,10 @@ def generate_poly(center_x, center_y, yaw, length, width):
     # y = -width
     # p3 = (center_x + math.cos(yaw)*x - math.sin(yaw)*y, center_y - (math.sin(yaw)*x + math.cos(yaw)*y))
     
-    temp = width
-    width = length
-    length = temp
+    # gazebo
+    # temp = width
+    # width = length
+    # length = temp
 
     x = length
     y = width

@@ -17,28 +17,28 @@ import time
 from queue import PriorityQueue
 from std_msgs.msg import Int8MultiArray
 
-UNLOAD_HEIGHT = [0.17, 0.085, 0.0]
+UNLOAD_HEIGHT = [0.17, 0.085, 0.01]
 LOAD_HEIGHT = [0.2, 0.115, 0.03]
-ZONE = [Pose(Point(0.319557756186, -0.991410136223, 0.0110616758466), Quaternion(-0.500597119331, 0.499149799347, -0.49899828434, 0.501251280308)),
-        Pose(Point(-0.136415556073, -0.992778539658, 0.0169941969216), Quaternion(-0.500597119331, 0.499149799347, -0.49899828434, 0.501251280308)),
-        Pose(Point(-0.59396481514, -0.994572877884, 0.0169941969216), Quaternion(-0.500597119331, 0.499149799347, -0.49899828434, 0.501251280308)),
-        Pose(Point(-1.05052709579, -0.99669367075, 0.0169941969216), Quaternion(-0.500597119331, 0.499149799347, -0.49899828434, 0.501251280308))]
+ZONE = [Pose(Point(0.315323382616, -1.01717340946, 0.103996619582), Quaternion(0.500282824039, -0.499866634607, 0.498632192612, -0.50121486187)),
+        Pose(Point(-0.139539673924, -1.01989018917, 0.104218177497), Quaternion(0.498746186495, -0.503944218159, 0.49566963315, -0.5016015172)),
+        Pose(Point(-0.593142211437, -1.02366733551, 0.106185980141), Quaternion(0.504684686661, -0.499624967575, 0.498205423355, -0.497453123331)),
+        Pose(Point(-1.04596865177, -1.02525186539, 0.108994059265), Quaternion(0.504900157452, -0.500990092754, 0.496651381254, -0.497415482998))]
 WIDTH = 640
 HEIGHT = 480
 NUM_ZONE = len(ZONE)
 TOP = len(LOAD_HEIGHT)
 EMPTY = 0
 RED = 1
-BLUE = 2
-GREEN = 3
-COLOR = [RED, BLUE, GREEN]      # len(COLOR) should be equal to NUM_ZONE
+GREEN = 2
+BLUE = 3
+COLOR = [RED, GREEN, BLUE]      # len(COLOR) should be equal to NUM_ZONE
 CV_MAX_DISTANCE = 2             # removing the background of objects more than
 CV_MIN_AREA = 300               # valid object with area
 LIFT_COST_SCALE = 1             # lift cost
 MOVE_COST_SCALE = 1.5           # move cost scale
 HEURISTIC_SCALE = 1             # heuristic scale, 5 for large space
-offset = 0.325
-offset_last_step = 0.225
+offset = 0.34
+offset_last_step = offset - 0.1
 
 
 # =========================== Plan ===========================
@@ -98,7 +98,8 @@ class Node:
 
         lift_cost = abs(self.fork_position_after - from_part_end + 1) + abs(to_part_end - from_part_end)
         move_cost = abs(self.base_position_after - pu) + abs(pu - pd)
-        cost = lift_cost * LIFT_COST_SCALE + move_cost * MOVE_COST_SCALE
+        # cost = lift_cost * LIFT_COST_SCALE + move_cost * MOVE_COST_SCALE
+        cost = 1
 
         return Node(state, pu, tu, pd, td, cost)
 
@@ -155,8 +156,8 @@ def a_star_search(start, goal):
             new_cost = cost_so_far[current] + next_node.cost
             if next_node not in cost_so_far or new_cost < cost_so_far[next_node]:
                 cost_so_far[next_node] = new_cost
-                next_node.priority = new_cost + heuristic(goal.state, next_node.state)
-                # next_node.priority = new_cost
+                # next_node.priority = new_cost + heuristic(goal.state, next_node.state)
+                next_node.priority = new_cost
                 frontier.put(next_node)
                 came_from[next_node] = current
         
@@ -170,105 +171,14 @@ def a_star_search(start, goal):
 
 
 # =========================== Control ===========================
-# def load(env, obj_name, height):
-#     # object
-#     obj_data = rospy.wait_for_message('/vrpn_client_node/' + obj_name + '/pose', PoseStamped)
-#     target_base_pose = obj_data.pose
-#     q = (obj_data.pose.orientation.x, obj_data.pose.orientation.y, obj_data.pose.orientation.z, obj_data.pose.orientation.w)
-#     obj_roll, obj_pitch, obj_yaw = euler_from_quaternion(q) 
-
-#     # base
-#     base_data = rospy.wait_for_message('/vrpn_client_node/' + "youbot_2" + '/pose', PoseStamped)
-#     current_base_pose = base_data.pose
-#     q = (base_data.pose.orientation.x, base_data.pose.orientation.y, base_data.pose.orientation.z, base_data.pose.orientation.w)
-#     base_roll, base_pitch, base_yaw = euler_from_quaternion(q) 
-
-#     # adjust pose
-#     diff_yaw = base_yaw - obj_yaw
-#     if abs(diff_yaw) > math.pi:
-#         if obj_yaw > 0:
-#             obj_yaw -= math.pi
-#         else:
-#             obj_yaw += math.pi
-#     target_base_pose.position.x -= offset * math.cos(obj_yaw)
-#     target_base_pose.position.y -= offset * math.sin(obj_yaw)
-#     q = quaternion_from_euler(obj_roll, obj_pitch, obj_yaw)
-#     target_base_pose.orientation.x = q[0]
-#     target_base_pose.orientation.y = q[1]
-#     target_base_pose.orientation.z = q[2]
-#     target_base_pose.orientation.w = q[3]
-
-#     last_step = copy.deepcopy(target_base_pose)
-#     last_step.position.x -= offset_last_step * math.cos(obj_yaw)
-#     last_step.position.y -= offset_last_step * math.sin(obj_yaw)
-
-#     env.move_to_target("youbot_2", last_step)
-#     if height == 0.0:
-#         env.update_env_del(obj_name)
-#         # TODO: else, we need to add a new object
-#     env.set_forklift_position('youbot_2', height)
-#     env.move_to_target("youbot_2", target_base_pose)
-#     env.set_forklift_position('youbot_2', height + load_height)
-
-#     return target_base_pose
-
-
-# def unload_on_object(env, obj_name, height):
-#     # object
-#     obj_data = rospy.wait_for_message('/vrpn_client_node/' + obj_name + '/pose', PoseStamped)
-#     target_base_pose = obj_data.pose
-#     q = (obj_data.pose.orientation.x, obj_data.pose.orientation.y, obj_data.pose.orientation.z, obj_data.pose.orientation.w)
-#     obj_roll, obj_pitch, obj_yaw = euler_from_quaternion(q) 
-
-#     # base
-#     base_data = rospy.wait_for_message('/vrpn_client_node/' + "youbot_2" + '/pose', PoseStamped)
-#     current_base_pose = base_data.pose
-#     q = (base_data.pose.orientation.x, base_data.pose.orientation.y, base_data.pose.orientation.z, base_data.pose.orientation.w)
-#     base_roll, base_pitch, base_yaw = euler_from_quaternion(q) 
-
-#     # adjust pose
-#     diff_yaw = base_yaw - obj_yaw
-#     if abs(diff_yaw) > math.pi:
-#         if obj_yaw > 0:
-#             obj_yaw -= math.pi
-#         else:
-#             obj_yaw += math.pi
-#     target_base_pose.position.x -= offset * math.cos(obj_yaw)
-#     target_base_pose.position.y -= offset * math.sin(obj_yaw)
-#     q = quaternion_from_euler(obj_roll, obj_pitch, obj_yaw)
-#     target_base_pose.orientation.x = q[0]
-#     target_base_pose.orientation.y = q[1]
-#     target_base_pose.orientation.z = q[2]
-#     target_base_pose.orientation.w = q[3]
-
-#     last_step = copy.deepcopy(target_base_pose)
-#     last_step.position.x -= offset_last_step * math.cos(obj_yaw)
-#     last_step.position.y -= offset_last_step * math.sin(obj_yaw)
-
-#     env.move_to_target("youbot_2", last_step)
-#     if height == 0.0:
-#         env.update_env_del(obj_name)
-#         # TODO: else, we need to add a new object
-#     env.set_forklift_position('youbot_2', height + unload_height)
-#     env.move_to_target("youbot_2", target_base_pose)
-#     env.set_forklift_position('youbot_2', height - unload_height)
-#     env.move_to_target("youbot_2", last_step)
-
-# def unload_on_pose(env, end_pose):
-#     last_step = copy.deepcopy(end_pose)
-#     q = (last_step.orientation.x, last_step.orientation.y, last_step.orientation.z, last_step.orientation.w)
-#     _, _, base_yaw = euler_from_quaternion(q) 
-#     last_step.position.x -= offset_last_step * math.cos(base_yaw)
-#     last_step.position.y -= offset_last_step * math.sin(base_yaw)
-
-#     env.move_to_target("youbot_2", end_pose)
-#     env.set_forklift_position('youbot_2', first_height)
-#     env.move_to_target("youbot_2", last_step)
-
-def step(base_load, fork_load, base_unload, fork_unload):
+def step(base_load, fork_load, base_unload, fork_unload, prev_base_load):
     # load
     # object
     target_base_pose = copy.deepcopy(ZONE[base_load])
+    # if base_load < prev_base_load:
+    #     target_base_pose.position.x += 0.002
+    # if base_load > prev_base_load:
+    #     target_base_pose.position.x -= 0.002
     q = (target_base_pose.orientation.x, target_base_pose.orientation.y, target_base_pose.orientation.z, target_base_pose.orientation.w)
     obj_roll, obj_pitch, obj_yaw = euler_from_quaternion(q) 
     # base
@@ -304,6 +214,10 @@ def step(base_load, fork_load, base_unload, fork_unload):
     # unload
     # object
     target_base_pose = copy.deepcopy(ZONE[base_unload])
+    # if base_unload < base_load:
+    #     target_base_pose.position.x += 0.002
+    # if base_unload > base_load:
+    #     target_base_pose.position.x -= 0.002
     q = (target_base_pose.orientation.x, target_base_pose.orientation.y, target_base_pose.orientation.z, target_base_pose.orientation.w)
     obj_roll, obj_pitch, obj_yaw = euler_from_quaternion(q) 
     # base
@@ -361,9 +275,9 @@ if __name__ == "__main__":
     target_base_pose.orientation.w = 0.7071068
 
     # Get start infomation
-    image = rospy.wait_for_message('/image', Int8MultiArray)
-    start = list(image.data)
-    # start = [0, 1, 3, 0, 0, 1, 0, 0, 3]
+    # image = rospy.wait_for_message('/image', Int8MultiArray)
+    # start = list(image.data)
+    start = [3, 2, 1, 3, 3, 2, 2, 1, 1]
     start.extend([EMPTY] * TOP)
     start = np.array(start)
     print('start', start)
@@ -392,10 +306,12 @@ if __name__ == "__main__":
     print('cost', cost_so_far[goal_node])
 
     # # execution
+    prev_base_load = 1
     for count, command in enumerate(control):
         print('===== step =====', count + 1)
-        step(command[0], command[1], command[2], command[3])
+        step(command[0], command[1], command[2], command[3], prev_base_load)
+        prev_base_load = command[2]
     print("Done!")
 
     # test
-    # env.set_forklift_position('youbot_2', 0.0)
+    # env.set_forklift_position('youbot_2', 0.03)
