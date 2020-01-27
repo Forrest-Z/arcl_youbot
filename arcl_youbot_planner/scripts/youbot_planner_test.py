@@ -18,7 +18,7 @@ if __name__ == "__main__":
     physicsClient = p.connect(p.DIRECT)#or p.DIRECT for non-graphical version
     p.setAdditionalSearchPath(pybullet_data.getDataPath()) #optionally
     p.setGravity(0,0,-10)
-    prmstar = prmstar.PRMStarPlanner(p, "/home/wei/catkin_youbot_ws/src/luh_youbot_description/robots/youbot_0.urdf")
+    prmstar = prmstar.PRMStarPlanner(p, "/home/youbot/ws/src/arcl_youbot/luh_youbot_description/robots/youbot_0.urdf")
     #prmstar.build_roadmap()
     start = np.zeros(arm_util.ARM_JOINT_NUM)
     #for jnt in range(ARM_JOINT_NUM):
