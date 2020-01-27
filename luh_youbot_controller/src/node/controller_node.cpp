@@ -27,7 +27,7 @@
 #include "luh_youbot_controller/module_direct_control/module_direct_control.h"
 #include "luh_youbot_controller/module_joint_trajectory/module_joint_trajectory.h"
 #include "luh_youbot_controller/module_gravity_compensation/module_gravity_compensation.h"
-// #include <luh_youbot_vrep_api/youbot_interface.h>
+//#include <luh_youbot_vrep_api/youbot_interface.h>
 #include <luh_youbot_gazebo/youbot_interface.h>
 
 using namespace arcl_youbot_kinematics;
@@ -44,15 +44,6 @@ ControllerNode::ControllerNode(ros::NodeHandle &node):
     ros::param::param("luh_youbot_controller/use_gazebo_simulation", use_gazebo_simulation_, false);
     ros::param::param("luh_youbot_controller/use_luh_gripper_v3", use_luh_gripper_v3_, false);
 
-    // node_->param("luh_youbot_controller/arm_controller_frequency", arm_frequency_, 200.0);
-    // node_->param("luh_youbot_controller/base_controller_frequency", base_frequency_, 50.0);
-    // node_->param("luh_youbot_controller/use_standard_gripper", use_standard_gripper_, true);
-    // node_->param("luh_youbot_controller/use_vrep_simulation", use_vrep_simulation_, false);
-    // node_->param("luh_youbot_controller/use_gazebo_simulation", use_gazebo_simulation_, true);
-    // node_->param("luh_youbot_controller/use_luh_gripper_v3", use_luh_gripper_v3_, false);
-
-    robot_name_ = node_->getNamespace();
-
     if(use_standard_gripper_)
         ROS_INFO("Using standard gripper.");
     else if(use_luh_gripper_v3_)
@@ -60,7 +51,7 @@ ControllerNode::ControllerNode(ros::NodeHandle &node):
     else
         ROS_INFO("Using external gripper.");
 
-
+    robot_name_ = node_->getNamespace();
     // === YOUBOT INTERFACE ===
     if(use_gazebo_simulation_)
     {
@@ -72,10 +63,9 @@ ControllerNode::ControllerNode(ros::NodeHandle &node):
         ROS_WARN("Running in VREP simulation mode.");
        // youbot_ = new YoubotVrepInterface(node);
     }    
-    else{ 
-        ROS_WARN("Running in real robot mode");
+    else
         youbot_ = new YoubotInterface(node);
-    }
+
     youbot_->initialise(use_standard_gripper_,use_luh_gripper_v3_);
 
     // === TIMER ===
@@ -109,13 +99,13 @@ ControllerNode::ControllerNode(ros::NodeHandle &node):
     // === INIT ARM ===
     if(youbot_->hasArms())
     {
-        //arm_modules_.push_back(new ModuleInterpolation());
-        //arm_modules_.push_back(new ModuleMotionPlanner());        
-        //arm_modules_.push_back(new ModuleDirectControl());
+        arm_modules_.push_back(new ModuleInterpolation());
+        arm_modules_.push_back(new ModuleMotionPlanner());        
+        arm_modules_.push_back(new ModuleDirectControl());
         arm_modules_.push_back(new ModuleJointTrajectory());
-        //arm_modules_.push_back(new ModuleGravityCompensation());
+        arm_modules_.push_back(new ModuleGravityCompensation());
 
-       // if(use_standard_gripper_ || use_luh_gripper_v3_)
+        if(use_standard_gripper_ || use_luh_gripper_v3_)
             arm_modules_.push_back(new ModuleGripper());
 
         // other modules can be added here
@@ -130,7 +120,7 @@ ControllerNode::ControllerNode(ros::NodeHandle &node):
     }
     else
     {
-        ROS_WARN_STREAM("no arm!!!!!!!!!!!!!!!!!!1");
+	ROS_WARN_STREAM("no arm!!!!!!");
         ControllerModule::setArmIsBusy(true);
         ControllerModule::setGripperIsBusy(true);
     }
@@ -185,34 +175,50 @@ void ControllerNode::armTimerCallback(const ros::TimerEvent &evt)
 
     // === READ ARM SENSORS ===
     ethercat_mutex_.lock();
+    try{
     youbot_->arm()->readState();
+    }catch(const std::exception& e){
+    	std::cout<<e.what()<<std::endl;
+    }
     ethercat_mutex_.unlock();
 
     // === UPDATE MODULES ===
     for(uint i=0; i<arm_modules_.size(); i++)
     {
-        arm_modules_[i]->update();
+ 	try{
+     	    arm_modules_[i]->update();
+    
+	}catch(const std::exception& e){
+		std::cout<<e.what()<<std::endl;
+	}
     }
 
     // === SECURITY CHECK ===
+    try{ 
     int error_joint = youbot_->arm()->securityCheck();
     if(error_joint > 0)
     {
         ROS_INFO("Overcurrent in joint %d", error_joint);
         stopArm();
     }
-
     // === WRITE ARM COMMANDS ===
     else
     {
         ethercat_mutex_.lock();
-        bool error = !youbot_->arm()->writeCommands();
-        ethercat_mutex_.unlock();
+	bool error;
+	try{
+        error = !youbot_->arm()->writeCommands();
+	}catch(const std::exception& e){
+	   std::cout<<e.what()<<std::endl;
+	}
+	ethercat_mutex_.unlock();
 
         if(error)
             stopArm();
     }
-
+    }catch(const std::exception& e){
+    	std::cout<<e.what()<<std::endl;
+    }
     // == PUBLISH JOINT STATE MESSAGES ===
     youbot_->arm()->publishMessages();
 

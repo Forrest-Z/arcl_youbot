@@ -2,8 +2,8 @@
 #define MODULE_EXAMPLE_H
 
 #include "luh_youbot_controller/module_base_class/controller_module.h"
-#include "arcl_youbot_msgs/CartesianVector.h"
-#include "arcl_youbot_msgs/JointVector.h"
+#include "luh_youbot_msgs/CartesianVector.h"
+#include "luh_youbot_msgs/JointVector.h"
 
 class ModuleExample : public ControllerModule
 {
@@ -22,9 +22,9 @@ protected:
 
     bool activated_;
 
-    arcl_youbot_kinematics::CartesianPosition cartesian_pose_;
+    luh_youbot_kinematics::CartesianPosition cartesian_pose_;
 
-    void cartesianPoseCallback(const arcl_youbot_msgs::CartesianVector::ConstPtr &cartesian_pose_msg);
+    void cartesianPoseCallback(const luh_youbot_msgs::CartesianVector::ConstPtr &cartesian_pose_msg);
 
 };
 

@@ -83,25 +83,24 @@ YoubotInterface::~YoubotInterface()
 void YoubotInterface::initialise(bool use_standard_gripper, bool use_luh_gripper_v3)
 {
     // === GET PARAMETERS ===
-    config_.node_handle->param("youBotHasBase", config_.has_base, true);
-    bool youbot_has_arms = true;
-    config_.node_handle->param("youBotHasArms", youbot_has_arms, true);
+    ros::param::param("youBotHasBase", config_.has_base, true);
+    bool youbot_has_arms;
+    ros::param::param("youBotHasArms", youbot_has_arms, true);
 //    node.param("youBotDriverCycleFrequencyInHz", config_.frequency, 200.0);
     config_.config_path = ros::package::getPath("youbot_driver");
     config_.config_path.append("/config");
-    config_.node_handle->param<std::string>("youBotConfigurationFilePath", config_.config_path, config_.config_path);
-    config_.node_handle->param("luh_youbot_controller/base_controller_frequency", base_frequency_, 50.0);
+    ros::param::param<std::string>("youBotConfigurationFilePath", config_.config_path, config_.config_path);
+
     // === CREATE ARMS ===
-    youbot_has_arms = true;
     if(youbot_has_arms)
     {
         int i = 1;
         std::stringstream ss;
         ss << "youBotArmName" << i; // youBotArmName1 is first checked param... then youBotArmName2, etc.
-        while (config_.node_handle->hasParam(ss.str()))
+        while (ros::param::has(ss.str()))
         {
             std::string arm_name;
-            config_.node_handle->getParam(ss.str(), arm_name);
+	    ros::param::get(ss.str(), arm_name);
 
             arms_.push_back(new YoubotArmInterface(arm_name, config_));
 
@@ -114,7 +113,7 @@ void YoubotInterface::initialise(bool use_standard_gripper, bool use_luh_gripper
     if(config_.has_base)
     {
         std::string base_name;
-        config_.node_handle->param<std::string>("youBotBaseName", base_name, "youbot-base");
+	ros::param::param<std::string>("youBotBaseName", base_name, "youbot-base");
         base_ = new YoubotBaseInterface(base_name, config_);
     }
 
@@ -126,47 +125,9 @@ void YoubotInterface::initialise(bool use_standard_gripper, bool use_luh_gripper
 
     for(uint i=0; i<arms_.size(); i++)
     {
-       arms_[i]->initialise(use_standard_gripper,use_luh_gripper_v3);
-       ROS_ASSERT(arms_[i]->isInitialised());
+        arms_[i]->initialise(use_standard_gripper,use_luh_gripper_v3);
+        ROS_ASSERT(arms_[i]->isInitialised());
     }
-
-    base_timer_ = config_.node_handle->createTimer(ros::Duration(1.0/base_frequency_),
-                                     &YoubotInterface::baseTimerCallback, this, false, false);
-
-    base_timer_.start();
-}
-
-void YoubotInterface::baseTimerCallback(const ros::TimerEvent &evt)
-{
-    //boost::mutex::scoped_lock lock(ControllerModule::base_mutex_);
-
-    if(!base_->isInitialised())
-        return;
-
-    // === READ BASE SENSORS ===
-    ethercat_mutex_.lock();
-    base_->readState();
-    ethercat_mutex_.unlock();
-
-    // === UPDATE MODULES ===
-    //for(uint i=0; i<base_modules_.size(); i++)
-    //{
-    //    base_modules_[i]->update();
-    //}
-
-    // === UPDATE BASE CONTROLLER ===
-    base_->updateController();
-
-    // === WRITE BASE COMMANDS ===
-    ethercat_mutex_.lock();
-    bool error = !base_->writeCommands();
-    ethercat_mutex_.unlock();
-
-    //if(error)
-      //  stopBase();
-    ros::spinOnce();
-    // == PUBLISH BASE MESSAGES ===
-    base_->publishMessages();
 }
 
 //########## READ STATE ################################################################################################
@@ -249,22 +210,4 @@ YoubotArmInterface* YoubotInterface::arm(int index)
 YoubotBaseInterface* YoubotInterface::base()
 {
     return base_;
-}
-
-
-int main(int argc, char** argv){
-    ros::init(argc, argv, "youbot_interface_node");
-
-    ros::NodeHandle node_handle;
-    YoubotInterface node(node_handle); 
-    node.initialise(false, true);
-    ROS_INFO_STREAM("youbot_interface_node namespace:"<< ros::this_node::getNamespace());
-    ROS_INFO("youbot_interface_node is spinning...");
-    ros::AsyncSpinner spinner(4);
-    spinner.start();
-
-
-    ros::waitForShutdown();
-
-    return 0;
 }

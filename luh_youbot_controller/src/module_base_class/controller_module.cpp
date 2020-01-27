@@ -71,7 +71,7 @@ void ControllerModule::initStatic(ros::NodeHandle *node, tf::TransformListener &
     ROS_INFO("Loading poses from %s", filename.c_str());
     predefined_poses_ = youbot_poses::read(filename);
     if(filename.empty())
-        ROS_INFO("Loaded default poses.yaml from arcl_youbot_poses.");
+        ROS_INFO("Loaded default poses.yaml from luh_youbot_poses.");
     else
         ROS_INFO("Loaded poses from: %s", filename.c_str());
 }

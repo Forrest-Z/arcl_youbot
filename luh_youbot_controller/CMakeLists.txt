@@ -22,7 +22,6 @@ find_package(catkin REQUIRED COMPONENTS
 find_package(orocos_kdl REQUIRED)
 
 catkin_package()
-catkin_python_setup()
 ###########
 ## Build ##
 ###########
@@ -85,8 +84,8 @@ include/${PROJECT_NAME}/module_gravity_compensation/module_gravity_compensation.
 
 ### CONTROLLER NODE ###
 add_executable(controller_node src/node/main.cpp src/node/controller_node.cpp include/${PROJECT_NAME}/node/controller_node.h)
-catkin_install_python(PROGRAMS bin/timer_test
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+#catkin_install_python(PROGRAMS bin/timer_test
+#  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes

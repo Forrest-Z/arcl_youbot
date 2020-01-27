@@ -13,7 +13,7 @@ void ModuleExample::init()
 
     // initialise ROS communication
     cartesian_pose_subscriber_ = node_->subscribe("my_topic", 100, &ModuleExample::cartesianPoseCallback, this);
-    joint_pose_publisher_ = node_->advertise<arcl_youbot_msgs::JointVector>("joint_pose", 100);
+    joint_pose_publisher_ = node_->advertise<luh_youbot_msgs::JointVector>("joint_pose", 100);
 }
 
 //########## UPDATE ####################################################################################################
@@ -23,7 +23,7 @@ void ModuleExample::update()
         return;
 
     // transform cartesian pose to jointspace (inverse kinematics)
-    arcl_youbot_kinematics::JointPosition joint_pose = cartesian_pose_.toJointspace(joint_state_position_);
+    luh_youbot_kinematics::JointPosition joint_pose = cartesian_pose_.toJointspace(joint_state_position_);
 
     // create output message
     controller_msgs::JointVector joint_pose_msg;
@@ -51,7 +51,7 @@ void ModuleExample::deactivate()
 }
 
 //########## CALLBACK: CARTESIAN POSE ##################################################################################
-void ModuleExample::cartesianPoseCallback(const arcl_youbot_msgs::CartesianVector::ConstPtr &cartesian_pose_msg)
+void ModuleExample::cartesianPoseCallback(const luh_youbot_msgs::CartesianVector::ConstPtr &cartesian_pose_msg)
 {
     // read input message
     cartesian_pose_.setX(cartesian_pose_msg->x);

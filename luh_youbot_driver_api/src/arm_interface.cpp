@@ -85,8 +85,8 @@ YoubotArmInterface::~YoubotArmInterface()
 void YoubotArmInterface::initialise(bool use_standard_gripper, bool use_luh_gripper_v3)
 {
     // === PARAMETERS ===
-    config_->node_handle->param("youbot_oodl_driver/disable_ramp", ramp_is_disabled_, false);
-    config_->node_handle->param("youbot_oodl_driver/max_effort_max_duration", max_effort_max_duration_, 0.5);
+    ros::param::param("youbot_oodl_driver/disable_ramp", ramp_is_disabled_, false);
+    ros::param::param("youbot_oodl_driver/max_effort_max_duration", max_effort_max_duration_, 0.5);
     if(!ros::param::get("youbot_oodl_driver/max_effort", max_effort_))
     ROS_WARN("Failed to get max_effort parameter.");
 
@@ -439,9 +439,9 @@ bool YoubotArmInterface::writeCommands()
             }
         }
 
-        if(max_angle_diff > 0.12)
+        if(max_angle_diff > 0.2)
         {
-            ROS_WARN("Position steps greater than 0.12 are not allowed if ramp is disabled.");
+            ROS_WARN("Position steps greater than 0.2 are not allowed if ramp is disabled.");
             ROS_WARN("Current position step is %f in joint %d", max_angle_diff, max_index+1);
             return false;
         }
@@ -464,7 +464,6 @@ bool YoubotArmInterface::writeCommands()
                 desired_angle.angle = position_command_[i] * radian;
                 try
                 {
-
                     arm_->getArmJoint(i + 1).setData(desired_angle);
                 }
                 catch (std::exception& e)
@@ -533,8 +532,7 @@ bool YoubotArmInterface::writeCommands()
 
         rightGripperFingerPosition.barPosition = gripper_command_[RIGHT_FINGER_INDEX] * meter;
         leftGripperFingerPosition.barPosition = gripper_command_[LEFT_FINGER_INDEX] * meter;
-        ROS_WARN_STREAM("left_gripper:"<<gripper_command_[LEFT_FINGER_INDEX]<<", right gripper:"<<gripper_command_[RIGHT_FINGER_INDEX]);
-        
+
         try
         {
             arm_->getArmGripper().getGripperBar1().setData(leftGripperFingerPosition);
@@ -607,9 +605,8 @@ void YoubotArmInterface::stop()
 
 //########## SET POSITIONS #############################################################################################
 void YoubotArmInterface::setJointPositions(ykin::JointPosition positions)
-{  
+{
     positions.subtractOffset();
-    
     mode_ = POSITION;
     position_command_ = positions;
     has_new_arm_command_ = true;
@@ -655,7 +652,7 @@ void YoubotArmInterface::setGripperPosition(double width)
     {
         gripper_command_[LEFT_FINGER_INDEX] = width / 2;
         gripper_command_[RIGHT_FINGER_INDEX] = width / 2;
-        ROS_WARN_STREAM("gripper_command:"<<width);
+
         has_new_gripper_command_ = true;
     }
 
