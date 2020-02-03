@@ -732,6 +732,12 @@ class YoubotEnvironment():
             arm_util.execute_path(youbot_name, final_path)
             return True
 
+    def move_arm_to_joint_pose_direct(self, youbot_name, joint_target):
+        arm_controller = arm_util.ArmController(youbot_name, self.mode)
+        start = arm_controller.get_current_joint_pos()
+        [final_path, final_cost] = self.prmstar_planner.direct_path_slow(tuple(start), tuple(joint_target))
+        arm_util.execute_path(youbot_name, final_path)
+
     def pick_object(self, youbot_name, pick_joint_value, pre_pick_joint_value):
         #Given picking joint configuration, executes the goto following steps:
         # 1, open gripper

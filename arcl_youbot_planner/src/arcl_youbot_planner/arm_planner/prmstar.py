@@ -115,6 +115,23 @@ class PRMStarPlanner():
         path.append(goal)
         return path, 0
 
+    def direct_path_slow(self, start, goal):
+        num_steps = 3
+        delta = []
+        for i in range(len(start)):
+            delta.append((goal[i] - start[i]) / num_steps)
+
+        path = []
+        path.append(start)
+
+        for n in range(num_steps):
+            step = []
+            for i in range(len(start)):
+                step.append(start[i] + delta[i] * (n + 1))
+            path.append(tuple(step))
+        
+        return path, 0
+
     def set_current_goal_index(self, goal_index):
         self.goal_index = goal_index
 

@@ -7,54 +7,54 @@ max_velocity_y_approach: 0.2 # meters/second
 max_velocity_theta_approach: 0.4 # radians/second
 
 # REAL
-velocity_p_factor_x: 2
-velocity_p_factor_y: 2
-velocity_p_factor_theta: 0.6
-
-velocity_i_factor_x: 0 # was 0.25 never used
-velocity_i_factor_y: 0 # was 0.25 never used
-velocity_i_factor_theta: 0 # was 0.25 never used
-
-velocity_d_factor_x: 0.1
-velocity_d_factor_y: 0.1
-velocity_d_factor_theta: 0.01
-
-velocity_p_factor_x_near: 1
-velocity_p_factor_y_near: 1
-velocity_p_factor_theta_near: 0.4
-
-velocity_i_factor_x_near: 0.05 # was 0.25 never used
-velocity_i_factor_y_near: 0.05 # was 0.25 never used
-velocity_i_factor_theta_near: 0.15 # was 0.25 never used
-
-velocity_d_factor_x_near: 0.1
-velocity_d_factor_y_near: 0.1
-velocity_d_factor_theta_near: 0.1
-
-# GAZEBO
-# velocity_p_factor_x: 4
-# velocity_p_factor_y: 4
-# velocity_p_factor_theta: 1.2
+# velocity_p_factor_x: 2
+# velocity_p_factor_y: 2
+# velocity_p_factor_theta: 0.6
 
 # velocity_i_factor_x: 0 # was 0.25 never used
 # velocity_i_factor_y: 0 # was 0.25 never used
 # velocity_i_factor_theta: 0 # was 0.25 never used
 
-# velocity_d_factor_x: 0.2
-# velocity_d_factor_y: 0.2
-# velocity_d_factor_theta: 0.2
+# velocity_d_factor_x: 0.1
+# velocity_d_factor_y: 0.1
+# velocity_d_factor_theta: 0.01
 
-# velocity_p_factor_x_near: 1.5
-# velocity_p_factor_y_near: 1.5
-# velocity_p_factor_theta_near: 0.8
+# velocity_p_factor_x_near: 1
+# velocity_p_factor_y_near: 1
+# velocity_p_factor_theta_near: 0.4
 
-# velocity_i_factor_x_near: 0.25 # was 0.25 never used
-# velocity_i_factor_y_near: 0.25 # was 0.25 never used
-# velocity_i_factor_theta_near: 0.25 # was 0.25 never used
+# velocity_i_factor_x_near: 0.05 # was 0.25 never used
+# velocity_i_factor_y_near: 0.05 # was 0.25 never used
+# velocity_i_factor_theta_near: 0.15 # was 0.25 never used
 
 # velocity_d_factor_x_near: 0.1
 # velocity_d_factor_y_near: 0.1
 # velocity_d_factor_theta_near: 0.1
+
+# GAZEBO
+velocity_p_factor_x: 4
+velocity_p_factor_y: 4
+velocity_p_factor_theta: 1.2
+
+velocity_i_factor_x: 0 # was 0.25 never used
+velocity_i_factor_y: 0 # was 0.25 never used
+velocity_i_factor_theta: 0 # was 0.25 never used
+
+velocity_d_factor_x: 0.2
+velocity_d_factor_y: 0.2
+velocity_d_factor_theta: 0.2
+
+velocity_p_factor_x_near: 1.5
+velocity_p_factor_y_near: 1.5
+velocity_p_factor_theta_near: 0.8
+
+velocity_i_factor_x_near: 0.25 # was 0.25 never used
+velocity_i_factor_y_near: 0.25 # was 0.25 never used
+velocity_i_factor_theta_near: 0.25 # was 0.25 never used
+
+velocity_d_factor_x_near: 0.1
+velocity_d_factor_y_near: 0.1
+velocity_d_factor_theta_near: 0.1
 
 position_tolerance_x: 0.02 # meters
 position_tolerance_y: 0.02 # meters
