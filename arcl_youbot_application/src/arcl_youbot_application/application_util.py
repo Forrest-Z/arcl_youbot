@@ -697,6 +697,41 @@ class YoubotEnvironment():
         client.send_goal(goal, done_cb=self.move_arm_to_joint_pose_old_cb)
         client.wait_for_result(rospy.Duration.from_sec(10.0))
     # joint_target in the range of [0, 5]
+
+    def combined_move_base_and_arm(self, youbot_name, joint_target, base_target_pose)
+        physicsClient = p.connect(p.DIRECT)#or p.DIRECT for non-graphical version
+        p.setAdditionalSearchPath(pybullet_data.getDataPath()) #optionally
+        p.setGravity(0,0,-10)
+        prmstar_planner = None
+        my_path = os.path.abspath(os.path.dirname(__file__))
+        my_path = os.path.join(my_path, "../../../luh_youbot_description/robots/youbot_0.urdf")
+        print(my_path)
+        if self.prmstar_planner == None:
+            self.prmstar_planner = prmstar.PRMStarPlanner(p, my_path)
+        else:
+            self.prmstar_planner.p_client = p
+        is_target_in_collision = False
+        is_target_in_collision = self.prmstar_planner.check_pose_collision(joint_target)
+        if is_target_in_collision == True:
+            return False
+        else:
+            self.prmstar_planner.remove_obstacles()
+            self.prmstar_planner.import_obstacles(self.object_list.values())
+            base_controller = base_util.BaseController(youbot_name, self.mode)
+            current_pos_2d = base_controller.get_youbot_base_pose()
+            robot_position = [current_pos_2d.position.x, current_pos_2d.position.y, current_pos_2d.position.z]
+            robot_orientation = [current_pos_2d.orientation.x, current_pos_2d.orientation.y, current_pos_2d.orientation.z, current_pos_2d.orientation.w]
+            self.prmstar_planner.set_robot_pose(robot_position, robot_orientation)
+
+            arm_controller = arm_util.ArmController(youbot_name, self.mode)
+            start = arm_controller.get_current_joint_pos()
+            [final_path, final_cost] = self.prmstar_planner.path_plan(tuple(start), tuple(joint_target))
+            arm_util.execute_path_without_wait(youbot_name, final_path)
+        self.move_to_target(youbot_name, base_target_pose):
+        r = rospy.Rate(30)
+        while not arm_util.current_path_finished:
+            r.sleep()
+        
     def move_arm_to_joint_pose(self, youbot_name, joint_target):
         # move youbot_arm to target joint_pose
         #INPUT: 
@@ -731,6 +766,8 @@ class YoubotEnvironment():
             [final_path, final_cost] = self.prmstar_planner.path_plan(tuple(start), tuple(joint_target))
             arm_util.execute_path(youbot_name, final_path)
             return True
+
+
 
     def pick_object(self, youbot_name, pick_joint_value, pre_pick_joint_value):
         #Given picking joint configuration, executes the goto following steps:
