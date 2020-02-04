@@ -613,7 +613,7 @@ def compute_heading(s, g, i, adjust_path, goal_heading):
         diff_heading -= 2*math.pi
     elif diff_heading < -math.pi:
         diff_heading += 2*math.pi
-    if abs(diff_heading) > math.pi / 4.0 * 3:
+    if abs(diff_heading) > math.pi / 2.0:
         if current_heading > 0:
             current_heading -= math.pi
         else:

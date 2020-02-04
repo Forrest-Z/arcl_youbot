@@ -116,7 +116,7 @@ class PRMStarPlanner():
         return path, 0
 
     def direct_path_slow(self, start, goal):
-        num_steps = 3
+        num_steps = 5
         delta = []
         for i in range(len(start)):
             delta.append((goal[i] - start[i]) / num_steps)
