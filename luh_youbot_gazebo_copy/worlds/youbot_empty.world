@@ -55,22 +55,9 @@
         <gravity>1</gravity>
       </link>
     </model>
-    <light name='sun' type='directional'>
-      <cast_shadows>1</cast_shadows>
-      <pose>0 0 10 0 -0 0</pose>
-      <diffuse>0.8 0.8 0.8 1</diffuse>
-      <specular>0.2 0.2 0.2 1</specular>
-      <attenuation>
-        <range>1000</range>
-        <constant>0.9</constant>
-        <linear>0.01</linear>
-        <quadratic>0.001</quadratic>
-      </attenuation>
-      <direction>-0.5 0.1 -0.9</direction>
-    </light>
     <light name='user_directional_light_0' type='directional'>
       <pose frame=''>4.2709 -2.45727 10 0 -0 0</pose>
-      <diffuse>0.5 0.5 0.5 1</diffuse>
+      <diffuse>0.23 0.23 0.23 1</diffuse>
       <specular>0.1 0.1 0.1 1</specular>
       <direction>0.1 0.1 -0.9</direction>
       <attenuation>
@@ -83,45 +70,6 @@
     </light>
     <light name='user_directional_light_1' type='directional'>
       <pose frame=''>-6.29685 -2.72231 10 0 -0 0</pose>
-      <diffuse>0.5 0.5 0.5 1</diffuse>
-      <specular>0.1 0.1 0.1 1</specular>
-      <direction>0.1 0.1 -0.9</direction>
-      <attenuation>
-        <range>20</range>
-        <constant>0.5</constant>
-        <linear>0.01</linear>
-        <quadratic>0.001</quadratic>
-      </attenuation>
-      <cast_shadows>1</cast_shadows>
-    </light>
-    <light name='user_directional_light_2' type='directional'>
-      <pose frame=''>4.46829 4.80995 10 0 -0 0</pose>
-      <diffuse>0.5 0.5 0.5 1</diffuse>
-      <specular>0.1 0.1 0.1 1</specular>
-      <direction>0.1 0.1 -0.9</direction>
-      <attenuation>
-        <range>20</range>
-        <constant>0.5</constant>
-        <linear>0.01</linear>
-        <quadratic>0.001</quadratic>
-      </attenuation>
-      <cast_shadows>1</cast_shadows>
-    </light>
-    <light name='user_directional_light_3' type='directional'>
-      <pose frame=''>-6.2627 4.68229 10 0 -0 0</pose>
-      <diffuse>0.5 0.5 0.5 1</diffuse>
-      <specular>0.1 0.1 0.1 1</specular>
-      <direction>0.1 0.1 -0.9</direction>
-      <attenuation>
-        <range>20</range>
-        <constant>0.5</constant>
-        <linear>0.01</linear>
-        <quadratic>0.001</quadratic>
-      </attenuation>
-      <cast_shadows>1</cast_shadows>
-    </light>
-    <light name='user_directional_light_4' type='directional'>
-      <pose frame=''>-0.130967 0.391098 10 0 -0 0</pose>
       <diffuse>0.5 0.5 0.5 1</diffuse>
       <specular>0.1 0.1 0.1 1</specular>
       <direction>0.1 0.1 -0.9</direction>
@@ -181,7 +129,7 @@
         <visual name='visual'>
           <geometry>
             <box>
-              <size>5 0.144018 0.15</size>
+              <size>7 0.144018 0.15</size>
             </box>
           </geometry>
           <material>
@@ -236,7 +184,7 @@
         <visual name='visual'>
           <geometry>
             <box>
-              <size>5 0.14227 0.15</size>
+              <size>7 0.14227 0.15</size>
             </box>
           </geometry>
           <material>
@@ -291,7 +239,7 @@
         <visual name='visual'>
           <geometry>
             <box>
-              <size>5 0.14227 0.15</size>
+              <size>7 0.14227 0.15</size>
             </box>
           </geometry>
           <material>
@@ -327,7 +275,7 @@
       <model name='wall_0'>   
         <pose>-1.65 -0.1 0.075 0 0 0</pose>
         <link name='link'>
-          <pose>-1.65 -0.1 0.075 0 0 0</pose>
+          <pose>-2.15 -0.1 0.075 0 0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>-0.303348 0.000544 -0.047176 -0.00109 -0.606696 1e-05</acceleration>
           <wrench>-0.303348 0.000544 -0.047176 0 -0 0</wrench>
@@ -336,7 +284,7 @@
       <model name='wall_1'>
         <pose>1.65 -0.1 0.075 0.5 0 0 0</pose>
         <link name='link'>
-          <pose>1.65 -0.1 0.075  0 0 0</pose>
+          <pose>2.15 -0.1 0.075  0 0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>-0.298576 -0 -0.045697 1e-06 -0.597152 -1.28037e-22</acceleration>
           <wrench>-0.298576 -0 -0.045697 0 -0 0</wrench>
@@ -345,7 +293,7 @@
       <model name='wall_2'>
         <pose>2.5 2.5 0.075 0 0 1.57</pose>
         <link name='link'>
-          <pose>2.5 2.5 0.075 0 0 1.57</pose>
+          <pose>3.5 3.5 0.075 0 0 1.57</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>-0.322383 -0.096401 -0.532362 0.192803 -0.644766 0</acceleration>
           <wrench>-0.322383 -0.096401 -0.532362 0 -0 0</wrench>
@@ -354,7 +302,7 @@
       <model name='wall_4'>
         <pose>0 5 0.075 -9e-06 3e-06 -0.000156</pose>
         <link name='link'>
-          <pose>0 5 0.075 -9e-06 3e-06 -0.000156</pose>
+          <pose>0 7 0.075 -9e-06 3e-06 -0.000156</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>-0.106992 -0.424659 1.78337 0.849318 -0.214144 -6e-06</acceleration>
           <wrench>-0.106992 -0.424659 1.78337 0 -0 0</wrench>
@@ -363,7 +311,7 @@
       <model name='wall_3'>
         <pose>-2.5 2.5 0.075 0 0 1.57</pose>
         <link name='link'>
-          <pose>-2.5 2.5 0.075 0 0 1.57</pose>
+          <pose>-3.5 3.5 0.075 0 0 1.57</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>-0.33225 0.096341 -0.383144 -0.192682 -0.6645 0</acceleration>
           <wrench>-0.33225 0.096341 -0.383144 0 -0 0</wrench>
@@ -374,33 +322,6 @@
         <pose>-0.7 -5.7 0.1 0 0 0</pose>
         <link name='link'>
           <pose>-0.7 -5.7 0.1 0 0 0</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>-0.33225 0.096341 -0.383144 -0.192682 -0.6645 0</acceleration>
-          <wrench>-0.33225 0.096341 -0.383144 0 -0 0</wrench>
-        </link>
-      </model>
-      <model name='pillar_1'>
-        <pose>-0.08 7.2 0.1 0 0 0</pose>
-        <link name='link'>
-          <pose>-0.08 7.2 0.1 0 0 0</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>-0.33225 0.096341 -0.383144 -0.192682 -0.6645 0</acceleration>
-          <wrench>-0.33225 0.096341 -0.383144 0 -0 0</wrench>
-        </link>
-      </model>
-      <model name='pillar_2'>
-        <pose>0.8 7.5 0.1 0 0 0</pose>
-        <link name='link'>
-          <pose>0.8 7.5 0.1 0 0 0</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>-0.33225 0.096341 -0.383144 -0.192682 -0.6645 0</acceleration>
-          <wrench>-0.33225 0.096341 -0.383144 0 -0 0</wrench>
-        </link>
-      </model>
-      <model name='pillar_3'>
-        <pose>-0.5 7.5 0.1 0 0 0</pose>
-        <link name='link'>
-          <pose>-0.5 7.5 0.1 0 0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>-0.33225 0.096341 -0.383144 -0.192682 -0.6645 0</acceleration>
           <wrench>-0.33225 0.096341 -0.383144 0 -0 0</wrench>
@@ -470,174 +391,7 @@
       </link>
       <static>0</static>
     </model>  
-    <model name='pillar_1'>
-      <pose>4 1 0.15 0 -0 0</pose>
-      <link name='link'>
-        <inertial>
-          <mass>1</mass>
-          <inertia>
-            <ixx>1</ixx>
-            <ixy>0</ixy>
-            <ixz>0</ixz>
-            <iyy>1</iyy>
-            <iyz>0</iyz>
-            <izz>1</izz>
-          </inertia>
-        </inertial>
-        <collision name='collision'>
-          <geometry>
-            <cylinder>
-              <radius>0.1</radius>
-              <length>0.2</length>
-            </cylinder>
-          </geometry>
-          <max_contacts>10</max_contacts>
-          <surface>
-            <bounce/>
-            <friction>
-              <ode/>
-            </friction>
-            <contact>
-              <ode/>
-            </contact>
-          </surface>
-        </collision>
-        <visual name='visual'>
-          <geometry>
-            <cylinder>
-              <radius>0.1</radius>
-              <length>0.2</length>
-            </cylinder>
-          </geometry>
-          <material>
-            <script>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-              <name>Gazebo/WoodFloor</name>
-            </script>
-          </material>
-        </visual>
-        <velocity_decay>
-          <linear>0</linear>
-          <angular>0</angular>
-        </velocity_decay>
-        <self_collide>0</self_collide>
-        <kinematic>0</kinematic>
-        <gravity>1</gravity>
-      </link>
-      <static>0</static>
-    </model>  
-    <model name='pillar_2'>
-      <pose>4 1 0.15 0 -0 0</pose>
-      <link name='link'>
-        <inertial>
-          <mass>1</mass>
-          <inertia>
-            <ixx>1</ixx>
-            <ixy>0</ixy>
-            <ixz>0</ixz>
-            <iyy>1</iyy>
-            <iyz>0</iyz>
-            <izz>1</izz>
-          </inertia>
-        </inertial>
-        <collision name='collision'>
-          <geometry>
-            <cylinder>
-              <radius>0.1</radius>
-              <length>0.2</length>
-            </cylinder>
-          </geometry>
-          <max_contacts>10</max_contacts>
-          <surface>
-            <bounce/>
-            <friction>
-              <ode/>
-            </friction>
-            <contact>
-              <ode/>
-            </contact>
-          </surface>
-        </collision>
-        <visual name='visual'>
-          <geometry>
-            <cylinder>
-              <radius>0.1</radius>
-              <length>0.2</length>
-            </cylinder>
-          </geometry>
-          <material>
-            <script>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-              <name>Gazebo/WoodFloor</name>
-            </script>
-          </material>
-        </visual>
-        <velocity_decay>
-          <linear>0</linear>
-          <angular>0</angular>
-        </velocity_decay>
-        <self_collide>0</self_collide>
-        <kinematic>0</kinematic>
-        <gravity>1</gravity>
-      </link>
-      <static>0</static>
-    </model>  
-    <model name='pillar_3'>
-      <pose>4 1 0.15 0 -0 0</pose>
-      <link name='link'>
-        <inertial>
-          <mass>1</mass>
-          <inertia>
-            <ixx>1</ixx>
-            <ixy>0</ixy>
-            <ixz>0</ixz>
-            <iyy>1</iyy>
-            <iyz>0</iyz>
-            <izz>1</izz>
-          </inertia>
-        </inertial>
-        <collision name='collision'>
-          <geometry>
-            <cylinder>
-              <radius>0.1</radius>
-              <length>0.2</length>
-            </cylinder>
-          </geometry>
-          <max_contacts>10</max_contacts>
-          <surface>
-            <bounce/>
-            <friction>
-              <ode/>
-            </friction>
-            <contact>
-              <ode/>
-            </contact>
-          </surface>
-        </collision>
-        <visual name='visual'>
-          <geometry>
-            <cylinder>
-              <radius>0.1</radius>
-              <length>0.2</length>
-            </cylinder>
-          </geometry>
-          <material>
-            <script>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-              <name>Gazebo/WoodFloor</name>
-            </script>
-          </material>
-        </visual>
-        <velocity_decay>
-          <linear>0</linear>
-          <angular>0</angular>
-        </velocity_decay>
-        <self_collide>0</self_collide>
-        <kinematic>0</kinematic>
-        <gravity>1</gravity>
-      </link>
-      <static>0</static>
-    </model> 
+    
     
     <model name='wall_0'>
       <pose>4 1 0.15 0 -0 0</pose>
@@ -674,7 +428,7 @@
         <visual name='visual'>
           <geometry>
             <box>
-              <size>1.9 0.144018 0.15</size>
+              <size>2.9 0.144018 0.15</size>
             </box>
           </geometry>
           <material>
@@ -728,7 +482,7 @@
         <visual name='visual'>
           <geometry>
             <box>
-              <size>1.9 0.14227 0.15</size>
+              <size>2.9 0.14227 0.15</size>
             </box>
           </geometry>
           <material>

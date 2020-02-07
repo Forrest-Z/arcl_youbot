@@ -10,17 +10,17 @@ from gurobipy import*
 import matplotlib.pyplot as plt
 
 
-XDIM = 1.50
-YDIM = 1.50
+XDIM = 2.50
+YDIM = 2.50
 k = 3.0
 MAX_Length = k*(XDIM+YDIM)
 robot_radius = 0.43
 EXIT = vg.Point(0.0, 0.0)
 
 class  Dynamic_Group(object):
-    def __init__(self, index, objs, min_cost_dict, exit, overlapping_dict):
+    def __init__(self, index, objs, min_cost_dict, Exit, overlapping_dict):
         self.min_cost_dict=min_cost_dict
-        self.exit = exit
+        self.exit = Exit
         self.num_discrete = 4
         self.elements = []
         self.paths = []
@@ -131,7 +131,7 @@ class  Dynamic_Group(object):
             for obj in subgroup.elements:
                 discrete_points = []
                 for i in range(self.num_discrete + 1):
-                    x = obj.x_min + float(i)/float(self.num_discrete) * (obj.x_max - obj.x_min)
+                    x = obj.x_real_min + float(i)/float(self.num_discrete) * (obj.x_real_max - obj.x_real_min)
                     discrete_points.append(vg.Point(x, obj.a * x + obj.b))
                 all_discrete_points.append(discrete_points)
             all_discrete_points.append([self.exit])
@@ -298,7 +298,11 @@ class  Dynamic_Group(object):
     def vsgraph(self, all_discrete_points, obstacles): # compute the min cost to pick up all the objs in the subgroup with the existance of the obstacles.
         polys = []
         for obstacle in obstacles:
-            polys.append([vg.Point(obstacle.x_min, obstacle.a * obstacle.x_min + obstacle.b), vg.Point(obstacle.x_max, obstacle.a * obstacle.x_max + obstacle.b)])
+            half_thickness = robot_radius
+            delta_x = half_thickness*math.cos(math.atan(-1.0/obstacle.a))
+            delta_y = half_thickness*math.sin(math.atan(-1.0/obstacle.a))
+            # polys.append([vg.Point(obstacle.x_min, obstacle.a * obstacle.x_min + obstacle.b), vg.Point(obstacle.x_max, obstacle.a * obstacle.x_max + obstacle.b), vg.Point(obstacle.x_max + 1, obstacle.a * obstacle.x_max + obstacle.b + 1), vg.Point(obstacle.x_min + 1, obstacle.a * obstacle.x_min + obstacle.b + 1)])
+            polys.append([vg.Point(obstacle.x_min+delta_x, obstacle.a * obstacle.x_min +delta_y + obstacle.b), vg.Point(obstacle.x_max+delta_x, obstacle.a * obstacle.x_max + delta_y + obstacle.b), vg.Point(obstacle.x_max-delta_x, obstacle.a * obstacle.x_max - delta_y + obstacle.b), vg.Point(obstacle.x_min - delta_x, obstacle.a * obstacle.x_min - delta_y + obstacle.b)])
         g = vg.VisGraph()
         g.build(polys)
 
@@ -344,8 +348,62 @@ class  Dynamic_Group(object):
             gtsp_pick_up_order.append(gtsp_path[i+1]//(self.num_discrete+1)+1)
             vs_path.append(g.shortest_path(all_discrete_points[gtsp_path[i]//(self.num_discrete+1)+1][gtsp_path[i]%(self.num_discrete+1)], all_discrete_points[gtsp_path[i+1]//(self.num_discrete+1)+1][gtsp_path[i+1]%(self.num_discrete+1)]))
         vs_path.append(g.shortest_path(all_discrete_points[gtsp_path[-2]//(self.num_discrete+1)+1][gtsp_path[-2]%(self.num_discrete+1)], self.exit))
+        # [vs_path, gtsp_pick_up_order] = self.path_order_modification(vs_path, gtsp_pick_up_order)
         return[length, vs_path, gtsp_pick_up_order]
-        
+
+    '''
+    def path_order_modification(self, raw_paths, order):
+        paths = []
+        for raw_path in raw_paths:
+            path = []
+            for i in range(len(raw_path)-1):
+                line = [raw_path[i], raw_path[i+1]]
+                path.append(line)
+            paths.append(path)
+        for i in range(len(order)):
+            path = paths[i]
+            for line_i in range(len(path)):
+                line = path[line_i]
+                r1 = (line[0].x, line[0].y)
+                r2 = (line[1].x, line[1].y)
+                for j in range(i+1, len(order)):
+                    l1 = (self.elements[j-1].x_min, self.elements[j-1].a * self.elements[j-1].x_min + self.elements[j-1].b)
+                    l2 = (self.elements[j-1].x_max, self.elements[j-1].a * self.elements[j-1].x_max + self.elements[j-1].b)
+                    if self.line_intersection_check(r1, r2, l1, l2):
+                        l1 = (self.elements[j-1].x_real_min, self.elements[j-1].a * self.elements[j-1].x_real_min + self.elements[j-1].b)
+                        l2 = (self.elements[j-1].x_real_max, self.elements[j-1].a * self.elements[j-1].x_real_max + self.elements[j-1].b)
+                        alpha_l = (l1[1]*(r2[0]-r1[0]) - r1[1]*(r2[0] - l1[0]) + r2[1]*(r1[0] - l1[0]))/((r2[1]-r1[1])*(l2[0]-l1[0]) - (l2[1]-l1[1])*(r2[0]-r1[0]))
+                        point = vg.Point(l1[0]+alpha_l*(l2[0]-l1[0]), l1[1]+alpha_l*(l2[1]-l1[1]))
+                        path1 = copy.deepcopy(path[0:line_i]) + copy.deepcopy([[line[0],point]])
+                        path2 = copy.deepcopy([[point,line[1]]]) + copy.deepcopy(path[line_i+1:])
+                        new_path_j = copy.deepcopy(paths[j]) + copy.deepcopy(paths[j+1])
+                        paths = copy.deepcopy(paths[0:i]) + copy.deepcopy([path1, path2]) + copy.deepcopy(paths[i+1:j]) + [copy.deepcopy(new_path_j)] + copy.deepcopy(paths[j+2:])
+                        order = order[0:i] + [j] + order[i:j] + order[j+1:]
+                        break
+        new_raw_paths = []
+        print paths
+        for path in paths:
+            print path[0]
+            raw_path = [path[0][0]]
+            for line in path:
+                raw_path.append(line[1])
+            new_raw_paths.append(raw_path)
+
+        return [new_raw_paths, order]
+    '''
+
+    def line_intersection_check(self, r1, r2, l1, l2):
+        epsilon = 0.001        
+        if ((l2[1]-l1[1])*(r2[0]-r1[0]))==((r2[1]-r1[1])*(l2[0]-l1[0])):
+            return False
+        # l1 + alpha_l...
+        alpha_l = (l1[1]*(r2[0]-r1[0]) - r1[1]*(r2[0] - l1[0]) + r2[1]*(r1[0] - l1[0]))/((r2[1]-r1[1])*(l2[0]-l1[0]) - (l2[1]-l1[1])*(r2[0]-r1[0]))
+        if (alpha_l>=0-epsilon) & (alpha_l<=1+epsilon):
+            alpha_r = (r1[1]*(l2[0]-l1[0]) - l1[1]*(l2[0] - r1[0]) + l2[1]*(l1[0] - r1[0]))/((l2[1]-l1[1])*(r2[0]-r1[0]) - (r2[1]-r1[1])*(l2[0]-l1[0]))
+            if (alpha_r>=0-epsilon) & (alpha_r<=1+epsilon):
+                return True
+        return False
+
     def generalized_tsp(self, distance, num_objs):
         
         # m=Model("VRP")
@@ -509,6 +567,8 @@ class Workplace_Object(object):
         self.b = 0.0
         self.x_min = 0.0
         self.x_max = 0.0
+        self.x_real_min = 0.0
+        self.x_real_max = 0.0
         self.index = 0
         # self.P1 = vg.Point(0,0)
         # self.P2 = vg.Point(0,0)
@@ -652,7 +712,7 @@ class DP_solver(object):
             new_obj =Workplace_Object()
             index_accum += 1 
             new_obj.index = index_accum
-            [new_obj.a, new_obj.b, new_obj.x_min, new_obj.x_max]= self.point2property(obj)
+            [new_obj.a, new_obj.b, new_obj.x_min, new_obj.x_max, new_obj.x_real_min, new_obj.x_real_max]= self.point2property(obj)
             new_obj.weight = random_weight()
             print("weight", new_obj.weight)
             self.objs.append(new_obj)
@@ -671,16 +731,27 @@ class DP_solver(object):
         return obj_list
 
     def experiment(self):
-        # self.dynamic_programming()
-        # self.construct_paths()
-        self.greedy_heuristics()
+        self.dynamic_programming()
+        self.construct_paths()
+        length = self.greedy_heuristics()
         
         # modify obj_order
         self.DP_obj_order = self.obj_index_motification(self.DP_obj_order)
         self.greedy_obj_order = self.obj_index_motification(self.greedy_obj_order)
         
+        print "obj_order", self.DP_obj_order
+        print "pickup points", self.DP_pickup_points
+        print "robot_locations", self.DP_robot_locations
+
+        print "obj_order", self.greedy_obj_order
+        print "pickup points", self.greedy_pickup_points
+        print "robot_locations", self.greedy_robot_locations
+
+        print self.cost
+        print length
+
         for obj in self.objs:
-            plt.plot([obj.x_min, obj.x_max], [obj.a*obj.x_min+obj.b, obj.a*obj.x_max+obj.b], color='r')
+            plt.plot([obj.x_real_min, obj.x_real_max], [obj.a*obj.x_real_min+obj.b, obj.a*obj.x_real_max+obj.b], color='r')
         for path in self.paths:
             for line in path:
                 Xs = []
@@ -709,41 +780,57 @@ class DP_solver(object):
     def overlapping_checking(self):
         for i in range(self.n):
             self.overlapping_dict[self.objs[i].index] = []
+            '''
             for j in range(0,i):
                 if self.line_intersection_check(self.objs[i], self.objs[j]):
                     # self.num_overlapping_obj += 1
                     self.overlapping_dict[self.objs[i].index].append(self.objs[j].index)
+            '''
         print self.overlapping_dict
 
-    def line_intersection_check(self, obj1, obj2):
+    def obj_line_intersection_check(self, obj1, obj2):
         r1 = (obj1.x_min, obj1.a*obj1.x_min+obj1.b)
         r2 = (obj1.x_max, obj1.a*obj1.x_max+obj1.b)
 
         l1 = (obj2.x_min, obj2.a*obj2.x_min+obj2.b)
         l2 = (obj2.x_max, obj2.a*obj2.x_max+obj2.b)
         
+        return self.line_intersection_check(r1, r2, l1, l2)
+
+    '''
+    def line_intersection_check(self, r1, r2, l1, l2):        
         if ((l2[1]-l1[1])*(r2[0]-r1[0]))==((r2[1]-r1[1])*(l2[0]-l1[0])):
             return False
         alpha_l = (l1[1]*(l2[0]-r1[0]) - r1[1]*(l2[0] - l1[0]) + r2[1]*(r1[0] - l1[0]))/((r2[1]-r1[1])*(l2[0]-l1[0]) - (l2[1]-l1[1])*(r2[0]-r1[0]))
+        print alpha_l
         if (alpha_l>=0) & (alpha_l<=1):
             alpha_r = (r1[1]*(r2[0]-l1[0]) - l1[1]*(r2[0] - r1[0]) + l2[1]*(l1[0] - r1[0]))/((l2[1]-l1[1])*(r2[0]-r1[0]) - (r2[1]-r1[1])*(l2[0]-l1[0]))
+            print alpha_r
             if (alpha_r>=0) & (alpha_r<=1):
                 return True
         return False
+    '''
+    
+    def line_intersection_check(self, r1, r2, l1, l2):
+        epsilon = 0.001        
+        if ((l2[1]-l1[1])*(r2[0]-r1[0]))==((r2[1]-r1[1])*(l2[0]-l1[0])):
+            return False
+        # l1 + alpha_l...
+        alpha_l = (l1[1]*(r2[0]-r1[0]) - r1[1]*(r2[0] - l1[0]) + r2[1]*(r1[0] - l1[0]))/((r2[1]-r1[1])*(l2[0]-l1[0]) - (l2[1]-l1[1])*(r2[0]-r1[0]))
+        print alpha_l
+        if (alpha_l>=0-epsilon) & (alpha_l<=1+epsilon):
+            alpha_r = (r1[1]*(l2[0]-l1[0]) - l1[1]*(l2[0] - r1[0]) + l2[1]*(l1[0] - r1[0]))/((l2[1]-l1[1])*(r2[0]-r1[0]) - (r2[1]-r1[1])*(l2[0]-l1[0]))
+            print alpha_r
+            if (alpha_r>=0-epsilon) & (alpha_r<=1+epsilon):
+                return True
+        return False
+    
 
     # def init_workplace(self):
         # print "properties", new_obj.a, new_obj.b, new_obj.x_min, new_obj.x_max
         
         
-        '''
-        for i in range(0,self.n):
-            new_obj =Workplace_Object() 
-            new_obj.index = i+1
-            new_obj.random_stick()
-            new_obj.weight = random_weight()
-            print("weight", new_obj.weight)
-            self.objs.append(new_obj)
-        '''
+        
 
     def point2property(self, obj):
         length_1 = math.sqrt((obj[0][0] - obj[1][0])**2 + (obj[0][1] - obj[1][1])**2)
@@ -758,21 +845,17 @@ class DP_solver(object):
             p4 = vg.Point(obj[1][0], obj[1][1])
             p3 = vg.Point(obj[2][0], obj[2][1])
             p2 = vg.Point(obj[3][0], obj[3][1])
-        x_min = min((p1.x+p4.x)/2.0, (p2.x+p3.x)/2.0)
-        x_max = max((p1.x+p4.x)/2.0, (p2.x+p3.x)/2.0)
+        x_real_min = min((p1.x+p4.x)/2.0, (p2.x+p3.x)/2.0)
+        x_real_max = max((p1.x+p4.x)/2.0, (p2.x+p3.x)/2.0)
         a = (p2.y-p1.y)/((p2.x-p1.x))
         b = (p1.y+p4.y)/2.0 - (p1.x+p4.x)/2.0 * a
-        return [a,b,x_min,x_max]
+        x_min = x_real_min - (x_real_max - x_real_min)*robot_radius/max(length_1, length_2)
+        x_max = x_real_max + (x_real_max - x_real_min)*robot_radius/max(length_1, length_2)
+        return [a,b,x_min,x_max, x_real_min, x_real_max]
 
     def greedy_heuristics(self):
         epsilon = 0.001
         paths = []
-        polys = []
-        for obstacle in self.objs:
-            # polys.append([vg.Point(obstacle.x_min, obstacle.a * obstacle.x_min + obstacle.b), vg.Point(obstacle.x_max, obstacle.a * obstacle.x_max + obstacle.b), vg.Point(obstacle.x_max + 1, obstacle.a * obstacle.x_max + obstacle.b + 1), vg.Point(obstacle.x_min + 1, obstacle.a * obstacle.x_min + obstacle.b + 1)])
-            polys.append([vg.Point(obstacle.x_min, obstacle.a * obstacle.x_min + obstacle.b), vg.Point(obstacle.x_max, obstacle.a * obstacle.x_max + obstacle.b)])
-        g = vg.VisGraph()
-        g.build(polys)
         
 
         objs_to_pick_up = {}
@@ -790,6 +873,19 @@ class DP_solver(object):
                 sorted_list = self.greedy_sort_objs_by_distance(objs_to_pick_up, current_point, current_load)
                 for obj in sorted_list:
                     if (self.objs[obj[2] - 1].weight <= (1-current_load))& (self.greedy_valid_pick(obj[2], objs_to_pick_up.keys())):
+                        polys = []
+                        for key in objs_to_pick_up.keys():
+                            if key != obj[2]:
+                                obstacle = objs_to_pick_up[key]
+                            else:
+                                continue
+                            half_thickness = robot_radius
+                            delta_x = half_thickness*math.cos(math.atan(-1.0/obstacle.a))
+                            delta_y = half_thickness*math.sin(math.atan(-1.0/obstacle.a))
+                            # polys.append([vg.Point(obstacle.x_min, obstacle.a * obstacle.x_min + obstacle.b), vg.Point(obstacle.x_max, obstacle.a * obstacle.x_max + obstacle.b), vg.Point(obstacle.x_max + 1, obstacle.a * obstacle.x_max + obstacle.b + 1), vg.Point(obstacle.x_min + 1, obstacle.a * obstacle.x_min + obstacle.b + 1)])
+                            polys.append([vg.Point(obstacle.x_min+delta_x, obstacle.a * obstacle.x_min +delta_y + obstacle.b), vg.Point(obstacle.x_max+delta_x, obstacle.a * obstacle.x_max + delta_y + obstacle.b), vg.Point(obstacle.x_max-delta_x, obstacle.a * obstacle.x_max - delta_y + obstacle.b), vg.Point(obstacle.x_min - delta_x, obstacle.a * obstacle.x_min - delta_y + obstacle.b)])
+                        g = vg.VisGraph()
+                        g.build(polys)
                         paths.append(g.shortest_path(vg.Point(current_point.x+epsilon, current_point.y+epsilon), vg.Point( obj[1].x + epsilon, obj[1].y+epsilon)))
                         current_point = obj[1]
                         tour_pickup_points.append((obj[1].x, obj[1].y))
@@ -834,19 +930,19 @@ class DP_solver(object):
         return sorted(object_list, key=lambda e: e[0])
 
     def greedy_point2obj(self, point, obj):
-        min_end = vg.Point(obj.x_min, obj.a*obj.x_min+obj.b)
-        max_end = vg.Point(obj.x_max, obj.a*obj.x_max+obj.b)
-        cos_theta_min = ((point.x-obj.x_min)*(obj.x_max-obj.x_min)+(point.y-(obj.a*obj.x_min+obj.b))*((obj.a*obj.x_max+obj.b)-(obj.a*obj.x_min+obj.b)))/(sqrt((point.x-obj.x_min)**2+(point.y-(obj.a*obj.x_min+obj.b))**2)*sqrt((obj.x_max-obj.x_min)**2+((obj.a*obj.x_max+obj.b)-(obj.a*obj.x_min+obj.b))**2))
-        cos_theta_max = ((point.x-obj.x_max)*(obj.x_min-obj.x_max)+(point.y-(obj.a*obj.x_max+obj.b))*((obj.a*obj.x_min+obj.b)-(obj.a*obj.x_max+obj.b)))/(sqrt((point.x-obj.x_max)**2+(point.y-(obj.a*obj.x_max+obj.b))**2)*sqrt((obj.x_min-obj.x_max)**2+((obj.a*obj.x_min+obj.b)-(obj.a*obj.x_max+obj.b))**2))
+        min_end = vg.Point(obj.x_real_min, obj.a*obj.x_real_min+obj.b)
+        max_end = vg.Point(obj.x_real_max, obj.a*obj.x_real_max+obj.b)
+        cos_theta_min = ((point.x-obj.x_real_min)*(obj.x_real_max-obj.x_real_min)+(point.y-(obj.a*obj.x_real_min+obj.b))*((obj.a*obj.x_real_max+obj.b)-(obj.a*obj.x_real_min+obj.b)))/(sqrt((point.x-obj.x_real_min)**2+(point.y-(obj.a*obj.x_real_min+obj.b))**2)*sqrt((obj.x_real_max-obj.x_real_min)**2+((obj.a*obj.x_real_max+obj.b)-(obj.a*obj.x_real_min+obj.b))**2))
+        cos_theta_max = ((point.x-obj.x_real_max)*(obj.x_real_min-obj.x_real_max)+(point.y-(obj.a*obj.x_real_max+obj.b))*((obj.a*obj.x_real_min+obj.b)-(obj.a*obj.x_real_max+obj.b)))/(sqrt((point.x-obj.x_real_max)**2+(point.y-(obj.a*obj.x_real_max+obj.b))**2)*sqrt((obj.x_real_min-obj.x_real_max)**2+((obj.a*obj.x_real_min+obj.b)-(obj.a*obj.x_real_max+obj.b))**2))
         if cos_theta_max*cos_theta_min<=0:
             if cos_theta_min<=0:
-                return [sqrt((point.x-obj.x_min)**2+(point.y-(obj.a*obj.x_min+obj.b))**2), vg.Point(obj.x_min, obj.a*obj.x_min+obj.b)]
+                return [sqrt((point.x-obj.x_real_min)**2+(point.y-(obj.a*obj.x_real_min+obj.b))**2), vg.Point(obj.x_real_min, obj.a*obj.x_real_min+obj.b)]
             else:
-                return [sqrt((point.x-obj.x_max)**2+(point.y-(obj.a*obj.x_max+obj.b))**2), vg.Point(obj.x_max, obj.a*obj.x_max+obj.b)]
+                return [sqrt((point.x-obj.x_real_max)**2+(point.y-(obj.a*obj.x_real_max+obj.b))**2), vg.Point(obj.x_real_max, obj.a*obj.x_real_max+obj.b)]
         else:
-            distance_opt2min = sqrt((point.x-obj.x_min)**2+(point.y-(obj.a*obj.x_min+obj.b))**2)*cos_theta_min
+            distance_opt2min = sqrt((point.x-obj.x_real_min)**2+(point.y-(obj.a*obj.x_real_min+obj.b))**2)*cos_theta_min
             distance = distance_opt2min*tan(math.acos(cos_theta_min))
-            return[distance, vg.Point(obj.x_min+1/sqrt(1+obj.a**2)*distance_opt2min, obj.a*obj.x_min+obj.b+obj.a/sqrt(1+obj.a**2)*distance_opt2min)]
+            return[distance, vg.Point(obj.x_real_min+1/sqrt(1+obj.a**2)*distance_opt2min, obj.a*obj.x_real_min+obj.b+obj.a/sqrt(1+obj.a**2)*distance_opt2min)]
 
     def greedy_valid_pick(self, obj_index, objs_list):
         intersection = set(self.overlapping_dict[obj_index]) & set(objs_list)
@@ -874,11 +970,54 @@ class DP_solver(object):
     def construct_paths(self):
         rest_index = 2**(self.n+1)-2
         while rest_index !=0:
-            self.paths.append(self.dy_group_dictionary[rest_index][2])
+            [new_path, new_order] = self.path_order_modification(self.dy_group_dictionary[rest_index][2], self.dy_group_dictionary[rest_index][5])
+            self.paths.append(new_path)
             self.paths_improved.append(self.dy_group_dictionary[rest_index][4])
-            self.DP_obj_order.append(self.dy_group_dictionary[rest_index][5])
+            self.DP_obj_order.append(new_order)
             rest_index = rest_index - self.dy_group_dictionary[rest_index][1].index
         self.pickup_points_robot_location_processing()
+
+    def path_order_modification(self, raw_paths, order):
+        obj_dict = {}
+        for obj in self.objs:
+            obj_dict[obj.index] = copy.deepcopy(obj)
+        paths = []
+        for raw_path in raw_paths:
+            path = []
+            for i in range(len(raw_path)-1):
+                line = [raw_path[i], raw_path[i+1]]
+                path.append(line)
+            paths.append(path)
+        for i in range(len(order)):
+            path = paths[i]
+            for line_i in range(len(path)):
+                line = path[line_i]
+                r1 = (line[0].x, line[0].y)
+                r2 = (line[1].x, line[1].y)
+                for j in range(i+1, len(order)):
+                    l1 = (obj_dict[order[j]].x_min, obj_dict[order[j]].a * obj_dict[order[j]].x_min + obj_dict[order[j]].b)
+                    l2 = (obj_dict[order[j]].x_max, obj_dict[order[j]].a * obj_dict[order[j]].x_max + obj_dict[order[j]].b)
+                    if self.line_intersection_check(r1, r2, l1, l2):
+                        l1 = (obj_dict[order[j]].x_real_min, obj_dict[order[j]].a * obj_dict[order[j]].x_real_min + obj_dict[order[j]].b)
+                        l2 = (obj_dict[order[j]].x_real_max, obj_dict[order[j]].a * obj_dict[order[j]].x_real_max + obj_dict[order[j]].b)
+                        alpha_l = (l1[1]*(r2[0]-r1[0]) - r1[1]*(r2[0] - l1[0]) + r2[1]*(r1[0] - l1[0]))/((r2[1]-r1[1])*(l2[0]-l1[0]) - (l2[1]-l1[1])*(r2[0]-r1[0]))
+                        point = vg.Point(l1[0]+alpha_l*(l2[0]-l1[0]), l1[1]+alpha_l*(l2[1]-l1[1]))
+                        path1 = copy.deepcopy(path[0:line_i]) + copy.deepcopy([[line[0],point]])
+                        path2 = copy.deepcopy([[point,line[1]]]) + copy.deepcopy(path[line_i+1:])
+                        new_path_j = copy.deepcopy(paths[j]) + copy.deepcopy(paths[j+1])
+                        paths = copy.deepcopy(paths[0:i]) + copy.deepcopy([path1, path2]) + copy.deepcopy(paths[i+1:j]) + [copy.deepcopy(new_path_j)] + copy.deepcopy(paths[j+2:])
+                        order = order[0:i] + [order[j]] + order[i:j] + order[j+1:]
+                        break
+        new_raw_paths = []
+        # print paths
+        for path in paths:
+            print path[0]
+            raw_path = [path[0][0]]
+            for line in path:
+                raw_path.append(line[1])
+            new_raw_paths.append(raw_path)
+
+        return [new_raw_paths, order]
 
     def pickup_points_robot_location_processing(self):
         for path in self.paths:
@@ -888,6 +1027,10 @@ class DP_solver(object):
                 segment = path[segment_index]
                 p1 = segment[-1]
                 p2 = segment[-2]
+                if p1 == p2:
+                    tour_pickup_points.append((p1.x, p1.y))
+                    tour_robot_locations.append(tour_robot_locations[-1])
+                    continue
                 length = math.sqrt((p1.x-p2.x)**2+(p1.y-p2.y)**2)
                 tour_pickup_points.append((p1.x, p1.y))
                 tour_robot_locations.append((p1.x+(p2.x-p1.x)*(robot_radius/length), p1.y+(p2.y-p1.y)*(robot_radius/length)))

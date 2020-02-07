@@ -506,26 +506,32 @@ def vg_find_combined_path(start_pos, goal_pos, start_heading, goal_heading, obst
     distance_large_path = vg_path_distance(large_path)
     if distance_large_path > LENGTH_TOL + distance_small_path:
         adjust_path.append([path[0].x, path[0].y, SHORT_ANGLE])  
-        if union_dilated_large_obstacles.intersection(Point(large_path[0].x, large_path[0].y)).is_empty:
-            li = 1
+        if len(path) == 2:
+            adjust_path.append([path[1].x, path[1].y, SHORT_ANGLE])  
         else:
-            li = 2
-        for i in range(1, len(path)):
-            if point_distance(path[i], large_path[li]) <= ADJUST_DISTANCE:
-                adjust_path.append([large_path[li].x, large_path[li].y, 0])    
-                li += 1
-                if li == len(large_path):
-                    break
+            if union_dilated_large_obstacles.intersection(Point(large_path[0].x, large_path[0].y)).is_empty:
+                li = 1
             else:
-                adjust_path.append([path[i].x, path[i].y, SHORT_ANGLE])
-                temp = li
-                while li < len(large_path) and point_distance(path[i+1], large_path[li]) > ADJUST_DISTANCE:
+                li = 2
+            for i in range(1, len(path)):
+                if point_distance(path[i], large_path[li]) <= ADJUST_DISTANCE:
+                    adjust_path.append([large_path[li].x, large_path[li].y, 0])    
                     li += 1
-                if li == len(large_path):
-                    li = temp
+                    if li == len(large_path):
+                        break
+                else:
+                    adjust_path.append([path[i].x, path[i].y, SHORT_ANGLE])
+                    if i == len(path) - 1:
+                        break
+                    temp = li
+                    while li < len(large_path) and point_distance(path[i+1], large_path[li]) > ADJUST_DISTANCE:
+                        li += 1
+                    if li == len(large_path):
+                        li = temp
+            adjust_path.append([path[-1].x, path[-1].y, SHORT_ANGLE]) 
     else:
         for li in range(len(large_path)):
-            adjust_path.append([large_path[li].x, large_path[li].y, 0])    
+            adjust_path.append([large_path[li].x, large_path[li].y, 0])  
     # ===== add heading =====
     # distance
     total_distance = 0
@@ -587,7 +593,6 @@ def vg_find_combined_path(start_pos, goal_pos, start_heading, goal_heading, obst
                 i += 1
                 adjust_path.insert(i, [g[0], g[1], current_heading])
             i += 1
-
     return adjust_path, small_g, large_g
 
 def compute_heading(s, g, i, adjust_path, goal_heading):
@@ -602,12 +607,16 @@ def compute_heading(s, g, i, adjust_path, goal_heading):
         target_heading = goal_heading
     vector = (g[0] - s[0], g[1] - s[1])
     current_heading = math.atan2(vector[1], vector[0])
-    if abs(target_heading - current_heading) > math.pi / 2 and abs(target_heading - current_heading) < 3 * math.pi / 2:
-        current_heading -= math.pi
-    if current_heading > math.pi:
-        current_heading -= 2*math.pi
-    elif current_heading < -math.pi:
-        current_heading += 2*math.pi
+    diff_heading = target_heading - current_heading
+    if diff_heading > math.pi:
+        diff_heading -= 2*math.pi
+    elif diff_heading < -math.pi:
+        diff_heading += 2*math.pi
+    if abs(diff_heading) > math.pi / 4.0 * 3:
+        if current_heading > 0:
+            current_heading -= math.pi
+        else:
+            current_heading += math.pi
 
     return current_heading
 

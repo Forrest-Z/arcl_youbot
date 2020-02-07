@@ -34,7 +34,7 @@ max_velocity_theta_approach: 0.4 # radians/second
 # GAZEBO
 velocity_p_factor_x: 4
 velocity_p_factor_y: 4
-velocity_p_factor_theta: 1.2
+velocity_p_factor_theta: 2.4
 
 velocity_i_factor_x: 0 # was 0.25 never used
 velocity_i_factor_y: 0 # was 0.25 never used
