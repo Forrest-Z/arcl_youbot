@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 
 XDIM = 2.50
 YDIM = 2.50
-k = 5.0
+k = 3.0
 MAX_Length = k*(XDIM+YDIM)
 robot_radius = 0.43
 EXIT = vg.Point(0.0, 0.0)
@@ -715,11 +715,10 @@ class DP_solver(object):
             index_accum += 1 
             new_obj.index = index_accum
             [new_obj.a, new_obj.b, new_obj.x_min, new_obj.x_max, new_obj.x_real_min, new_obj.x_real_max, length]= self.point2property(obj)
-            # if length > threadshold:
-            #     new_obj.weight = 0.4
-            # else:
-            #     new_obj.weight = 0.3
-            new_obj.weight = 1.0/k + (index_accum-1)*(2.0/k-1.0/k)/(self.n-1)    
+            if length > 0.19:
+                new_obj.weight = 0.6
+            else:
+                new_obj.weight = 0.3    
             # new_obj.weight = random_weight()
             print "index", new_obj.index
             print("weight", new_obj.weight)
@@ -747,16 +746,6 @@ class DP_solver(object):
         self.DP_obj_order = self.obj_index_motification(self.DP_obj_order)
         self.greedy_obj_order = self.obj_index_motification(self.greedy_obj_order)
         
-        
-        print "obj_order", self.DP_obj_order
-        print "pickup points", self.DP_pickup_points
-        print "robot_locations", self.DP_robot_locations
-
-        print "obj_order", self.greedy_obj_order
-        print "pickup points", self.greedy_pickup_points
-        print "robot_locations", self.greedy_robot_locations
-
-
         for obj in self.objs:
             plt.plot([obj.x_real_min, obj.x_real_max], [obj.a*obj.x_real_min+obj.b, obj.a*obj.x_real_max+obj.b], color='r')
         for path in self.paths:
@@ -877,12 +866,11 @@ class DP_solver(object):
         while len(objs_to_pick_up.values()) > 0:
             current_point = self.exit
             current_load = 0.0
-            while current_load<1.1:
+            while current_load<1.0:
                 is_full = 1
                 sorted_list = self.greedy_sort_objs_by_distance(objs_to_pick_up, current_point, current_load)
                 for obj in sorted_list:
                     if (self.objs[obj[2] - 1].weight <= (1-current_load))& (self.greedy_valid_pick(obj[2], objs_to_pick_up.keys())):
-                        # print "obj", self.objs[obj[2] - 1].weight, "current_load", current_load
                         polys = []
                         for key in objs_to_pick_up.keys():
                             if key != obj[2]:
@@ -907,7 +895,6 @@ class DP_solver(object):
                         objs_to_pick_up.pop(obj[2])
                         is_full = 0
                         break
-                # print "tour_object_order", tour_object_order
                 if is_full == 1:
                     self.greedy_obj_order.append(tour_object_order)
                     self.greedy_pickup_points.append(tour_pickup_points)
@@ -985,10 +972,8 @@ class DP_solver(object):
 
     def construct_paths(self):
         rest_index = 2**(self.n+1)-2
-        while (rest_index !=0):
-            new_path = self.dy_group_dictionary[rest_index][2]
-            new_order = self.dy_group_dictionary[rest_index][5]
-            # [new_path, new_order] = self.path_order_modification(self.dy_group_dictionary[rest_index][2], self.dy_group_dictionary[rest_index][5])
+        while rest_index !=0:
+            [new_path, new_order] = self.path_order_modification(self.dy_group_dictionary[rest_index][2], self.dy_group_dictionary[rest_index][5])
             self.paths.append(new_path)
             self.paths_improved.append(self.dy_group_dictionary[rest_index][4])
             self.DP_obj_order.append(new_order)

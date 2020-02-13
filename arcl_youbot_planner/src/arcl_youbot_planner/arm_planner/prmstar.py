@@ -115,6 +115,23 @@ class PRMStarPlanner():
         path.append(goal)
         return path, 0
 
+    def direct_path_slow(self, start, goal):
+        num_steps = 5
+        delta = []
+        for i in range(len(start)):
+            delta.append((goal[i] - start[i]) / num_steps)
+
+        path = []
+        path.append(start)
+
+        for n in range(num_steps):
+            step = []
+            for i in range(len(start)):
+                step.append(start[i] + delta[i] * (n + 1))
+            path.append(tuple(step))
+        
+        return path, 0
+
     def set_current_goal_index(self, goal_index):
         self.goal_index = goal_index
 
@@ -236,7 +253,7 @@ class PRMStarPlanner():
                     self.p_client.stepSimulation()
                     self_collision_list = self.p_client.getContactPoints(self.robot_id, self.robot_id)
                     for self_contact in self_collision_list:
-                        if (self_contact[3] == 12 and self_contact[4] == 15) or (self_contact[3] == 12 and self_contact[4] == 14) or (self_contact[3] == 14 and self_contact[4] == 15) or (self_contact[3] == 15 and self_contact[4] == 0) or (self_contact[3] == 14 and self_contact[4] == 0):
+                        if (self_contact[3] == 12 and self_contact[4] == 15) or (self_contact[3] == 12 and self_contact[4] == 14) or (self_contact[3] == 14 and self_contact[4] == 15) or (self_contact[3] == 15 and self_contact[4] == 0):
                             pass
                         else:
                             print("self-collision:")

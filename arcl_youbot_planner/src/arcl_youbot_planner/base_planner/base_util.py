@@ -507,7 +507,7 @@ def vg_find_combined_path(start_pos, goal_pos, start_heading, goal_heading, obst
     if distance_large_path > LENGTH_TOL + distance_small_path:
         adjust_path.append([path[0].x, path[0].y, SHORT_ANGLE])  
         if len(path) == 2:
-            adjust_path.append([path[1].x, path[1].y, SHORT_ANGLE])  
+            adjust_path.append([path[1].x, path[1].y, SHORT_ANGLE])
         else:
             if union_dilated_large_obstacles.intersection(Point(large_path[0].x, large_path[0].y)).is_empty:
                 li = 1
@@ -528,10 +528,10 @@ def vg_find_combined_path(start_pos, goal_pos, start_heading, goal_heading, obst
                         li += 1
                     if li == len(large_path):
                         li = temp
-            adjust_path.append([path[-1].x, path[-1].y, SHORT_ANGLE]) 
+            adjust_path.append([path[-1].x, path[-1].y, SHORT_ANGLE])
     else:
         for li in range(len(large_path)):
-            adjust_path.append([large_path[li].x, large_path[li].y, 0])  
+            adjust_path.append([large_path[li].x, large_path[li].y, 0]) 
     # ===== add heading =====
     # distance
     total_distance = 0
@@ -612,7 +612,7 @@ def compute_heading(s, g, i, adjust_path, goal_heading):
         diff_heading -= 2*math.pi
     elif diff_heading < -math.pi:
         diff_heading += 2*math.pi
-    if abs(diff_heading) > math.pi / 4.0 * 3:
+    if abs(diff_heading) > math.pi / 2.0:
         if current_heading > 0:
             current_heading -= math.pi
         else:

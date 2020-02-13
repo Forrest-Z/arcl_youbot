@@ -15,14 +15,15 @@ import pickle
 from shapely.geometry import Polygon
 from arcl_youbot_planner.base_planner.base_util import YOUBOT_LONG_RADIUS
 from shapely.ops import unary_union, nearest_points
+import Queue
+import threading
 
 
-base_pose = Pose()
+def get_next_grasp(env, obj_name, obj_pick_pose, result):
+    grasp_plan_result = env.send_grasp_action_asyn(env.planning_scene_msg, obj_name, env.reserved_planning_scene_msg.scene_object_list[env.obj_name_to_index_dict[obj_name]].object_pose, " ", "cube", obj_pick_pose, True)
+    env.update_copy_env(obj_name)
+    result.put(grasp_plan_result)
 
-def position_callback(data):
-    global base_pose
-    base_pose.position.x = data.point.x
-    base_pose.position.y = data.point.y
 
 def compute_path_distance(path):
     distance = 0
@@ -32,60 +33,60 @@ def compute_path_distance(path):
 
     return distance
 
+
 if __name__ == "__main__":
-    # rospy.init_node("single_youbot_pick_demo")
-    # rospy.Subscriber('/youbot_0/robot/pose', PointStamped, position_callback)
+    rospy.init_node("single_youbot_pick_demo")
 
 
-    # # env = app_util.YoubotEnvironment(-1.5, 1.5, -3.0, 1.0)    
-    # env = app_util.YoubotEnvironment(-3.2, 3.2, 1.0, 6.8, 'youbot_0', 0)
-    # my_path = os.path.abspath(os.path.dirname(__file__))
+    # env = app_util.YoubotEnvironment(-1.5, 1.5, -3.0, 1.0)    
+    env = app_util.YoubotEnvironment(-3.2, 3.2, 1.0, 6.8, 'youbot_0', 0)
+    my_path = os.path.abspath(os.path.dirname(__file__))
 
     
-    # env_name = '01'
-    # # import object list from file
-    # env.import_obj_from_file(os.path.join(my_path, "scatter/new_12_" + env_name + ".txt"))
-    # # export object
-    # # env.create_environment(12, 12)
-    # # env.export_obj_to_file(os.path.join(my_path, "scatter/new_12_" + env_name + ".txt"))
+    env_name = '10'
+    # import object list from file
+    env.import_obj_from_file(os.path.join(my_path, "scatter/new_12_" + env_name + ".txt"))
+    # export object
+    # env.create_environment(12, 12)
+    # env.export_obj_to_file(os.path.join(my_path, "scatter/new_12_" + env_name + ".txt"))
     
 
-    # print(env.object_list)
+    print(env.object_list)
 
 
-    # #spawn the objects in gazebo, and generate the planningscene msg 
-    # env.generate_obj_in_gazebo() ############ comment it and type "roscore" when gazebo is useless
+    #spawn the objects in gazebo, and generate the planningscene msg 
+    env.generate_obj_in_gazebo() ############ comment it and type "roscore" when gazebo is useless
 
 
-    # rest_base_pose = Pose()
-    # rest_base_pose.position.x = 0
-    # rest_base_pose.position.y = 0
-    # rest_base_pose.position.z = 0.1
-    # rest_base_pose.orientation.x = 0
-    # rest_base_pose.orientation.y = 0
-    # rest_base_pose.orientation.z = 0.7135624
-    # rest_base_pose.orientation.w = 0.7006335
+    rest_base_pose = Pose()
+    rest_base_pose.position.x = 0
+    rest_base_pose.position.y = 0
+    rest_base_pose.position.z = 0.1
+    rest_base_pose.orientation.x = 0
+    rest_base_pose.orientation.y = 0
+    rest_base_pose.orientation.z = 0.7135624
+    rest_base_pose.orientation.w = 0.7006335
 
-    # q = (rest_base_pose.orientation.x,
-    #     rest_base_pose.orientation.y,
-    #     rest_base_pose.orientation.z,
-    #     rest_base_pose.orientation.w)
-    # (_, _, yaw) = euler_from_quaternion(q)
-    # rest_base_pose_2d = [rest_base_pose.position.x, rest_base_pose.position.y, yaw]
+    q = (rest_base_pose.orientation.x,
+        rest_base_pose.orientation.y,
+        rest_base_pose.orientation.z,
+        rest_base_pose.orientation.w)
+    (_, _, yaw) = euler_from_quaternion(q)
+    rest_base_pose_2d = [rest_base_pose.position.x, rest_base_pose.position.y, yaw]
 
-    # target_base_pose = Pose()
-    # target_base_pose.position.x = 0.2
-    # target_base_pose.position.y = -1
-    # target_base_pose.position.z = 0.1
-    # target_base_pose.orientation.x = 0
-    # target_base_pose.orientation.y = 0
-    # rest_base_pose.orientation.z = 0.7135624
-    # rest_base_pose.orientation.w = 0.7006335
+    target_base_pose = Pose()
+    target_base_pose.position.x = 0.2
+    target_base_pose.position.y = -1
+    target_base_pose.position.z = 0.1
+    target_base_pose.orientation.x = 0
+    target_base_pose.orientation.y = 0
+    rest_base_pose.orientation.z = 0.7135624
+    rest_base_pose.orientation.w = 0.7006335
 
-    # arm_drop_joint = [math.radians(169), math.radians(60), math.radians(-190), math.radians(50), math.radians(82)]
-    # print('=========')
-    # env_obj_list = deepcopy(env.object_list)
-    # del env_obj_list['wall']
+    arm_drop_joint = [math.radians(169), math.radians(60), math.radians(-190), math.radians(50), math.radians(82)]
+    print('=========')
+    env_obj_list = deepcopy(env.object_list)
+    del env_obj_list['wall']
 
 
     # Calculation
@@ -314,17 +315,17 @@ if __name__ == "__main__":
     # ===== executaion =====
 
     # ===== compute =====
-    total_distance = 0
+    # total_distance = 0
 
-    with open('new_12_10_greedy.pkl', 'rb') as input:
-        paths, return_paths, pick_joint_values, pre_pick_joint_values, arm_paths, drop_paths = pickle.load(input)
+    # with open('new_12_10_greedy.pkl', 'rb') as input:
+    #     paths, return_paths, pick_joint_values, pre_pick_joint_values, arm_paths, drop_paths = pickle.load(input)
 
-    for i, pick_index_list in enumerate(pick_rounds_index_list):
-        for j, index in enumerate(pick_index_list):
-            total_distance += compute_path_distance(paths[i][j])
-        total_distance += compute_path_distance(return_paths[i])
+    # for i, pick_index_list in enumerate(pick_rounds_index_list):
+    #     for j, index in enumerate(pick_index_list):
+    #         total_distance += compute_path_distance(paths[i][j])
+    #     total_distance += compute_path_distance(return_paths[i])
 
-    print(total_distance)
+    # print(total_distance)
     # ===== compute =====
 
 
@@ -346,3 +347,50 @@ if __name__ == "__main__":
     #         env.drop_object("youbot_0", obj_name)
 
     #     env.move_to_target("youbot_0", rest_base_pose)
+
+    loaded = False
+    loaded_obj_name = ''
+    result = Queue.Queue()   
+    env.copy_env()
+    next_obj_name = "obj_" + str(pick_rounds_index_list[0][0])
+    next_obj_pick_pose = pick_rounds_pose_list[0][0]
+    get_next_grasp(env, next_obj_name, next_obj_pick_pose, result)
+
+    for i, pick_index_list in enumerate(pick_rounds_index_list):
+        for j, index in enumerate(pick_index_list):
+            print("pick " + str(index))
+            obj_name = "obj_" + str(index)
+            
+            # next obj
+            if j < len(pick_index_list) - 1:
+                next_obj_name = "obj_" + str(pick_rounds_index_list[i][j+1])
+                next_obj_pick_pose = pick_rounds_pose_list[i][j+1]
+            else:
+                if i < len(pick_rounds_index_list) - 1:
+                    next_obj_name = "obj_" + str(pick_rounds_index_list[i+1][0])
+                    next_obj_pick_pose = pick_rounds_pose_list[i+1][0]
+            
+            if not (i == 0 and j == 0):
+                grasp.join()
+            grasp = threading.Thread(target=get_next_grasp, args=(env, next_obj_name, next_obj_pick_pose, result))
+            grasp.start()
+
+            grasp_plan = result.get()
+            target_base_pose = grasp_plan.final_base_pose
+            pick_joint_value = [grasp_plan.q1, grasp_plan.q2, grasp_plan.q3, grasp_plan.q4, grasp_plan.q5]
+            pre_pick_joint_value = [grasp_plan.q1_pre, grasp_plan.q2_pre, grasp_plan.q3_pre, grasp_plan.q4_pre, grasp_plan.q5_pre]    
+            
+            if loaded:
+                env.combined_move_base_and_arm_drop_pick("youbot_0", loaded_obj_name, arm_drop_joint, pre_pick_joint_value, target_base_pose)
+                loaded = False
+            else:
+                env.combined_move_base_and_arm_pick("youbot_0", pre_pick_joint_value, target_base_pose)
+                loaded = True
+                loaded_obj_name = obj_name
+
+            env.pick_object_from_prev("youbot_0", pick_joint_value, pre_pick_joint_value)
+            env.update_env(obj_name)
+
+            if j == len(pick_index_list) - 1:
+                env.combined_move_base_and_arm_drop("youbot_0", obj_name, arm_drop_joint, rest_base_pose)
+                loaded = False
