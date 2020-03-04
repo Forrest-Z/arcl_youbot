@@ -2,7 +2,7 @@
 <launch>
 	<arg name="youBotHasBase" default="true"/>
 	<arg name="youBotHasArm" default="true"/>
-	<arg name="youbotName" default="youbot_0">	
+	<arg name="youbotName" default="youbot_0"/>	
 
         <!-- LOAD DEFAULT DRIVER PARAMETERS -->
         <include file="$(find luh_youbot_driver_api)/launch/load_default_parameters.launch">
@@ -17,14 +17,12 @@
         <include file="$(find luh_youbot_controller)/launch/youbot_state_publisher.launch">
                 <arg name="youBotHasArm" value="$(arg youBotHasArm)"/>
 		<arg name="youBotHasBase" value="$(arg youBotHasBase)"/>
-		<arg name="youbotName" value="$(arg youbotName)">
+		<arg name="youbotName" value="$(arg youbotName)"/>
         </include>
 
        	<!-- LAUNCH DRIVER NODE -->
 	<param name="luh_youbot_controller/use_standard_gripper" value="true" />
 	<param name="luh_youbot_controller/use_luh_gripper_v3" value="false" />
 	<node name="controller_node" pkg="luh_youbot_controller" type="controller_node" output="screen" args="$(arg youbotName)"/>
-	<!--<node name="controller_node" pkg="luh_youbot_controller" type="controller_node" output="screen"/>-->
-
 
 </launch>

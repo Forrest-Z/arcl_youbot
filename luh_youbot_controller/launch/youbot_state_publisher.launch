@@ -2,7 +2,7 @@
 <launch>
 	<arg name="youBotHasBase" default="true"/>
 	<arg name="youBotHasArm" default="true"/>	
-        <arg name="youbotName" default="youbot_0">
+	<arg name="youbotName" default="youbot_0"/>
 	<group if="$(arg youBotHasBase)" >
 		<node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_base_state_publisher" output="screen">
 			<remap from="joint_states" to="/$(arg youbotName)/base/joint_states"/>
