@@ -2,8 +2,8 @@
 <launch>
 	<arg name="youBotHasBase" default="true"/>
 	<arg name="youBotHasArm" default="true"/>
-	<arg name="youbotName" default="youbot_0">	
-
+	<arg name="youbotName" default="youbot_0">
+	
         <!-- LOAD DEFAULT DRIVER PARAMETERS -->
         <include file="$(find luh_youbot_driver_api)/launch/load_default_parameters.launch">
                 <arg name="youBotHasArm" value="$(arg youBotHasArm)"/>
@@ -21,10 +21,14 @@
         </include>
 
        	<!-- LAUNCH DRIVER NODE -->
-	<param name="luh_youbot_controller/use_standard_gripper" value="true" />
 	<param name="luh_youbot_controller/use_luh_gripper_v3" value="false" />
 	<node name="controller_node" pkg="luh_youbot_controller" type="controller_node" output="screen" args="$(arg youbotName)"/>
-	<!--<node name="controller_node" pkg="luh_youbot_controller" type="controller_node" output="screen"/>-->
-
-
+        <node type="hokuyo_node" pkg="hokuyo_node" name="hokuyo_node">  
+		<param name="min_ang" type="double" value="-1.3" />
+		<param name="max_ang" type="double" value="1.3" />
+		<remap from="/scan" to="/base_scan"/>
+		<param name="port" type="string" value="/dev/ttyACM0"/>
+	</node>
+	<node pkg="tf" type="static_transform_publisher" name="front_hokuyo_frame"
+	args="0 0 0 0 0 0 /base_laser_front_link /laser 1" />
 </launch>

@@ -2,10 +2,10 @@
 <launch>
 	<arg name="youBotHasBase" default="true"/>
 	<arg name="youBotHasArm" default="true"/>	
-
+        <arg name="youbotName" default="youbot_0">
 	<group if="$(arg youBotHasBase)" >
 		<node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_base_state_publisher" output="screen">
-			<remap from="joint_states" to="base/joint_states"/>
+			<remap from="joint_states" to="/$(arg youbotName)/base/joint_states"/>
 		</node>
 
 
@@ -15,7 +15,7 @@
 
 	<group if="$(arg youBotHasArm)" >
 		<node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_arm_state_publisher" output="screen">
-			<remap from="joint_states" to="arm_1/joint_states"/>
+			<remap from="joint_states" to="/$(arg youbotName)/arm_1/joint_states"/>
 		</node>
 
 			<param name="robot_description" command="$(find xacro)/xacro.py '$(find luh_youbot_description)/robots/youbot.urdf.xacro'"/>
