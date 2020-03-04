@@ -34,7 +34,7 @@ OBJECT_LENGTH_MAX = 0.35
 OBJECT_LENGTH_MIN = 0.15
 USE_GAZEBO = 0
 USE_OPTI = 1
-CUBE_SIZE_DICT = {'obj_0': (0.04,0.04,0.242), 'obj_1': (0.04,0.04,0.237), 'obj_2': (0.04,0.04,0.185), 'obj_3': (0.04,0.04,0.238), 'obj_4': (0.04,0.04,0.15), 'obj_5': (0.04,0.04,0.168), 
+CUBE_SIZE_DICT = {'obj_0': (0.04,0.04,0.202), 'obj_1': (0.04,0.04,0.237), 'obj_2': (0.04,0.04,0.185), 'obj_3': (0.04,0.04,0.238), 'obj_4': (0.04,0.04,0.15), 'obj_5': (0.04,0.04,0.168), 
                     'obj_6': (0.04,0.04,0.27), 'obj_7': (0.04,0.04,0.147), 'obj_8': (0.04,0.04,0.134), 'obj_9': (0.04,0.04,0.257), 'obj_10': (0.04,0.04,0.178), 
                     'obj_11': (0.04,0.04,0.199), 'obj_12': (0.04,0.04,0.195), 'obj_13': (0.04,0.04,0.257), 'obj_14': (0.04,0.04,0.257)}
 
@@ -63,6 +63,9 @@ def get_yaw_from_polygon(obj):
         temp_length = long_length
         long_length = short_length
         short_length = temp_length
+
+    if long_x == 0.0:
+        long_x = 0.0001
     return math.atan(float(long_y/long_x))
 
 #return information from a cube, defined as [[x0,y0], [x1,y1], [x2,y2], [x3,y3]]
@@ -173,6 +176,11 @@ def generate_poly(center_x, center_y, yaw, length, width):
     # y = -width
     # p3 = (center_x + math.cos(yaw)*x - math.sin(yaw)*y, center_y - (math.sin(yaw)*x + math.cos(yaw)*y))
     
+    # gazebo
+    # temp = width
+    # width = length
+    # length = temp
+
     x = length
     y = width
     p0 = (center_x + math.cos(yaw)*x - math.sin(yaw)*y, center_y + (math.sin(yaw)*x + math.cos(yaw)*y))

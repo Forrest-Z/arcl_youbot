@@ -16,7 +16,7 @@ import os.path
 
 SAMPLE_NUM = 1000
 ROBOT_COLLISION_CHECK_RADIUS = 0.7
-PATH_PLAN_TRYING_MAX = 60
+PATH_PLAN_TRYING_MAX = 120
 
 
 class PRMStarPlanner():
@@ -113,6 +113,23 @@ class PRMStarPlanner():
         path = []
         path.append(start)
         path.append(goal)
+        return path, 0
+
+    def direct_path_slow(self, start, goal):
+        num_steps = 5
+        delta = []
+        for i in range(len(start)):
+            delta.append((goal[i] - start[i]) / num_steps)
+
+        path = []
+        path.append(start)
+
+        for n in range(num_steps):
+            step = []
+            for i in range(len(start)):
+                step.append(start[i] + delta[i] * (n + 1))
+            path.append(tuple(step))
+        
         return path, 0
 
     def set_current_goal_index(self, goal_index):
