@@ -368,36 +368,36 @@
       </model>
       
       <model name='pillar_0'>
-        <pose>-0.7 -5.7 0.1 0 0 0</pose>
+        <pose>-0.7 1.7 0.1 0 0 0</pose>
         <link name='link'>
-          <pose>-0.7 -5.7 0.1 0 0 0</pose>
+          <pose>-0.7 1.7 0.1 0 0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>-0.33225 0.096341 -0.383144 -0.192682 -0.6645 0</acceleration>
           <wrench>-0.33225 0.096341 -0.383144 0 -0 0</wrench>
         </link>
       </model>
       <model name='pillar_1'>
-        <pose>-0.08 7.2 0.1 0 0 0</pose>
+        <pose>-0.08 3.2 0.1 0 0 0</pose>
         <link name='link'>
-          <pose>-0.08 7.2 0.1 0 0 0</pose>
+          <pose>-0.08 3.2 0.1 0 0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>-0.33225 0.096341 -0.383144 -0.192682 -0.6645 0</acceleration>
           <wrench>-0.33225 0.096341 -0.383144 0 -0 0</wrench>
         </link>
       </model>
       <model name='pillar_2'>
-        <pose>0.8 7.5 0.1 0 0 0</pose>
+        <pose>0.8 2.5 0.1 0 0 0</pose>
         <link name='link'>
-          <pose>0.8 7.5 0.1 0 0 0</pose>
+          <pose>0.8 2.5 0.1 0 0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>-0.33225 0.096341 -0.383144 -0.192682 -0.6645 0</acceleration>
           <wrench>-0.33225 0.096341 -0.383144 0 -0 0</wrench>
         </link>
       </model>
       <model name='pillar_3'>
-        <pose>-0.5 7.5 0.1 0 0 0</pose>
+        <pose>2.5 3.5 0.1 0 0 0</pose>
         <link name='link'>
-          <pose>-0.5 7.5 0.1 0 0 0</pose>
+          <pose>2.5 3.5 0.1 0 0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>-0.33225 0.096341 -0.383144 -0.192682 -0.6645 0</acceleration>
           <wrench>-0.33225 0.096341 -0.383144 0 -0 0</wrench>

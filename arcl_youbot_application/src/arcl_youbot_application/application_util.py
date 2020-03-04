@@ -76,7 +76,7 @@ class YoubotEnvironment():
         self.planning_scene_msg = PlanningSceneMsg()
         self.reserved_planning_scene_msg = PlanningSceneMsg()
         self.mode = 0
-        
+        self.prmstar_planner = None
     def import_obj_from_file(self, filename):
         # filename: ffabsolute path for the environment file
 
@@ -412,13 +412,14 @@ class YoubotEnvironment():
         obj_index = 0
         for obj_name, obj  in self.object_list.iteritems():
             if obj_name == 'wall': continue
-            
+            print("write to file")
+            print(obj_name)
             #write num of object vertices
             scene_file.write("4\n")
-            scene_file.write(str(obj[0][0]) + " " + str(obj[0][1])+"\n")
-            scene_file.write(str(obj[1][0]) + " " + str(obj[1][1])+"\n")
-            scene_file.write(str(obj[2][0]) + " " + str(obj[2][1])+"\n")
-            scene_file.write(str(obj[3][0]) + " " + str(obj[3][1])+"\n")
+            scene_file.write(str(-obj[0][0] * 1000 + 500) + " " + str(obj[0][1]*1000 + 2000)+"\n")
+            scene_file.write(str(-obj[1][0]*1000 + 500) + " " + str(obj[1][1]*1000 + 2000)+"\n")
+            scene_file.write(str(-obj[2][0]*1000 + 500) + " " + str(obj[2][1]*1000 + 2000)+"\n")
+            scene_file.write(str(-obj[3][0]*1000 + 500) + " " + str(obj[3][1]*1000 + 2000)+"\n")
 
   
 
@@ -534,7 +535,7 @@ class YoubotEnvironment():
 
     def update_env(self, deleted_obj):
         # when deleted_obj is removed from the scene, this function updates the self.object_list and self.planning_scene_msg
-
+        print(self.object_list)
         print(deleted_obj) 
         deleted_obj_index = self.object_list.values().index(deleted_obj)        
         # print(self.object_list)
@@ -586,7 +587,7 @@ class YoubotEnvironment():
         print(path_with_heading)
         
         # base_util.plot_vg_path(obstacles, path_with_heading, g, large_g)
-        base_util.plot_vg_path(obstacles, path_with_heading, g)
+        # base_util.plot_vg_path(obstacles, path_with_heading, g)
 
         base_controller.execute_path_vel_pub(path_with_heading, True)
 
@@ -747,32 +748,43 @@ class YoubotEnvironment():
         # move youbot_arm to target joint_pose
         #INPUT: 
         #  joint_target: [q1,q2,q3,q4,q5], in the range between arm_util.MIN_JOINT_POS and arm_util.MAX_JOINT_POS
-
+        prepare_time_start0 = time.time()
         physicsClient = p.connect(p.DIRECT)#or p.DIRECT for non-graphical version
         p.setAdditionalSearchPath(pybullet_data.getDataPath()) #optionally
         p.setGravity(0,0,-10)
-        prmstar_planner = None
-        my_path = os.path.abspath(os.path.dirname(__file__))
-        my_path = os.path.join(my_path, "../../../luh_youbot_description/robots/youbot_0.urdf")
-        print(my_path)
-        prmstar_planner = prmstar.PRMStarPlanner(p, my_path)
+        print("prepare_time0:--- %s seconds ---" % (time.time() - prepare_time_start0))
+        prepare_time_start1 = time.time()
+        if self.prmstar_planner == None:
+            my_path = os.path.abspath(os.path.dirname(__file__))
+            my_path = os.path.join(my_path, "../../../luh_youbot_description/robots/youbot_0.urdf")
+            print(my_path)
+            self.prmstar_planner = prmstar.PRMStarPlanner(p, my_path)
+        else:
+           self.prmstar_planner.p_client = p
+        # my_path = os.path.abspath(os.path.dirname(__file__))
+        # my_path = os.path.join(my_path, "../../../luh_youbot_description/robots/youbot_0.urdf")
+        print("prepare_time1:--- %s seconds ---" % (time.time() - prepare_time_start1))
+        prepare_time_start2 = time.time()
         is_target_in_collision = False
-        is_target_in_collision = prmstar_planner.check_pose_collision(joint_target)
+        is_target_in_collision = self.prmstar_planner.check_pose_collision(joint_target)
         if is_target_in_collision == True:
             return False
         else:
-            prmstar_planner.remove_obstacles()
-            prmstar_planner.import_obstacles(self.object_list.values())
+            self.prmstar_planner.remove_obstacles()
+            self.prmstar_planner.import_obstacles(self.object_list.values())
             base_controller = base_util.BaseController(youbot_name, self.mode)
             current_pos_2d = base_controller.get_youbot_base_pose()
             robot_position = [current_pos_2d.position.x, current_pos_2d.position.y, current_pos_2d.position.z]
             robot_orientation = [current_pos_2d.orientation.x, current_pos_2d.orientation.y, current_pos_2d.orientation.z, current_pos_2d.orientation.w]
-            prmstar_planner.set_robot_pose(robot_position, robot_orientation)
+            self.prmstar_planner.set_robot_pose(robot_position, robot_orientation)
 
             arm_controller = arm_util.ArmController(youbot_name, self.mode)
+            print("prepare_time2:--- %s seconds ---" % (time.time() - prepare_time_start2))
             start = arm_controller.get_current_joint_pos()
-            [final_path, final_cost] = prmstar_planner.path_plan(tuple(start), tuple(joint_target))
-            arm_util.execute_path(youbot_name, final_path)
+            plan_time = time.time()
+            [final_path, final_cost] = self.prmstar_planner.path_plan(tuple(start), tuple(joint_target))
+            print("plan_time:--- %s seconds ---" % (time.time() - plan_time))
+            # arm_util.execute_path(youbot_name, final_path)
             return True
 
     def pick_object(self, youbot_name, pick_joint_value, pre_pick_joint_value):
@@ -786,20 +798,20 @@ class YoubotEnvironment():
         physicsClient = p.connect(p.DIRECT)#or p.GUI for graphical version
         p.setAdditionalSearchPath(pybullet_data.getDataPath()) #optionally
         p.setGravity(0,0,-10)
-        prmstar_planner = None
+        self.prmstar_planner = None
         my_path = os.path.abspath(os.path.dirname(__file__))
         my_path = os.path.join(my_path, "../../../luh_youbot_description/robots/youbot_0.urdf")
         print(my_path)
-        prmstar_planner = prmstar.PRMStarPlanner(p, my_path)
+        self.prmstar_planner = prmstar.PRMStarPlanner(p, my_path)
         #prmstar.build_roadmap()
 
-        prmstar_planner.remove_obstacles()
-        prmstar_planner.import_obstacles(self.object_list.values())
+        self.prmstar_planner.remove_obstacles()
+        self.prmstar_planner.import_obstacles(self.object_list.values())
         base_controller = base_util.BaseController(youbot_name, self.mode)
         current_pos_2d = base_controller.get_youbot_base_pose()
         robot_position = [current_pos_2d.position.x, current_pos_2d.position.y, current_pos_2d.position.z]
         robot_orientation = [current_pos_2d.orientation.x, current_pos_2d.orientation.y, current_pos_2d.orientation.z, current_pos_2d.orientation.w]
-        prmstar_planner.set_robot_pose(robot_position, robot_orientation)
+        self.prmstar_planner.set_robot_pose(robot_position, robot_orientation)
 
         arm_controller = arm_util.ArmController(youbot_name, self.mode)
         start = arm_controller.get_current_joint_pos()
@@ -823,7 +835,7 @@ class YoubotEnvironment():
         arm_util.subtract_offset(pre_pick_joint_value)
 
         #plan and move arm to pre_pick_pos
-        [final_path, final_cost] = prmstar_planner.path_plan(tuple(start), tuple(pre_pick_joint_value))
+        [final_path, final_cost] = self.prmstar_planner.path_plan(tuple(start), tuple(pre_pick_joint_value))
         if self.mode == 0:
             arm_util.set_gripper_width(youbot_name, 0.06, self.mode)
         else:
@@ -834,7 +846,7 @@ class YoubotEnvironment():
         #directly move arm to pick_pos
         arm_controller = arm_util.ArmController(youbot_name, self.mode)
         start = arm_controller.get_current_joint_pos()
-        [final_path, final_cost] = prmstar_planner.direct_path(tuple(start), tuple(pick_joint_value))
+        [final_path, final_cost] = self.prmstar_planner.direct_path(tuple(start), tuple(pick_joint_value))
         print("before execution waiting.....")
         arm_util.execute_path(youbot_name, final_path)
         print("moved to the pick pose")
@@ -850,7 +862,9 @@ class YoubotEnvironment():
         #directly retract arm to pre_pick_pos
         arm_controller = arm_util.ArmController(youbot_name, self.mode)
         start = arm_controller.get_current_joint_pos()
-        [final_path, final_cost] = prmstar_planner.direct_path(tuple(start), tuple(pre_pick_joint_value))
+        post_pick_joint_value = pre_pick_joint_value
+        post_pick_joint_value[1] -= 0.5
+        [final_path, final_cost] = self.prmstar_planner.direct_path(tuple(start), tuple(post_pick_joint_value))
         arm_util.execute_path(youbot_name, final_path)
         print("moved back to the pre_pick pose")
 
@@ -865,22 +879,22 @@ class YoubotEnvironment():
         physicsClient = p.connect(p.DIRECT)#or p.GUI for graphical version
         p.setAdditionalSearchPath(pybullet_data.getDataPath()) #optionally
         p.setGravity(0,0,-10)
-        prmstar_planner = None
+        self.prmstar_planner = None
         my_path = os.path.abspath(os.path.dirname(__file__))
         my_path = os.path.join(my_path, "../../../luh_youbot_description/robots/youbot_0.urdf")
         print(my_path)
-        # prmstar_planner = prmstar.PRMStarPlanner(p, my_path)
+        # self.prmstar_planner = prmstar.PRMStarPlanner(p, my_path)
         #prmstar.build_roadmap()
 
-        # prmstar_planner.remove_obstacles()
-        # prmstar_planner.import_obstacles(self.object_list.values())
+        # self.prmstar_planner.remove_obstacles()
+        # self.prmstar_planner.import_obstacles(self.object_list.values())
         base_controller = base_util.BaseController(youbot_name, self.mode)
         current_pos_2d = base_controller.get_youbot_base_pose()
         robot_position = [current_pos_2d.position.x, current_pos_2d.position.y, current_pos_2d.position.z]
         robot_orientation = [current_pos_2d.orientation.x, current_pos_2d.orientation.y, current_pos_2d.orientation.z, current_pos_2d.orientation.w]
-        # prmstar_planner.set_robot_pose(robot_position, robot_orientation)
+        # self.prmstar_planner.set_robot_pose(robot_position, robot_orientation)
 
-        arm_controller = arm_util.ArmController("", self.mode)
+        arm_controller = arm_util.ArmController(youbot_name, self.mode)
         start = arm_controller.get_current_joint_pos()
         if self.mode == 0 or self.mode == 1:
             pick_joint_value[4] = -pick_joint_value[4]
@@ -902,54 +916,54 @@ class YoubotEnvironment():
         arm_util.subtract_offset(pre_pick_joint_value)
 
         #plan and move arm to pre_pick_pos
-        # [final_path, final_cost] = prmstar_planner.path_plan(tuple(start), tuple(pre_pick_joint_value))
+        # [final_path, final_cost] = self.prmstar_planner.path_plan(tuple(start), tuple(pre_pick_joint_value))
         if self.mode == 0:
-            arm_util.set_gripper_width("", 0.06, self.mode)
+            arm_util.set_gripper_width(youbot_name, 0.06, self.mode)
         else:
-            arm_util.set_gripper_width("", 0.0, self.mode)
+            arm_util.set_gripper_width(youbot_name, 0.0, self.mode)
         
        
         # self.move_arm_to_joint_pose_old("youbot_0", pre_pick_joint_value)
 #DEBUG        
-        self.move_arm_to_joint_pose_old("", pre_pick_joint_value)
+        self.move_arm_to_joint_pose_old(youbot_name, pre_pick_joint_value)
 #DEBUG        
         
         # arm_util.execute_path(youbot_name, final_path)
 
         print("moved to the pre_pick pose")
         #directly move arm to pick_pos
-        arm_controller = arm_util.ArmController("", self.mode)
+        arm_controller = arm_util.ArmController(youbot_name, self.mode)
         start = arm_controller.get_current_joint_pos()
-        # [final_path, final_cost] = prmstar_planner.direct_path(tuple(start), tuple(pick_joint_value))
+        # [final_path, final_cost] = self.prmstar_planner.direct_path(tuple(start), tuple(pick_joint_value))
         print("before execution waiting.....")
         # arm_util.execute_path(youbot_name, final_path)
 
 
 #        self.move_arm_to_joint_pose_old_direct("youbot_0", pick_joint_value)
  #DEBUG
-        self.move_arm_to_joint_pose_old_direct("", pick_joint_value)
+        self.move_arm_to_joint_pose_old_direct(youbot_name, pick_joint_value)
  #DEBUG       
         
         print("moved to the pick pose")
         if self.mode == 0:
-            arm_util.set_gripper_width("", 0.0, self.mode)
+            arm_util.set_gripper_width(youbot_name, 0.0, self.mode)
             rospy.sleep(rospy.Duration.from_sec(5.0))
         else:
-            arm_util.set_gripper_width("", 0.06, self.mode)
+            arm_util.set_gripper_width(youbot_name, 0.06, self.mode)
             rospy.sleep(rospy.Duration.from_sec(2.5))
 
 
 
         #directly retract arm to pre_pick_pos
-        arm_controller = arm_util.ArmController("", self.mode)
+        arm_controller = arm_util.ArmController(youbot_name, self.mode)
         start = arm_controller.get_current_joint_pos()
-        # [final_path, final_cost] = prmstar_planner.direct_path(tuple(start), tuple(pre_pick_joint_value))
+        # [final_path, final_cost] = self.prmstar_planner.direct_path(tuple(start), tuple(pre_pick_joint_value))
         # arm_util.execute_path(youbot_name, final_path)
 
 
         #self.move_arm_to_joint_pose_old_direct("youbot_0", pre_pick_joint_value)
         #DEBUG
-        self.move_arm_to_joint_pose_old_direct("", pre_pick_joint_value)        
+        self.move_arm_to_joint_pose_old_direct(youbot_name, pre_pick_joint_value)        
         #DEBUG
 
 
@@ -959,7 +973,7 @@ class YoubotEnvironment():
 
             # arm_util.set_gripper_width("youbot_0", 0.068, self.mode)
             #DEBUG
-            arm_util.set_gripper_width("", 0.068, self.mode)
+            arm_util.set_gripper_width("youbot_0", 0.068, self.mode)
             #DEBUG
             deserted_pose = Pose()
             deserted_pose.position.x = 0
@@ -974,7 +988,7 @@ class YoubotEnvironment():
         else:
             # arm_util.set_gripper_width("youbot_0", 0.0, self.mode)
 
-            arm_util.set_gripper_width("", 0.0, self.mode)
+            arm_util.set_gripper_width("youbot_0", 0.0, self.mode)
 
     def forklift_done_cb(self, goal_state, result):
         print("Fork Lift GoToPosition returned")
@@ -1011,27 +1025,27 @@ class YoubotEnvironment():
         physicsClient = p.connect(p.GUI)#or p.DIRECT for non-graphical version
         p.setAdditionalSearchPath(pybullet_data.getDataPath()) #optionally
         p.setGravity(0,0,-10)
-        prmstar_planner = None
+        self.prmstar_planner = None
         my_path = os.path.abspath(os.path.dirname(__file__))
         my_path = os.path.join(my_path, "../../../luh_youbot_description/robots/youbot_0.urdf")
         print(my_path)
-        prmstar_planner = prmstar.PRMStarPlanner(p, my_path)
+        self.prmstar_planner = prmstar.PRMStarPlanner(p, my_path)
 
         base_controller = base_util.BaseController("youbot_0", self.mode)
         current_pos_2d = base_controller.get_youbot_base_pose()
         robot_position = [current_pos_2d.position.x, current_pos_2d.position.y, current_pos_2d.position.z]
         robot_orientation = [current_pos_2d.orientation.x, current_pos_2d.orientation.y, current_pos_2d.orientation.z, current_pos_2d.orientation.w]
         
-        prmstar_planner.generate_reachibility(robot_position, robot_orientation)
+        self.prmstar_planner.generate_reachibility(robot_position, robot_orientation)
 
     def build_arm_roadmap(self):
         #re-build the PRM roadmap for youbot arm
         physicsClient = p.connect(p.DIRECT)#or p.GUI for graphical version
         p.setAdditionalSearchPath(pybullet_data.getDataPath()) #optionally
         p.setGravity(0,0,-10)
-        prmstar_planner = None
+        self.prmstar_planner = None
         my_path = os.path.abspath(os.path.dirname(__file__))
         my_path = os.path.join(my_path, "../../../luh_youbot_description/robots/youbot_0.urdf")
 
-        prmstar_planner = prmstar.PRMStarPlanner(p, my_path, False)
-        prmstar_planner.build_roadmap()
+        self.prmstar_planner = prmstar.PRMStarPlanner(p, my_path, False)
+        self.prmstar_planner.build_roadmap()

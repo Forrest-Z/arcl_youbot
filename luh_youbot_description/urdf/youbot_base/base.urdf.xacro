@@ -2,7 +2,7 @@
 <robot  xmlns:xacro="http://ros.org/wiki/xacro">
 
     <!-- sensors -->
-    <!-- <xacro:include filename="$(find luh_youbot_description)/urdf/sensors/hokuyo_urg04_laser.urdf.xacro"/> -->
+    <xacro:include filename="$(find luh_youbot_description)/urdf/sensors/hokuyo_urg04_laser.urdf.xacro"/>
   <xacro:include filename="$(find luh_youbot_description)/urdf/youbot_base/base.gazebo.xacro" />
   <!-- <xacro:include filename="$(find luh_youbot_description)/urdf/youbot_base/bumper.gazebo.xacro" /> -->
         
@@ -75,9 +75,9 @@
             </link>
                
         <!-- base laser front -->
-            <!-- <xacro:hokuyo_urg04_laser name="${name}_laser_front" parent="${name}" ros_topic="scan" update_rate="10" min_angle="-1.57" max_angle="1.57" >
+            <xacro:hokuyo_urg04_laser name="${name}_laser_front" parent="${name}" ros_topic="base_scan" update_rate="10" min_angle="-1.57" max_angle="1.57" >
                   <origin xyz="0.309 0 -0.03" rpy="0 0 0" />
-            </xacro:hokuyo_urg04_laser> -->
+            </xacro:hokuyo_urg04_laser>
 
         <!-- base laser back -->
             <!-- <xacro:hokuyo_urg04_laser  name="${name}_laser_back" parent="${name}" ros_topic="scan_back" update_rate="10" min_angle="1.57" max_angle="-1.57" >

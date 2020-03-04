@@ -163,7 +163,7 @@
         <collision name='collision'>
           <geometry>
             <box>
-              <size>4.8 0.144018 0.15</size>
+              <size>4.8 0.15 0.15</size>
             </box>
           </geometry>
           <max_contacts>10</max_contacts>
@@ -180,7 +180,7 @@
         <visual name='visual'>
           <geometry>
             <box>
-              <size>5 0.144018 0.15</size>
+              <size>5 0.15 0.15</size>
             </box>
           </geometry>
           <material>
@@ -217,7 +217,7 @@
         <collision name='collision'>
           <geometry>
             <box>
-              <size>5 0.14227 0.15</size>
+              <size>5 0.15 0.15</size>
             </box>
           </geometry>
           <max_contacts>10</max_contacts>
@@ -234,7 +234,7 @@
         <visual name='visual'>
           <geometry>
             <box>
-              <size>5 0.14227 0.15</size>
+              <size>5 0.15 0.15</size>
             </box>
           </geometry>
           <material>
@@ -271,7 +271,7 @@
         <collision name='collision'>
           <geometry>
             <box>
-              <size>4.8 0.14227 0.15</size>
+              <size>4.8 0.15 0.15</size>
             </box>
           </geometry>
           <max_contacts>10</max_contacts>
@@ -288,7 +288,7 @@
         <visual name='visual'>
           <geometry>
             <box>
-              <size>5 0.14227 0.15</size>
+              <size>5 0.15 0.15</size>
             </box>
           </geometry>
           <material>
@@ -368,42 +368,50 @@
       </model>
       
       <model name='pillar_0'>
-        <pose>-0.7 -5.7 0.1 0 0 0</pose>
+        <pose>-0.7 1.7 0.1 0 0 0</pose>
         <link name='link'>
-          <pose>-0.7 -5.7 0.1 0 0 0</pose>
+          <pose>-0.7 1.7 0.1 0 0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>-0.33225 0.096341 -0.383144 -0.192682 -0.6645 0</acceleration>
           <wrench>-0.33225 0.096341 -0.383144 0 -0 0</wrench>
         </link>
       </model>
       <model name='pillar_1'>
-        <pose>-0.08 7.2 0.1 0 0 0</pose>
+        <pose>-0.08 3.2 0.1 0 0 0</pose>
         <link name='link'>
-          <pose>-0.08 7.2 0.1 0 0 0</pose>
+          <pose>-0.08 3.2 0.1 0 0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>-0.33225 0.096341 -0.383144 -0.192682 -0.6645 0</acceleration>
           <wrench>-0.33225 0.096341 -0.383144 0 -0 0</wrench>
         </link>
       </model>
       <model name='pillar_2'>
-        <pose>0.8 7.5 0.1 0 0 0</pose>
+        <pose>0.8 2.5 0.1 0 0 0</pose>
         <link name='link'>
-          <pose>0.8 7.5 0.1 0 0 0</pose>
+          <pose>0.8 2.5 0.1 0 0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>-0.33225 0.096341 -0.383144 -0.192682 -0.6645 0</acceleration>
           <wrench>-0.33225 0.096341 -0.383144 0 -0 0</wrench>
         </link>
       </model>
       <model name='pillar_3'>
-        <pose>-0.5 7.5 0.1 0 0 0</pose>
+        <pose>2 3.5 0.1 0 0 0</pose>
         <link name='link'>
-          <pose>-0.5 7.5 0.1 0 0 0</pose>
+          <pose>2 3.5 0.1 0 0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>-0.33225 0.096341 -0.383144 -0.192682 -0.6645 0</acceleration>
           <wrench>-0.33225 0.096341 -0.383144 0 -0 0</wrench>
         </link>
       </model>
-   
+      <model name='obs_0'>   
+        <pose>0.1 2 0.075 0 0 0</pose>
+        <link name='link'>
+          <pose>0.1 2 0.075 0 0 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>-0.303348 0.000544 -0.047176 -0.00109 -0.606696 1e-05</acceleration>
+          <wrench>-0.303348 0.000544 -0.047176 0 -0 0</wrench>
+        </link>
+      </model>
     </state>
     <gui fullscreen='0'>
       <camera name='user_camera'>
@@ -635,7 +643,60 @@
       </link>
       <static>0</static>
     </model> 
-    
+    <model name='obs_0'>
+      <pose>4 1 0.15 0 -0 0</pose>
+      <link name='link'>
+        <inertial>
+          <mass>1</mass>
+          <inertia>
+            <ixx>1</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>1</iyy>
+            <iyz>0</iyz>
+            <izz>1</izz>
+          </inertia>
+        </inertial>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>1 0.15 0.15</size>
+            </box>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <bounce/>
+            <friction>
+              <ode/>
+            </friction>
+            <contact>
+              <ode/>
+            </contact>
+          </surface>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>1 0.15 0.15</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/WoodFloor</name>
+            </script>
+          </material>
+        </visual>
+        <velocity_decay>
+          <linear>0</linear>
+          <angular>0</angular>
+        </velocity_decay>
+        <self_collide>0</self_collide>
+        <kinematic>0</kinematic>
+        <gravity>1</gravity>
+      </link>
+      <static>0</static>
+    </model>
     <model name='wall_0'>
       <pose>4 1 0.15 0 -0 0</pose>
       <link name='link'>
@@ -653,7 +714,7 @@
         <collision name='collision'>
           <geometry>
             <box>
-              <size>1.9 0.144018 0.15</size>
+              <size>1.9 0.15 0.15</size>
             </box>
           </geometry>
           <max_contacts>10</max_contacts>
@@ -670,7 +731,7 @@
         <visual name='visual'>
           <geometry>
             <box>
-              <size>1.9 0.144018 0.15</size>
+              <size>1.9 0.15 0.15</size>
             </box>
           </geometry>
           <material>
@@ -707,7 +768,7 @@
         <collision name='collision'>
           <geometry>
             <box>
-              <size>1.9 0.14227 0.15</size>
+              <size>1.9 0.15 0.15</size>
             </box>
           </geometry>
           <max_contacts>10</max_contacts>
@@ -724,7 +785,7 @@
         <visual name='visual'>
           <geometry>
             <box>
-              <size>1.9 0.14227 0.15</size>
+              <size>1.9 0.15 0.15</size>
             </box>
           </geometry>
           <material>
