@@ -18,10 +18,10 @@ import time
 import tf
 import arcl_youbot_application.application_util as app_util
 import arcl_youbot_planner.arm_planner.arm_util as arm_util
+import arcl_youbot_application.vision_util as vision_util
 from geometry_msgs.msg import Point32
-from arcl_youbot_msgs.srv import ImageSegment
 from arcl_youbot_msgs.msg import SingleMask, AllMask
-from sensor_msgs.msg import PointCloud, Image, ChannelFloat32
+from sensor_msgs.msg import PointCloud, Image, ChannelFloat32, CameraInfo
 from tf.transformations import euler_from_quaternion, quaternion_from_euler, quaternion_about_axis, quaternion_from_matrix
 from cv_bridge import CvBridge, CvBridgeError
 
@@ -58,8 +58,8 @@ if __name__ == "__main__":
     #Create a config and configure the pipeline to stream
     #  different resolutions of color and depth streams
     config = rs.config()
-    config.enable_stream(rs.stream.depth, 1280, 720, rs.format.z16, 30)
-    config.enable_stream(rs.stream.color, 1280, 720, rs.format.bgr8, 30)
+    config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
+    config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
 
     # Start streaming and get color frame intrinsics
     profile = pipeline.start(config)
@@ -94,40 +94,64 @@ if __name__ == "__main__":
     try:
         time.sleep(0.8)
         # Get frameset of color and depth
-        frames = pipeline.wait_for_frames()
-        listener = tf.TransformListener()
-        # frames.get_depth_frame() is a 640x360 depth image
 
-        # Align the depth frame to color frame
-        aligned_frames = align.process(frames)
+        rgb_pub = rospy.Publisher('/youbot_rgb_image', Image, queue_size=10)
+        depth_pub = rospy.Publisher('/youbot_depth_image', Image, queue_size=10)
+        camera_info_pub = rospy.Publisher('/youbot_camera_info', CameraInfo, queue_size=10)
 
-        # Get aligned frames
-        aligned_depth_frame = aligned_frames.get_depth_frame() # aligned_depth_frame is a 640x480 depth image
-        color_frame = aligned_frames.get_color_frame()
-
-        # Validate that both frames are valid
-        if not aligned_depth_frame or not color_frame:
-            exit
-
-        depth_image = np.asanyarray(aligned_depth_frame.get_data())
-        color_image = np.asanyarray(color_frame.get_data())
-        cv2.imwrite('scene_rgb.png', color_image)
-        cv2.imwrite('scene_depth.png', depth_image)
-        bridge = CvBridge()
-        rgb_image_msg = bridge.cv2_to_imgmsg(color_image, "bgr8")
-        cv2.imshow("bgr8",color_image)
-        cv2.waitKey(-1)
-
-
-        pub = rospy.Publisher('/image_segment', Image, queue_size=10)
+        camera_info_msg = CameraInfo()
+        camera_info_msg.K = [color_intrinsics.fx, 0, color_intrinsics.ppx, 0, color_intrinsics.fy, color_intrinsics.ppy, 0, 0, depth_scale]
+        r = rospy.Rate(10)
         while not rospy.is_shutdown():
-            connections = pub.get_num_connections()
-            rospy.loginfo('Connections: %d', connections)
-            if connections > 0:
-                pub.publish(rgb_image_msg)
-                break
+            start_time = time.time()
+
+            frames = pipeline.wait_for_frames()
+            listener = tf.TransformListener()
+            # frames.get_depth_frame() is a 640x360 depth image
+
+            # Align the depth frame to color frame
+            aligned_frames = align.process(frames)
+
+            # Get aligned frames
+            aligned_depth_frame = aligned_frames.get_depth_frame() # aligned_depth_frame is a 640x480 depth image
+            color_frame = aligned_frames.get_color_frame()
+
+            # Validate that both frames are valid
+            if not aligned_depth_frame or not color_frame:
+                exit
+
+            depth_image = np.asanyarray(aligned_depth_frame.get_data())
+            color_image = np.asanyarray(color_frame.get_data())
+            # cv2.imwrite('scene_rgb.png', color_image)
+            depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.4), cv2.COLORMAP_JET)
+            # cv2.imwrite('scene_depth.png', depth_colormap)
+            bridge = CvBridge()
+            rgb_image_msg = bridge.cv2_to_imgmsg(color_image, "bgr8")
+            depth_image_msg = bridge.cv2_to_imgmsg(depth_image, "passthrough")
+
+            # cv2.imshow("bgr8",color_image)
+            # cv2.waitKey(-1)
+
+            
 
 
+            
 
+            
+            rgb_connections = rgb_pub.get_num_connections()
+            depth_connections = depth_pub.get_num_connections()
+            camera_info_connections = camera_info_pub.get_num_connections()
+            # print("waiting")
+            # if rgb_connections > 0 and depth_connections > 0 and camera_info_connections > 0:
+            # print("sent")
+            rgb_pub.publish(rgb_image_msg)
+            depth_pub.publish(depth_image_msg)
+            camera_info_pub.publish(camera_info_msg)
+            r.sleep()
+            print("--- %s seconds ---" % (time.time() - start_time))  
     finally:
         pipeline.stop()
+
+
+
+

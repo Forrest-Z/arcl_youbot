@@ -287,6 +287,20 @@ class YoubotEnvironment():
         client.send_goal_and_wait(goal)
         return client.get_result()
 
+
+    def send_local_grasp_action(self, object_type_name, object_x, object_y, object_z, axis_x, axis_y):
+        client = actionlib.SimpleActionClient("localmanipulation_action", LocalManipulationAction)
+        client.wait_for_server()
+        goal = LocalManipulationGoal()
+        goal.target_object_type.data = object_type_name
+        goal.object_x = object_x 
+        goal.object_y = object_y 
+        goal.object_z = object_z
+        goal.primary_axis_x = axis_x 
+        goal.primary_axis_y = axis_y 
+        client.send_goal(goal, done_cb=self.local_manipulation_action_done_cb)
+        client.wait_for_result(rospy.Duration.from_sec(10.0))
+
     def generate_planning_scene_msg(self):
         #prepare the planning_scene_msg for grasp planning
 
@@ -554,6 +568,8 @@ class YoubotEnvironment():
         self.copy_planning_scene_msg.scene_object_list.pop(deleted_index)
         print("copy planning_scene_msg size:" + str(len(self.copy_planning_scene_msg.scene_object_list)))
 
+    def move_to_local_target(self, youbot_name, local_target_x, local_target_y, local_target_theta):
+        self.base_controller.move_base_local(youbot_name, local_target_x, local_target_y, local_target_theta)
 
     def move_to_target(self, youbot_name, target_pose):
         # works under gazebo and real world env

@@ -19,6 +19,8 @@ add_message_files(
   JointVector.msg
   NamedPath.msg
   PolygonArray.msg
+  AllMask.msg
+  SingleMask.msg
 )
 
 ## Generate services in the 'srv' folder

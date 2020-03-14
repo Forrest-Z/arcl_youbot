@@ -18,10 +18,10 @@ import time
 import tf
 import arcl_youbot_application.application_util as app_util
 import arcl_youbot_planner.arm_planner.arm_util as arm_util
+import arcl_youbot_application.vision_util as vision_util
 from geometry_msgs.msg import Point32
-from arcl_youbot_msgs.srv import ImageSegment
 from arcl_youbot_msgs.msg import SingleMask, AllMask
-from sensor_msgs.msg import PointCloud, Image, ChannelFloat32
+from sensor_msgs.msg import PointCloud, Image, ChannelFloat32, CameraInfo
 from tf.transformations import euler_from_quaternion, quaternion_from_euler, quaternion_about_axis, quaternion_from_matrix
 from cv_bridge import CvBridge, CvBridgeError
 
@@ -112,11 +112,32 @@ if __name__ == "__main__":
         depth_image = np.asanyarray(aligned_depth_frame.get_data())
         color_image = np.asanyarray(color_frame.get_data())
         cv2.imwrite('scene_rgb.png', color_image)
-        cv2.imwrite('scene_depth.png', depth_image)
+        depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.4), cv2.COLORMAP_JET)
+        cv2.imwrite('scene_depth.png', depth_colormap)
         bridge = CvBridge()
         rgb_image_msg = bridge.cv2_to_imgmsg(color_image, "bgr8")
+        depth_image_msg = bridge.cv2_to_imgmsg(depth_image, "passthrough")
+
         cv2.imshow("bgr8",color_image)
         cv2.waitKey(-1)
+
+        rgb_pub = rospy.Publisher('/youbot_rgb_image', Image, queue_size=10)
+        depth_pub = rospy.Publisher('/youbot_depth_image', Image, queue_size=10)
+        camera_info_pub = rospy.Publisher('/youbot_camera_info', CameraInfo, queue_size=10)
+
+
+        camera_info_msg = CameraInfo()
+        camera_info_msg.K = [color_intrinsics.fx, 0, color_intrinsics.ppx, 0, color_intrinsics.fy, color_intrinsics.ppy, 0, 0, depth_scale]
+
+        # while not rospy.is_shutdown():
+        #     rgb_connections = rgb_pub.get_num_connections()
+        #     depth_connections = depth_pub.get_num_connections()
+        #     camera_info_connections = camera_info_pub.get_num_connections()
+        #     if rgb_connections > 0 and depth_connections > 0 and camera_info_connections > 0:
+        #         rgb_pub.publish(rgb_image_msg)
+        #         depth_pub.publish(depth_image_msg)
+        #         camera_info_pub.publish(camera_info_msg)
+            
 
 
         pub = rospy.Publisher('/image_segment', Image, queue_size=10)
@@ -128,7 +149,16 @@ if __name__ == "__main__":
                 break
 
         mask_list =rospy.wait_for_message("/segment_mask", AllMask)
-        print(mask_list)
+        # print(mask_list)
+
+
+        camera_info = vision_util.CameraInfo(depth_scale, w, h, color_intrinsics.fx, color_intrinsics.fy, color_intrinsics.ppx, color_intrinsics.ppy)
+        target_selector = vision_util.TargetSelector(camera_info)
+        target_selector.get_mask_list(mask_list)
+        target_selector.get_depth_image(depth_image)
+
+        # will publish the pointcloud of the top_surface
+        target_selector.get_next_target()
 
 
 
@@ -136,103 +166,108 @@ if __name__ == "__main__":
 
 
 
+        # print(depth_image)
+        # print('depth shape:')
+        # print(depth_image.shape)
+        # print('color shape:')
+        # print(color_image.shape)
 
+        # target_pointcloud = np.dstack((depth_image,depth_image,depth_image)).astype(np.float) #depth image is 1 channel, color is 3 channels
+        # print("pointlcoud size:")
+        # print(target_pointcloud.shape)
 
-        print(depth_image)
-        print('depth shape:')
-        print(depth_image.shape)
-        print('color shape:')
-        print(color_image.shape)
+        # pointcloud_in_youbot_base_cut = PointCloud()
+        # pointcloud_in_youbot_base_cut.header.frame_id = 'base_link'
+        # pointcloud_in_camera_frame = PointCloud()
+        # pointcloud_in_camera_frame.header.frame_id = 'camera_rgb_optical_frame'
+        # point_num = 0
+        # for ins in mask_list.mask_list:
+        #     for pt in range(len(ins.col_list)):
+        #         u = ins.row_list[pt]
+        #         v = ins.col_list[pt]
+        #         target_pointcloud[u,v,2] = float(depth_image[u][v]) * depth_scale
+        #         target_pointcloud[u,v,0] = (v - color_intrinsics.ppx) / color_intrinsics.fx * target_pointcloud[u][v][2]
+        #         target_pointcloud[u,v,1] = (u - color_intrinsics.ppy) / color_intrinsics.fy * target_pointcloud[u][v][2]
+        #         target_pt = Point32()
+        #         target_pt.x = target_pointcloud[u][v][0]
+        #         target_pt.y = target_pointcloud[u][v][1]
+        #         target_pt.z = target_pointcloud[u][v][2]
+        #         if DEBUG_:
+        #             print("x:"+str(target_pt.x) + " y:"+str(target_pt.y) + " z:"+str(target_pt.z))
+        #         pointcloud_in_camera_frame.points.append(target_pt)
+        #         rgb_pt = ChannelFloat32()
+        #         rgb_pt.name = "rgb"
+        #         rgb_pt.values.append(color_image[u][v][2]) # r
+        #         rgb_pt.values.append(color_image[u][v][1]) # g
+        #         rgb_pt.values.append(color_image[u][v][0]) # b
+        #         # pointcloud_in_camera_frame.channels.append(rgb_pt)
 
-        target_pointcloud = np.dstack((depth_image,depth_image,depth_image)).astype(np.float) #depth image is 1 channel, color is 3 channels
-        print("pointlcoud size:")
-        print(target_pointcloud.shape)
-
-        pointcloud_in_youbot_base_cut = PointCloud()
-        pointcloud_in_youbot_base_cut.header.frame_id = 'base_link'
-        pointcloud_in_camera_frame = PointCloud()
-        pointcloud_in_camera_frame.header.frame_id = 'camera_rgb_optical_frame'
-        point_num = 0
-        for ins in mask_list.mask_list:
-            for pt in range(len(ins.col_list)):
-                u = ins.row_list[pt]
-                v = ins.col_list[pt]
-                target_pointcloud[u,v,2] = float(depth_image[u][v]) * depth_scale
-                target_pointcloud[u,v,0] = (v - color_intrinsics.ppx) / color_intrinsics.fx * target_pointcloud[u][v][2]
-                target_pointcloud[u,v,1] = (u - color_intrinsics.ppy) / color_intrinsics.fy * target_pointcloud[u][v][2]
-                target_pt = Point32()
-                target_pt.x = target_pointcloud[u][v][0]
-                target_pt.y = target_pointcloud[u][v][1]
-                target_pt.z = target_pointcloud[u][v][2]
-                if DEBUG_:
-                    print("x:"+str(target_pt.x) + " y:"+str(target_pt.y) + " z:"+str(target_pt.z))
-                pointcloud_in_camera_frame.points.append(target_pt)
-                rgb_pt = ChannelFloat32()
-                rgb_pt.name = "rgb"
-                rgb_pt.values.append(color_image[u][v][2]) # r
-                rgb_pt.values.append(color_image[u][v][1]) # g
-                rgb_pt.values.append(color_image[u][v][0]) # b
-                # pointcloud_in_camera_frame.channels.append(rgb_pt)
-
-                point_num += 1
+        #         point_num += 1
         
 
 
 
-        pointcloud_in_youbot_base = listener.transformPointCloud("base_link", pointcloud_in_camera_frame)
-        [center_pt_x, center_pt_y, center_pt_z] = get_pointcloud_center(pointcloud_in_youbot_base)
+        # pointcloud_in_youbot_base = listener.transformPointCloud("base_link", pointcloud_in_camera_frame)
+        # [center_pt_x, center_pt_y, center_pt_z] = get_pointcloud_center(pointcloud_in_youbot_base)
 
         
-        print("center_x:")
-        print(center_pt_x)
-        print("center_y:")
-        print(center_pt_y)
-        print("center_z:")
-        print(center_pt_z)
-        # point_num = pointcloud_in_youbot_base.points.count
-        print("all point_num:" + str(point_num))
+        # print("center_x:")
+        # print(center_pt_x)
+        # print("center_y:")
+        # print(center_pt_y)
+        # print("center_z:")
+        # print(center_pt_z)
+        # # point_num = pointcloud_in_youbot_base.points.count
+        # print("all point_num:" + str(point_num))
   
 
-        pointcloud_pub = rospy.Publisher('pointcloud_in_youbot_base', PointCloud, queue_size=10)
-        rate = rospy.Rate(10) # 10hz
-        while not rospy.is_shutdown():
-            pointcloud_pub.publish(pointcloud_in_youbot_base)
-        rate.sleep()
-        pca_data = np.zeros((cube_point_num, 3))
-        index = 0
-        for pt in pointcloud_in_youbot_base.points:
-            if pt.z > -0.03 and pt.z < 0.05:
-            # if pt.z < -0.03:
-                pca_data[index][:] = [pt.x, pt.y, pt.z]
-                index += 1
-        
-        # print(pca)
-        
-        centered_pca_data = pca_data
-        cube_center = np.mean(pca_data, axis = 0)
-        print("cube_center_x:" + str(cube_center[0]))
-        print("cube_center_y:" + str(cube_center[1]))
-        print("cube_center_z:" + str(cube_center[2]))
+        # pointcloud_pub = rospy.Publisher('pointcloud_in_youbot_base', PointCloud, queue_size=10)
+        # rate = rospy.Rate(10) # 10hz
+        # while not rospy.is_shutdown():
+        #     pointcloud_pub.publish(pointcloud_in_youbot_base)
+        # rate.sleep()
 
-        centered_pca_data[:,0] = np.subtract(centered_pca_data[:,0], cube_center[0])
-        centered_pca_data[:,1] = np.subtract(centered_pca_data[:,1], cube_center[1])
-        centered_pca_data[:,2] = np.subtract(centered_pca_data[:,2], cube_center[2])
 
-        print(pca_data.shape)
-        print(pca_data.ndim)
-        u, s, vh = np.linalg.svd(centered_pca_data)
-        u.shape, s.shape, vh.shape
-        print("u:")
-        print(u)
-        print("s:")
-        print(s)
-        print("vh:")
-        print(vh)
-        print(vh[0][0])
-        print(vh[1][0])
+
+
+
+
+
+        # pca_data = np.zeros((cube_point_num, 3))
+        # index = 0
+        # for pt in pointcloud_in_youbot_base.points:
+        #     if pt.z > -0.03 and pt.z < 0.05:
+        #     # if pt.z < -0.03:
+        #         pca_data[index][:] = [pt.x, pt.y, pt.z]
+        #         index += 1
+        
+        # # print(pca)
+        
+        # centered_pca_data = pca_data
+        # cube_center = np.mean(pca_data, axis = 0)
+        # print("cube_center_x:" + str(cube_center[0]))
+        # print("cube_center_y:" + str(cube_center[1]))
+        # print("cube_center_z:" + str(cube_center[2]))
+
+        # centered_pca_data[:,0] = np.subtract(centered_pca_data[:,0], cube_center[0])
+        # centered_pca_data[:,1] = np.subtract(centered_pca_data[:,1], cube_center[1])
+        # centered_pca_data[:,2] = np.subtract(centered_pca_data[:,2], cube_center[2])
+
+        # print(pca_data.shape)
+        # print(pca_data.ndim)
+        # u, s, vh = np.linalg.svd(centered_pca_data)
+        # u.shape, s.shape, vh.shape
+        # print("u:")
+        # print(u)
+        # print("s:")
+        # print(s)
+        # print("vh:")
+        # print(vh)
+        # print(vh[0][0])
+        # print(vh[1][0])
  
-        primary_axis_x = vh[0][0]
-        primary_axis_y = vh[1][0]
+        # primary_axis_x = vh[0][0]
+        # primary_axis_y = vh[1][0]
         # env.send_local_grasp_action("cube", cube_center[0], cube_center[1], cube_center[2], primary_axis_x, primary_axis_y)
         # target_pos_2d = [0, 0, 0]
         # target_pose = env.local_grasp_plan_result.final_base_pose
@@ -260,7 +295,7 @@ if __name__ == "__main__":
 
 
 
-        # Render images
+        # # Render images
         # depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.03), cv2.COLORMAP_JET)
         # images = np.hstack((bg_removed, depth_colormap))
         # cv2.namedWindow('Align Example', cv2.WINDOW_AUTOSIZE)

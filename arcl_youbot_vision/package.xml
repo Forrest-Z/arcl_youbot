@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>arcl_youbot_application</name>
+  <name>arcl_youbot_vision</name>
   <version>0.0.0</version>
-  <description>package for defining the application for youbot</description>
+  <description>The arcl_youbot_vision package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
@@ -19,7 +19,7 @@
   <!-- Url tags are optional, but multiple are allowed, one per tag -->
   <!-- Optional attribute type can be: website, bugtracker, or repository -->
   <!-- Example: -->
-  <!-- <url type="website">http://wiki.ros.org/my_youbot_pkg</url> -->
+  <!-- <url type="website">http://wiki.ros.org/arcl_youbot_vision</url> -->
 
 
   <!-- Author tags are optional, multiple are allowed, one per tag -->
@@ -51,6 +51,14 @@
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>rospy</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_export_depend>roscpp</build_export_depend>
+  <build_export_depend>rospy</build_export_depend>
+  <build_export_depend>sensor_msgs</build_export_depend>
+  <build_export_depend>std_msgs</build_export_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
   <build_depend>gazebo</build_depend>
   <build_depend>youbot_grasp</build_depend>
   <build_depend>luh_youbot_controller</build_depend>

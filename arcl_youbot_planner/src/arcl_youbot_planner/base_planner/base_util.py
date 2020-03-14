@@ -79,6 +79,19 @@ class BaseController():
         self.current_pose_2d[2] = yaw
         self.is_pose_received = True
 
+    def move_base_local(self, youbot_name, target_x, target_y, target_theta):
+        base_action_name = youbot_name + '/youbot_base/move'
+        client = actionlib.SimpleActionClient(base_action_name, MoveBaseAction)
+        print("waiting for server" + base_action_name)
+        client.wait_for_server()
+        print("connected to server")
+        goal = MoveBaseGoal()
+        goal.x = target_x
+        goal.y = target_y
+        goal.theta = target_theta + 20*math.pi
+        client.send_goal(goal)
+        client.wait_for_result(rospy.Duration.from_sec(10.0)) 
+
     def execute_path_vel_pub(self, final_path, single):
         """ compute and publish velocity
         """
