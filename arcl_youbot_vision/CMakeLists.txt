@@ -154,7 +154,7 @@ include_directories(
 # add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 
-add_executable(pointcloud_process src/pointcloud_process.cpp   src/util.cpp)
+add_executable(pointcloud_process src/pointcloud_process.cpp   src/util.cpp  src/target_selector.cpp)
 
 target_link_libraries(pointcloud_process ${catkin_LIBRARIES} ${ompl_LIBRARIES})
 add_dependencies(pointcloud_process ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
