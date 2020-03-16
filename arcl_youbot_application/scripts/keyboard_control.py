@@ -8,7 +8,7 @@ from std_msgs.msg import UInt8
 import os.path
 import math
 import time
-import TSP_DP_new as TSP_DP
+# import TSP_DP_new as TSP_DP
 import copy
 import sys, termios, tty, os, time
 
@@ -50,7 +50,7 @@ def walk(vel_pub):
 if __name__ == "__main__":
     rospy.init_node("base_key_control")
 
-    youbot_name = 'youbot_1'
+    youbot_name = 'youbot_0'
     vel_pub = rospy.Publisher('/' + youbot_name + '/robot/cmd_vel', Twist, queue_size=1)
     msg = Twist()
 

@@ -17,6 +17,7 @@ void target_selector::segment_mask_callback(const arcl_youbot_msgs::AllMask& msg
         }
         mask_list_.push_back(single_mask);
     }
+    is_segment_mask_ready_ = true;
     
 }
 
@@ -34,20 +35,33 @@ void target_selector::get_current_scene(){
                        camera_frame_, 
                        cloud_base_, 
                        listener);
-
+    publish_pointcloud(nh_, "target_cloud", cloud_base_);
 }
 
 void target_selector::get_instance_mask(){
     ros::Publisher image_segment_pub = nh_.advertise<sensor_msgs::Image>(image_segment_topic_, 3);
+    ros::Subscriber mask_sub = nh_.subscribe(segment_mask_topic_, 1, &target_selector::segment_mask_callback, this);
+    is_segment_mask_ready_ = false;
     while(1){
         if(image_segment_pub.getNumSubscribers() > 0){
             image_segment_pub.publish(curr_image_);
+            ros::spinOnce();
+            std::cout<<"publish the image segment message"<<std::endl;
+            if(is_segment_mask_ready_ == true){
+            std::cout<<"get the segment mask, continue"<<std::endl;
             break;
+            }
+        }else{ 
+        std::cout<<"no image segment subscriber"<<std::endl;
         }
+        
     }
-    ros::Subscriber mask_sub = nh_.subscribe(segment_mask_topic_, 1, &target_selector::segment_mask_callback, this);
 }
+    
 
+
+
+        
 bool target_selector::is_mask_separated(std::vector<std::pair<int, int>> mask_ins, int miss_num_threshold){
     bool is_separated = false;
     int min_x = 10000;
@@ -55,7 +69,7 @@ bool target_selector::is_mask_separated(std::vector<std::pair<int, int>> mask_in
     int min_y = 10000;
     int max_y = -1;
     std::map<int, bool> x_map, y_map;
-
+    std::cout<<"mask_ins size:"<<mask_ins.size()<<std::endl;
     for(int i = 0; i < mask_ins.size(); i++){
         if(mask_ins[i].first < min_x){
             min_x = mask_ins[i].first;
@@ -110,6 +124,7 @@ void target_selector::get_next_target_instance(){
     get_current_scene();
     get_instance_mask();
 
+    
     //calculate closest instance that is also graspable
 
     //step 1, get the closest one
@@ -120,7 +135,8 @@ void target_selector::get_next_target_instance(){
     std::vector<pcl::PointCloud<pcl::PointXYZRGB>> instance_cloud_list;
     for(int i = 0; i < mask_list_.size(); i++){
         pcl::PointCloud<pcl::PointXYZRGB> curr_cloud;
-        curr_cloud.header.frame_id = base_frame_;
+        pcl::PointCloud<pcl::PointXYZRGB> curr_cloud_base;
+        curr_cloud.header.frame_id = camera_frame_;
         std::tuple<double, double, double> instance_center;
         double center_x = 0;
         double center_y = 0;
@@ -144,6 +160,10 @@ void target_selector::get_next_target_instance(){
             pt.z = z;
             pt.x = x;
             pt.y = y;
+            cv_bridge::CvImagePtr cv_img = cv_bridge::toCvCopy(curr_image_, curr_image_.encoding);    
+            pt.r = cv_img->image.at<cv::Vec3b>(r,c)[0];
+            pt.g = cv_img->image.at<cv::Vec3b>(r,c)[1];
+            pt.b = cv_img->image.at<cv::Vec3b>(r,c)[2];
             curr_cloud.push_back(pt);
             center_x += pt.x;
             center_y += pt.y;
@@ -151,23 +171,45 @@ void target_selector::get_next_target_instance(){
 
 
         }
+
+        tf::TransformListener listener;
+        pcl_ros::transformPointCloud (base_frame_, ros::Time(0), 
+                        curr_cloud, 
+                        camera_frame_, 
+                        curr_cloud_base, 
+                        listener);
+        center_x = 0;
+        center_y = 0;
+        center_z = 0;
+        for(int s = 0; s < curr_cloud_base.points.size(); s++){
+            center_x += curr_cloud_base.points[s].x;
+            center_y += curr_cloud_base.points[s].y;
+            center_z += curr_cloud_base.points[s].z;
+        }
         center_x = center_x / (mask_list_[i].size() - invalid_point_num);
         center_y = center_y / (mask_list_[i].size() - invalid_point_num);
         center_z = center_z / (mask_list_[i].size() - invalid_point_num);
         instance_center = std::make_tuple(center_x, center_y, center_z);
         instance_center_list.push_back(instance_center);
-        instance_cloud_list.push_back(curr_cloud);
+        instance_cloud_list.push_back(curr_cloud_base);
     }
 
+    std::cout<<"after get instance_cloud_list"<<std::endl;
     double closest_dist = 100000000;
     int closest_index = 0;
     bool is_chosen = false;
     std::map<int, bool> discarded_map;
+    double highest = -1;
+    int highest_index = 0;
     while(!is_chosen){ 
         closest_dist = 100000000;
         for(int i = 0; i < instance_center_list.size(); i ++){
             if(discarded_map.find(i) != discarded_map.end()) continue;
-
+            std::cout<<"x:"<<std::get<0>(instance_center_list[i])<<", y:"<<std::get<1>(instance_center_list[i])<<", z:"<<std::get<2>(instance_center_list[i])<<std::endl;
+            if(std::get<2>(instance_center_list[i]) > highest){
+                highest = std::get<2>(instance_center_list[i]);
+                highest_index = i;
+            }
             double curr_dist = std::sqrt(std::get<0>(instance_center_list[i]) * std::get<0>(instance_center_list[i]) + std::get<1>(instance_center_list[i]) * std::get<1>(instance_center_list[i]) + std::get<2>(instance_center_list[i]) * std::get<2>(instance_center_list[i]));
             if(curr_dist < closest_dist){
                 closest_dist = curr_dist;
@@ -176,18 +218,21 @@ void target_selector::get_next_target_instance(){
         }
 
         //step 1.5 check whether current instance is spatially separated, if yes, continue with next instance (current instance is blocked)
+        std::cout<<"highest_index:"<<highest_index<<std::endl;
+        std::cout<<"mask_list_ size:"<<mask_list_.size()<<std::endl;
+        // if(is_mask_separated(mask_list_[highest_index], 10)){
+        //     // current instance is potentially separated, discard, go to next one
+        //     discarded_map[highest_index] = true;
+        //     continue;
+        // }
 
-        if(is_mask_separated(mask_list_[closest_index], 10)){
-            // current instance is potentially separated, discard, go to next one
-            discarded_map[closest_index] = true;
-            continue;
-        }
-
+        std::cout<<"starting calculating surface normal"<<std::endl;
         //step 2, get its top surface through normal
-        pcl::PointCloud<pcl::PointXYZRGB> target_cloud = instance_cloud_list[closest_index];
+        pcl::PointCloud<pcl::PointXYZRGB> target_cloud = instance_cloud_list[highest_index];
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr normal_input_cloud( new pcl::PointCloud<pcl::PointXYZRGB>);
         pcl::NormalEstimation<pcl::PointXYZRGB, pcl::Normal> ne;
         copyPointCloud(target_cloud, *normal_input_cloud);
+        // publish_pointcloud(nh_, "target_cloud", *normal_input_cloud);
         ne.setInputCloud (normal_input_cloud);
 
         // Create an empty kdtree representation, and pass it to the normal estimation object.
@@ -203,8 +248,44 @@ void target_selector::get_next_target_instance(){
 
         // Compute the features
         ne.compute (*cloud_normals);
+        std::cout<<"target instance point num:"<<cloud_normals->points.size()<<std::endl;
+        // pcl::PointCloud<pcl::Normal> target_top_surface;
+        pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr target_top_surface(new pcl::PointCloud<pcl::PointXYZRGBNormal>);
+        target_top_surface->header.frame_id = "/base_link";
+        for(int i = 0; i < cloud_normals->points.size(); i ++){
+            // std::cout<<"pt: x: "<<normal_input_cloud->points[i].x<<" ,y:"<<normal_input_cloud->points[i].y<<" , z:"<<normal_input_cloud->points[i].z<<std::endl;
+            if(cloud_normals->points[i].normal[2] > 0.7 || cloud_normals->points[i].normal[2] < -0.7){
+                pcl::PointXYZRGBNormal top_pt;
+                top_pt.x = normal_input_cloud->points[i].x;
+                top_pt.y = normal_input_cloud->points[i].y;
+                top_pt.z = normal_input_cloud->points[i].z;
+                top_pt.r = normal_input_cloud->points[i].r;
+                top_pt.g = normal_input_cloud->points[i].g;
+                top_pt.b = normal_input_cloud->points[i].b;
 
-        pcl::PointCloud<pcl::PointXYZRGB> target_top_surface;
+                target_top_surface->points.push_back(top_pt);
+            }
+        }        
+        std::cout<<"target top surface point num:"<<target_top_surface->points.size()<<std::endl;
+        // publish_pointcloud(nh_, "target_cloud", target_top_surface);
+
+        pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr filtered_top_surface(new pcl::PointCloud<pcl::PointXYZRGBNormal>);
+        pcl::StatisticalOutlierRemoval<pcl::PointXYZRGBNormal> sor;
+        sor.setInputCloud(target_top_surface);
+        sor.setMeanK (60);
+        sor.setStddevMulThresh (0.9);
+        sor.filter (*filtered_top_surface);
+        // publish_pointcloud(nh_, "target_cloud", *filtered_top_surface);
+
+
+        double surface_center_x = 0;
+        double surface_center_y = 0;
+        double surface_center_z = 0;
+
+        // eigen::MatrixXf top_surface_
+
+        break;
+
 
 
 

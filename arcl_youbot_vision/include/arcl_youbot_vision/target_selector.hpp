@@ -6,6 +6,9 @@
 #include <ros/ros.h>
 #include <arcl_youbot_msgs/AllMask.h>
 #include <pcl/features/normal_3d.h>
+#include <pcl/filters/statistical_outlier_removal.h>
+#include <Eigen/SVD> 
+#include <Eigen/Dense>
 
 class target_selector{
     private:
@@ -23,6 +26,7 @@ class target_selector{
         camerainfo_t caminfo_;
         pcl::PointCloud<pcl::PointXYZRGB> cloud_camera_;
         pcl::PointCloud<pcl::PointXYZRGB> cloud_base_;
+        bool is_segment_mask_ready_;
 
     public:
         target_selector(ros::NodeHandle& nh);

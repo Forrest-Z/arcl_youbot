@@ -44,7 +44,7 @@ bool GetInputFromCamera( ros::NodeHandle &nh,
 
     msg_image = *img_ptr;
     msg_depth = *dep_ptr;
-
+    std::cout<<"get rgb points num:"<<msg_image.data.size()<<std::endl;
     caminfo.camera_K.resize(9);
     for( int k=0; k<9; k++ ) caminfo.camera_K[k] = ci_depth->K[k];
     caminfo.depth_scale = ci_depth->K[8];
@@ -198,9 +198,9 @@ void PointCloudfromDepth( PointCloud<PointT> &cloud,
     {
         PointT &pt = cloud(c,r);
 
-        pt.r = image.at<cv::Vec3b>(r,c)[0];
+        pt.r = image.at<cv::Vec3b>(r,c)[2];
         pt.g = image.at<cv::Vec3b>(r,c)[1];
-        pt.b = image.at<cv::Vec3b>(r,c)[2];
+        pt.b = image.at<cv::Vec3b>(r,c)[0];
     }
 
     if( !isOrganized )    
@@ -362,6 +362,20 @@ void PointCloudsfromDepth<PointXYZRGB, uint16_t>(
                            const cv::Mat &mask              );
 
 void publish_pointcloud(ros::NodeHandle& nh ,std::string topic_name, pcl::PointCloud<pcl::PointXYZRGB>& pointcloud){
+    ros::Publisher pub = nh.advertise<pcl::PointCloud<pcl::PointXYZRGB>> (topic_name, 1);
+
+    std::cout<<"publish pointcloud in base link"<<std::endl;
+    ros::Rate loop_rate(4);
+    while (nh.ok())
+    {
+        pub.publish(pointcloud);
+        ros::spinOnce ();
+        loop_rate.sleep ();
+    }
+
+}
+
+void publish_pointcloud(ros::NodeHandle& nh ,std::string topic_name, pcl::PointCloud<pcl::PointXYZRGBNormal>& pointcloud){
     ros::Publisher pub = nh.advertise<pcl::PointCloud<pcl::PointXYZRGB>> (topic_name, 1);
 
     std::cout<<"publish pointcloud in base link"<<std::endl;
