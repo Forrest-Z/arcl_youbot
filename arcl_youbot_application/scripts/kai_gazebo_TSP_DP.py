@@ -382,7 +382,6 @@ if __name__ == "__main__":
             
             if loaded:
                 env.combined_move_base_and_arm_drop_pick("youbot_0", loaded_obj_name, arm_drop_joint, pre_pick_joint_value, target_base_pose)
-                loaded = False
             else:
                 env.combined_move_base_and_arm_pick("youbot_0", pre_pick_joint_value, target_base_pose)
                 loaded = True

@@ -21,7 +21,7 @@ class  Dynamic_Group(object):
     def __init__(self, index, objs, min_cost_dict, Exit, overlapping_dict):
         self.min_cost_dict=min_cost_dict
         self.exit = Exit
-        self.num_discrete = 4
+        self.num_discrete = 1
         self.elements = []
         self.paths = []
         self.cost = 0.0
@@ -710,8 +710,15 @@ class DP_solver(object):
         for sorted_obj in self.obj_list:
             # print "obj", obj
             obj = copy.deepcopy(sorted_obj)
-            del obj[0]
+            
             new_obj =Workplace_Object()
+            # if (obj[0] == 3) or(obj[0] == 7):
+            #     new_obj.weight = 0.55
+            # elif (obj[0] == 0) or(obj[0] == 10)or(obj[0] == 11)or(obj[0] == 12):
+            #     new_obj.weight = 0.44
+            # elif (obj[0] == 2) or(obj[0] == 4)or(obj[0] == 5):
+            #     new_obj.weight = 0.55
+            del obj[0]
             index_accum += 1 
             new_obj.index = index_accum
             [new_obj.a, new_obj.b, new_obj.x_min, new_obj.x_max, new_obj.x_real_min, new_obj.x_real_max, length]= self.point2property(obj)
@@ -719,7 +726,8 @@ class DP_solver(object):
             #     new_obj.weight = 0.4
             # else:
             #     new_obj.weight = 0.3
-            new_obj.weight = 1.0/k + (index_accum-1)*(2.0/k-1.0/k)/(self.n-1)    
+            # new_obj.weight = 1.0/k + (index_accum-1)*(2.0/k-1.0/k)/(self.n-1)
+            new_obj.weight = 1.0/k + (1-(0.27-length)/0.14)/k    
             # new_obj.weight = random_weight()
             print "index", new_obj.index
             print("weight", new_obj.weight)

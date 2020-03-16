@@ -27,7 +27,7 @@ def move_arm_to_joint_pose_old_direct(youbot_name, joint_target):
 if __name__ == "__main__":
     rospy.init_node("reachibility")
 
-    youbot_name = 'youbot_1'
+    youbot_name = 'youbot_0'
 
     arm_near_reset_joint = [0.2726646259971648, 0.07, -0.3581317007977318, 0.109522973054868, 3.001966313430247]
     arm_up_joint = [202/180.0*math.pi, 65/180.0*math.pi, -146 / 180.0 * math.pi, 102.5 / 180.0 * math.pi, 172 / 180.0 * math.pi]
