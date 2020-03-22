@@ -84,7 +84,7 @@ void PointCloudsfromDepth( std::map<uint8_t,typename pcl::PointCloud<PointT>::Pt
 void publish_pointcloud(ros::NodeHandle& nh, std::string topic_name, pcl::PointCloud<pcl::PointXYZRGB>& pointcloud);
 void publish_pointcloud(ros::NodeHandle& nh ,std::string topic_name, pcl::PointCloud<pcl::PointXYZRGBNormal>& pointcloud);
 
-
+std::tuple<double, double, double> get_pointcloud_center(pcl::PointCloud<pcl::PointXYZRGBNormal>& pc);
 
 
 #endif

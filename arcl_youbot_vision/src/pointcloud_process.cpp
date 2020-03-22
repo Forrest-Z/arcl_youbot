@@ -34,10 +34,9 @@ int main(int argc, char** argv)
 
 
     //publish_pointcloud(nh, "point_base_link", cloud_base_link);
-    t_selector.get_next_target_instance();
+    // t_selector.get_next_target_instance_0();
+    t_selector.get_labeled_scene_pointcloud();
 
     
-
-    
-    ros::spin();
+    // ros::spin();
 }

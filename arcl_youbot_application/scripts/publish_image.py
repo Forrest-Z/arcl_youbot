@@ -104,31 +104,45 @@ if __name__ == "__main__":
         r = rospy.Rate(10)
         while not rospy.is_shutdown():
             start_time = time.time()
+            repeated_time = 0
+            while repeated_time < 30:
+                frames = pipeline.wait_for_frames()
+                listener = tf.TransformListener()
+                # frames.get_depth_frame() is a 640x360 depth image
 
-            frames = pipeline.wait_for_frames()
-            listener = tf.TransformListener()
-            # frames.get_depth_frame() is a 640x360 depth image
+                # Align the depth frame to color frame
+                aligned_frames = align.process(frames)
 
-            # Align the depth frame to color frame
-            aligned_frames = align.process(frames)
+                # Get aligned frames
+                aligned_depth_frame = aligned_frames.get_depth_frame() # aligned_depth_frame is a 640x480 depth image
+                color_frame = aligned_frames.get_color_frame()
 
-            # Get aligned frames
-            aligned_depth_frame = aligned_frames.get_depth_frame() # aligned_depth_frame is a 640x480 depth image
-            color_frame = aligned_frames.get_color_frame()
+                # Validate that both frames are valid
+                if not aligned_depth_frame or not color_frame:
+                    exit
 
-            # Validate that both frames are valid
-            if not aligned_depth_frame or not color_frame:
-                exit
+                new_depth_image = np.asanyarray(aligned_depth_frame.get_data())
+                if repeated_time > 0:
+                    depth_image[depth_image==0] = new_depth_image[depth_image==0]
+                else:
+                    depth_image = new_depth_image
+                # print(temp_depth_image.shape)
+                
+                # for row_index in range(depth_image.shape[0]):
+                #     for col_index in range(depth_image.shape[1]):
+                #         if depth_image[row_index,col_index] == 0:
+                #             depth_image[row_index,col_index] = temp_depth_image[row_index,col_index]
+                color_image = np.asanyarray(color_frame.get_data())
+                repeated_time += 1
 
-            depth_image = np.asanyarray(aligned_depth_frame.get_data())
-            color_image = np.asanyarray(color_frame.get_data())
             # cv2.imwrite('scene_rgb.png', color_image)
             depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.4), cv2.COLORMAP_JET)
-            # cv2.imwrite('scene_depth.png', depth_colormap)
+            cv2.imwrite('scene_depth.png', depth_colormap)
             bridge = CvBridge()
             rgb_image_msg = bridge.cv2_to_imgmsg(color_image, "bgr8")
             depth_image_msg = bridge.cv2_to_imgmsg(depth_image, "passthrough")
-
+            # print(depth_image_msg)
+            
             # cv2.imshow("bgr8",color_image)
             # cv2.waitKey(-1)
 
