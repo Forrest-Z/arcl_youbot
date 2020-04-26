@@ -134,61 +134,61 @@ if __name__ == "__main__":
     print(env_obj_list)
 
     # DP
-    # pick_rounds_index_list = [[9], [2, 11], [1], [3], [10, 12], [0, 5], [6]]
-    # pick_rounds_pose_list = [[Pose(Point(-0.683016193367,-0.425243096452,0),Quaternion(0,0,0,0)),],[Pose(Point(0.472523801307,-1.75371351518,0),Quaternion(0,0,0,0)),Pose(Point(-0.0258034938946,-2.2349652171,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.631459353839,-1.33854507522,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.338779258296,-0.0935720981184,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.280279736286,-0.448332669034,0),Quaternion(0,0,0,0)),Pose(Point(-0.94868945199,-1.74457276598,0),Quaternion(0,0,0,0)),],[Pose(Point(0.85785154938,-1.18506542227,0),Quaternion(0,0,0,0)),Pose(Point(1.13647644996,-1.66429931096,0),Quaternion(0,0,0,0)),],[Pose(Point(0.741259927745,-0.180241800908,0),Quaternion(0,0,0,0)),],]
+    pick_rounds_index_list = [[9], [2, 11], [1], [3], [10, 12], [0, 5], [6]]
+    pick_rounds_pose_list = [[Pose(Point(-0.683016193367,-0.425243096452,0),Quaternion(0,0,0,0)),],[Pose(Point(0.472523801307,-1.75371351518,0),Quaternion(0,0,0,0)),Pose(Point(-0.0258034938946,-2.2349652171,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.631459353839,-1.33854507522,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.338779258296,-0.0935720981184,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.280279736286,-0.448332669034,0),Quaternion(0,0,0,0)),Pose(Point(-0.94868945199,-1.74457276598,0),Quaternion(0,0,0,0)),],[Pose(Point(0.85785154938,-1.18506542227,0),Quaternion(0,0,0,0)),Pose(Point(1.13647644996,-1.66429931096,0),Quaternion(0,0,0,0)),],[Pose(Point(0.741259927745,-0.180241800908,0),Quaternion(0,0,0,0)),],]
     # Greedy
-    # pick_rounds_index_list = [[0], [1], [11], [12]]
-    # pick_rounds_pose_list = [[Pose(Point(-0.337779258296,-0.0925720981184,0),Quaternion(0,0,0,0)),Pose(Point(-0.673112148581,-0.414992878439,0),Quaternion(0,0,0,0)),],[Pose(Point(0.742259927745,-0.179241800908,0),Quaternion(0,0,0,0)),Pose(Point(1.26465516555,-1.65681052557,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.685037924917,-0.419289319079,0),Quaternion(0,0,0,0)),Pose(Point(0.27066011026,-1.87491735555,0),Quaternion(0,0,0,0)),],[Pose(Point(0.85885154938,-1.18406542227,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.630459353839,-1.33754507522,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.36849904939,-1.85849184156,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.929863789521,-1.75251212121,0),Quaternion(0,0,0,0)),],]
-    # pick_rounds_pose_list = [[Pose(Point(0.85885154938,-1.18406542227,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.630459353839,-1.33754507522,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.36849904939,-1.85849184156,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.929863789521,-1.75251212121,0),Quaternion(0,0,0,0)),],]
+    pick_rounds_index_list = [[0], [1], [11], [12]]
+    pick_rounds_pose_list = [[Pose(Point(-0.337779258296,-0.0925720981184,0),Quaternion(0,0,0,0)),Pose(Point(-0.673112148581,-0.414992878439,0),Quaternion(0,0,0,0)),],[Pose(Point(0.742259927745,-0.179241800908,0),Quaternion(0,0,0,0)),Pose(Point(1.26465516555,-1.65681052557,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.685037924917,-0.419289319079,0),Quaternion(0,0,0,0)),Pose(Point(0.27066011026,-1.87491735555,0),Quaternion(0,0,0,0)),],[Pose(Point(0.85885154938,-1.18406542227,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.630459353839,-1.33754507522,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.36849904939,-1.85849184156,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.929863789521,-1.75251212121,0),Quaternion(0,0,0,0)),],]
+    pick_rounds_pose_list = [[Pose(Point(0.85885154938,-1.18406542227,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.630459353839,-1.33754507522,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.36849904939,-1.85849184156,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.929863789521,-1.75251212121,0),Quaternion(0,0,0,0)),],]
 
 
 
-    # loaded = False
-    # loaded_obj_name = ''
-    # result = Queue.Queue()   
-    # env.copy_env()
-    # next_obj_name = "obj_" + str(pick_rounds_index_list[0][0])
-    # next_obj_pick_pose = pick_rounds_pose_list[0][0]
-    # get_next_grasp(env, next_obj_name, next_obj_pick_pose, result)
+    loaded = False
+    loaded_obj_name = ''
+    result = Queue.Queue()   
+    env.copy_env()
+    next_obj_name = "obj_" + str(pick_rounds_index_list[0][0])
+    next_obj_pick_pose = pick_rounds_pose_list[0][0]
+    get_next_grasp(env, next_obj_name, next_obj_pick_pose, result)
 
-    # for i, pick_index_list in enumerate(pick_rounds_index_list):
-    #     for j, index in enumerate(pick_index_list):
-    #         print("pick " + str(index))
-    #         obj_name = "obj_" + str(index)
+    for i, pick_index_list in enumerate(pick_rounds_index_list):
+        for j, index in enumerate(pick_index_list):
+            print("pick " + str(index))
+            obj_name = "obj_" + str(index)
             
-    #         # next obj
-    #         if j < len(pick_index_list) - 1:
-    #             next_obj_name = "obj_" + str(pick_rounds_index_list[i][j+1])
-    #             next_obj_pick_pose = pick_rounds_pose_list[i][j+1]
-    #         else:
-    #             if i < len(pick_rounds_index_list) - 1:
-    #                 next_obj_name = "obj_" + str(pick_rounds_index_list[i+1][0])
-    #                 next_obj_pick_pose = pick_rounds_pose_list[i+1][0]
+            # next obj
+            if j < len(pick_index_list) - 1:
+                next_obj_name = "obj_" + str(pick_rounds_index_list[i][j+1])
+                next_obj_pick_pose = pick_rounds_pose_list[i][j+1]
+            else:
+                if i < len(pick_rounds_index_list) - 1:
+                    next_obj_name = "obj_" + str(pick_rounds_index_list[i+1][0])
+                    next_obj_pick_pose = pick_rounds_pose_list[i+1][0]
             
-    #         if not (i == 0 and j == 0):
-    #             grasp.join()
-    #         grasp = threading.Thread(target=get_next_grasp, args=(env, next_obj_name, next_obj_pick_pose, result))
-    #         grasp.start()
+            if not (i == 0 and j == 0):
+                grasp.join()
+            grasp = threading.Thread(target=get_next_grasp, args=(env, next_obj_name, next_obj_pick_pose, result))
+            grasp.start()
 
-    #         grasp_plan = result.get()
-    #         target_base_pose = grasp_plan.final_base_pose
-    #         pick_joint_value = [grasp_plan.q1, grasp_plan.q2, grasp_plan.q3, grasp_plan.q4, grasp_plan.q5]
-    #         pre_pick_joint_value = [grasp_plan.q1_pre, grasp_plan.q2_pre, grasp_plan.q3_pre, grasp_plan.q4_pre, grasp_plan.q5_pre]    
+            grasp_plan = result.get()
+            target_base_pose = grasp_plan.final_base_pose
+            pick_joint_value = [grasp_plan.q1, grasp_plan.q2, grasp_plan.q3, grasp_plan.q4, grasp_plan.q5]
+            pre_pick_joint_value = [grasp_plan.q1_pre, grasp_plan.q2_pre, grasp_plan.q3_pre, grasp_plan.q4_pre, grasp_plan.q5_pre]    
             
-    #         if loaded:
-    #             env.combined_move_base_and_arm_drop_pick("youbot_0", loaded_obj_name, arm_drop_joint, pre_pick_joint_value, target_base_pose)
-    #             loaded = False
-    #         else:
-    #             env.combined_move_base_and_arm_pick("youbot_0", pre_pick_joint_value, target_base_pose)
-    #             loaded = True
-    #             loaded_obj_name = obj_name
+            if loaded:
+                env.combined_move_base_and_arm_drop_pick("youbot_0", loaded_obj_name, arm_drop_joint, pre_pick_joint_value, target_base_pose)
+                loaded = False
+            else:
+                env.combined_move_base_and_arm_pick("youbot_0", pre_pick_joint_value, target_base_pose)
+                loaded = True
+                loaded_obj_name = obj_name
 
-    #         env.pick_object_from_prev("youbot_0", pick_joint_value, pre_pick_joint_value)
-    #         env.update_env(obj_name)
+            env.pick_object_from_prev("youbot_0", pick_joint_value, pre_pick_joint_value)
+            env.update_env(obj_name)
 
-    #         if j == len(pick_index_list) - 1:
-    #             env.combined_move_base_and_arm_drop("youbot_0", obj_name, arm_drop_joint, rest_base_pose)
-    #             loaded = False
+            if j == len(pick_index_list) - 1:
+                env.combined_move_base_and_arm_drop("youbot_0", obj_name, arm_drop_joint, rest_base_pose)
+                loaded = False
 
     # for i, pick_index_list in enumerate(pick_rounds_index_list):
     #     for j, index in enumerate(pick_index_list):

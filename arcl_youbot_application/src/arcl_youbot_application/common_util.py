@@ -112,11 +112,14 @@ def get_info_from_cube(obj):
 
 def spawnCuboid(size, position, quaternion, color, object_name):
     rospy.wait_for_service('/gazebo/spawn_urdf_model')
-    mass = 0.1
+    mass = 1
     dx = size[0]
     dy = size[1]
     dz = size[2]
-    
+    print("dx:" + str(dx))
+    print("dy:" + str(dy))
+    print("dz:" + str(dz))
+
     try:
         spawn_model = rospy.ServiceProxy('/gazebo/spawn_urdf_model', SpawnModel)
 
@@ -125,26 +128,27 @@ def spawnCuboid(size, position, quaternion, color, object_name):
         #print >> ss, "<robot><link name='box'><inertial><origin xyz='0 0 0' /><mass value='0.3' /><inertia  ixx='0.002625115' ixy='0.0'  ixz='0.0'  iyy='0.002625115'  iyz='0.0'  izz='0.000023563' /></inertial><visual><origin xyz='0 0 0'/><geometry><box size='0.0376 0.0376 0.56' /></geometry></visual><collision><geometry><box size='0.0376 0.0376 0.56' /></geometry></collision></link><gazebo reference='box'><maxVel>0.0</maxVel><kp>10000.0</kp><kd>1.0</kd><minDepth>0.001</minDepth><mu1>200.0</mu1><mu2>200.0</mu2><material>Gazebo/Red</material></gazebo></robot>"
        
   
-        print >> ss, "<robot><link name='box'><inertial><origin xyz='0 0 0' /><mass value='"
-        print >> ss, str(mass) 
-        print >> ss, "' />"
-        print >> ss, "<inertia  ixx='" 
-        print >> ss, str((1./12)*(dy*dy + dz*dz)*0.1) 
-        print >> ss, "' ixy='0.0'  ixz='0.0'  iyy='"
-        print >> ss, str((1./12)*(dx*dx + dz*dz)*0.1) 
-        print >> ss, "'  iyz='0.0'  izz='"  
-        print >> ss, str((1./12)*(dx*dx + dy*dy)*0.1) 
-        print >> ss, "' /></inertial><visual><origin xyz='0 0 0'/><geometry>"
-        print >> ss, "<box size='" 
-        print >> ss, str(dx) + " " + str(dy) + " " + str(dz) + "' /></geometry></visual>"
-        print >> ss, "<collision><geometry><box size='" + str(dx) + " " + str(dy) + " " + str(dz) + "' /></geometry>"
-        print >> ss, "</collision></link>"
-        print >> ss, "<gazebo reference='box'><maxVel>0.0</maxVel><kp>10000.0</kp><kd>1.0</kd><minDepth>0.001</minDepth><mu1>200.0</mu1>"
-        print >> ss, "<mu2>200.0</mu2><material>" + str(color) + "</material><gravity>0</gravity></gazebo></robot>"
+        print >> ss, "<robot><link name='box'><inertial><origin xyz='0 0 0' /><mass value='0.1'/>"
+        # print >> ss, str(mass) 
+        # print >> ss, "' />"
+        ss.write("<inertia  ixx='") 
+        ss.write(str((1./12)*(dy*dy + dz*dz)*0.1)) 
+        ss.write("' ixy='0.0'  ixz='0.0'  iyy='")
+        ss.write(str((1./12)*(dx*dx + dz*dz)*0.1)) 
+        ss.write("'  iyz='0.0'  izz='")
+        ss.write(str((1./12)*(dx*dx + dy*dy)*0.1)) 
+        ss.write("' /></inertial><visual><origin xyz='0 0 0'/><geometry>")
+        ss.write("<box size='") 
+        ss.write(str(dx) + " " + str(dy) + " " + str(dz) + "' /></geometry></visual>")
+        ss.write("<collision><geometry><box size='" + str(dx) + " " + str(dy) + " " + str(dz) + "' /></geometry>")
+        ss.write("</collision></link>")
+        ss.write("<gazebo reference='box'><maxVel>0.0</maxVel><kp>10000.0</kp><kd>1.0</kd><minDepth>0.001</minDepth><mu1>200.0</mu1>")
+        ss.write("<mu2>200.0</mu2><material>" + str(color) + "</material><gravity>0</gravity></gazebo></robot>")
 
         #print ss.getvalue()
 
         model_xml = ss.getvalue()
+        print(model_xml)
        # model_xml = "<robot name = '1'><link name='my_link><visual><origin xyz='0 0 0' rpy='0 0 0' /><geometry><box size='1 1 1' /></geometry><material name='Cyan'><color rgba='0 1.0 1.0 1.0'/></material></visual></link><gazebo reference='box'><maxVel>0.0</maxVel><kp>10000.0</kp><kd>1.0</kd><minDepth>0.001</minDepth><mu1>200.0</mu1><mu2>200.0</mu2><material>Gazebo/Red</material></gazebo></robot>"
         #file_xml = open("/home/wei/catkin_youbot_ws/src/luh_youbot_description/robots/youbot_0.urdf")
         #model_xml = file_xml.read()
@@ -177,9 +181,9 @@ def generate_poly(center_x, center_y, yaw, length, width):
     # p3 = (center_x + math.cos(yaw)*x - math.sin(yaw)*y, center_y - (math.sin(yaw)*x + math.cos(yaw)*y))
     
     # gazebo
-    # temp = width
-    # width = length
-    # length = temp
+    temp = width
+    width = length
+    length = temp
 
     x = length
     y = width

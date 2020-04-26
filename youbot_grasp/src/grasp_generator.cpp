@@ -224,14 +224,14 @@ int GraspGenerator::generateGrasp(std::string object_file_name, std::vector<geom
 
           geoPoseToFclPose(gripper_pose, fcl_gripper_v, fcl_gripper_m); 
           geoPoseToFclPose(pre_gripper_pose, fcl_pre_gripper_v, fcl_pre_gripper_m); 
-          #ifdef DEBUG_
+          // #ifdef DEBUG_
           //arc::gazeboUtility::spawnSDFModel(*node_, "/home/wei/.gazebo/models/006_mustard_bottle/model.sdf", pre_gripper_pose, "flying_gripper_test");
-          //ROS_INFO_STREAM("target_pose:"<<target_pose.position.x<<","<<target_pose.position.y<<","<<target_pose.position.z);
-          //ROS_INFO_STREAM("gripper_pose:"<<gripper_pose.position.x<<","<<gripper_pose.position.y<<","<<gripper_pose.position.z);
+          ROS_INFO_STREAM("target_pose:"<<target_pose.position.x<<","<<target_pose.position.y<<","<<target_pose.position.z);
+          ROS_INFO_STREAM("gripper_pose:"<<gripper_pose.position.x<<","<<gripper_pose.position.y<<","<<gripper_pose.position.z);
           //ros::Duration(1).sleep();
           std::string model_name = "flying_gripper_test";
           //arc::gazeboUtility::deleteModel(*node_, model_name);
-          #endif
+          // #endif
           vrep_gripper_pose = gripper_pose;
         //  vrep_gripper_pose.position.z -= 0.0285;
           fly_gripper_pub.publish(vrep_gripper_pose);
@@ -267,17 +267,18 @@ int GraspGenerator::generateGrasp(std::string object_file_name, std::vector<geom
             config_ok = true; 
           }
           if(config_ok){
-            if(checkCollision(gripper_filename, "floor", fcl_gripper_v, fcl_scene_object_v_list[planning_scene->scene_object_pose.size()-1], fcl_gripper_m, fcl_scene_object_m_list[planning_scene->scene_object_pose.size()-1]) || checkCollision(gripper_filename, "floor", fcl_pre_gripper_v, fcl_scene_object_v_list[planning_scene->scene_object_pose.size()-1], fcl_pre_gripper_m, fcl_scene_object_m_list[planning_scene->scene_object_pose.size()-1])){
-              config_ok = false;
-              break;
-            }
-            for(int q = 0;q < planning_scene->scene_object_pose.size()-1;q++){
-              if(checkCollision(gripper_filename, object_file_name, fcl_gripper_v, fcl_scene_object_v_list[q], fcl_gripper_m, fcl_scene_object_m_list[q]) || checkCollision(gripper_filename, object_file_name, fcl_pre_gripper_v, fcl_scene_object_v_list[q], fcl_pre_gripper_m, fcl_scene_object_m_list[q])){
+            // if(checkCollision(gripper_filename, "floor", fcl_gripper_v, fcl_scene_object_v_list[planning_scene->scene_object_pose.size()-1], fcl_gripper_m, fcl_scene_object_m_list[planning_scene->scene_object_pose.size()-1]) || checkCollision(gripper_filename, "floor", fcl_pre_gripper_v, fcl_scene_object_v_list[planning_scene->scene_object_pose.size()-1], fcl_pre_gripper_m, fcl_scene_object_m_list[planning_scene->scene_object_pose.size()-1])){
+            //   ROS_ERROR_STREAM("collision with floor when k ="<<k);
+            //   config_ok = false;
+            //   break;
+            // }
+            // for(int q = 0;q < planning_scene->scene_object_pose.size()-1;q++){
+            //   if(checkCollision(gripper_filename, object_file_name, fcl_gripper_v, fcl_scene_object_v_list[q], fcl_gripper_m, fcl_scene_object_m_list[q]) || checkCollision(gripper_filename, object_file_name, fcl_pre_gripper_v, fcl_scene_object_v_list[q], fcl_pre_gripper_m, fcl_scene_object_m_list[q])){
                 
-                config_ok = false;
-                break;
-              }
-            }
+            //     config_ok = false;
+            //     break;
+            //   }
+            // }
 
           }
           if(!config_ok){
@@ -288,6 +289,7 @@ int GraspGenerator::generateGrasp(std::string object_file_name, std::vector<geom
            
         } 
         if(k > 4){
+            ROS_ERROR_STREAM("adding grasp candidate with k="<<k);
              //while( getchar() != '\n' );
             //ROS_INFO_STREAM("---------------------------------------------");
             //ROS_INFO_STREAM("adding grasp candidate to grasp list-----------");

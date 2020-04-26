@@ -195,7 +195,26 @@ void target_selector::get_labeled_scene_pointcloud(){
     }
     std::cout<<"start saving pcd"<<std::endl;
     std::string pcd_name = std::to_string(ros::Time::now().toSec());
-    pcl::io::savePCDFileASCII ("/home/wei/catkin_youbot_ws/test_pcd/" + pcd_name+ ".pcd", result);
+
+    pcl::PointCloud<pcl::PointXYZRGBL>::Ptr unfiltered_result(new pcl::PointCloud<pcl::PointXYZRGBL>);
+    copyPointCloud(result, *unfiltered_result);
+    pcl::PointCloud<pcl::PointXYZRGBL>::Ptr filtered_result(new pcl::PointCloud<pcl::PointXYZRGBL>);
+    pcl::StatisticalOutlierRemoval<pcl::PointXYZRGBL> sor;
+    sor.setInputCloud(unfiltered_result);
+    sor.setMeanK (80);
+    sor.setStddevMulThresh (0.8);
+    sor.filter (*filtered_result);
+    sor.setInputCloud(filtered_result);
+    sor.filter (*filtered_result);
+
+
+    pcl::PointCloud<pcl::PointXYZRGBL>::Ptr downsample_result(new pcl::PointCloud<pcl::PointXYZRGBL>);
+    pcl::VoxelGrid<pcl::PointXYZRGBL> downsample_sor;
+    downsample_sor.setInputCloud (filtered_result);
+    downsample_sor.setLeafSize (0.002f, 0.002f, 0.002f);
+    downsample_sor.filter (*downsample_result);
+
+    pcl::io::savePCDFileASCII ("/home/wei/semantic-object-relations/SemanticObjectRelations/build/bin/test_pcd/" + pcd_name+ ".pcd", *downsample_result);
     std::cout<<"saved pcd" + pcd_name<<std::endl;
 }
 

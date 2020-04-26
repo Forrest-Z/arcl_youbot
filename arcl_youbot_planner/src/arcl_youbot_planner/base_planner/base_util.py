@@ -65,6 +65,7 @@ class BaseController():
     def base_pose2d_callback(self, data, args):
         """ Gazebo: callback to receive the current youbot position
         """
+        youbot_index = 0
         for name, data_index in zip(data.name, range(len(data.name))):
             if name == args[0]:
                 youbot_index = data_index

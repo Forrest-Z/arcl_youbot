@@ -101,13 +101,12 @@ if __name__ == "__main__":
 
         camera_info_msg = CameraInfo()
         camera_info_msg.K = [color_intrinsics.fx, 0, color_intrinsics.ppx, 0, color_intrinsics.fy, color_intrinsics.ppy, 0, 0, depth_scale]
-        r = rospy.Rate(10)
+        r = rospy.Rate(3)
         while not rospy.is_shutdown():
             start_time = time.time()
             repeated_time = 0
-            while repeated_time < 30:
+            while repeated_time < 6:
                 frames = pipeline.wait_for_frames()
-                listener = tf.TransformListener()
                 # frames.get_depth_frame() is a 640x360 depth image
 
                 # Align the depth frame to color frame
@@ -136,8 +135,6 @@ if __name__ == "__main__":
                 repeated_time += 1
 
             # cv2.imwrite('scene_rgb.png', color_image)
-            depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.4), cv2.COLORMAP_JET)
-            cv2.imwrite('scene_depth.png', depth_colormap)
             bridge = CvBridge()
             rgb_image_msg = bridge.cv2_to_imgmsg(color_image, "bgr8")
             depth_image_msg = bridge.cv2_to_imgmsg(depth_image, "passthrough")
@@ -152,17 +149,11 @@ if __name__ == "__main__":
             
 
             
-            rgb_connections = rgb_pub.get_num_connections()
-            depth_connections = depth_pub.get_num_connections()
-            camera_info_connections = camera_info_pub.get_num_connections()
-            # print("waiting")
-            # if rgb_connections > 0 and depth_connections > 0 and camera_info_connections > 0:
-            # print("sent")
             rgb_pub.publish(rgb_image_msg)
             depth_pub.publish(depth_image_msg)
             camera_info_pub.publish(camera_info_msg)
             r.sleep()
-            print("--- %s seconds ---" % (time.time() - start_time))  
+            # print("--- %s seconds ---" % (time.time() - start_time))  
     finally:
         pipeline.stop()
 
