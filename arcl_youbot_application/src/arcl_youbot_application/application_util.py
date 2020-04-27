@@ -287,6 +287,20 @@ class YoubotEnvironment():
         client.send_goal_and_wait(goal)
         return client.get_result()
 
+
+    def send_local_grasp_action(self, object_type_name, object_x, object_y, object_z, axis_x, axis_y):
+        client = actionlib.SimpleActionClient("localmanipulation_action", LocalManipulationAction)
+        client.wait_for_server()
+        goal = LocalManipulationGoal()
+        goal.target_object_type.data = object_type_name
+        goal.object_x = object_x 
+        goal.object_y = object_y 
+        goal.object_z = object_z
+        goal.primary_axis_x = axis_x 
+        goal.primary_axis_y = axis_y 
+        client.send_goal(goal, done_cb=self.local_manipulation_action_done_cb)
+        client.wait_for_result(rospy.Duration.from_sec(10.0))
+
     def generate_planning_scene_msg(self):
         #prepare the planning_scene_msg for grasp planning
 
@@ -377,13 +391,14 @@ class YoubotEnvironment():
         obj_index = 0
         for obj_name, obj  in self.object_list.iteritems():
             if obj_name == 'wall': continue
-            
+            print("write to file")
+            print(obj_name)
             #write num of object vertices
             scene_file.write("4\n")
-            scene_file.write(str(obj[0][0]) + " " + str(obj[0][1])+"\n")
-            scene_file.write(str(obj[1][0]) + " " + str(obj[1][1])+"\n")
-            scene_file.write(str(obj[2][0]) + " " + str(obj[2][1])+"\n")
-            scene_file.write(str(obj[3][0]) + " " + str(obj[3][1])+"\n")
+            scene_file.write(str(-obj[0][0] * 1000 + 500) + " " + str(obj[0][1]*1000 + 2000)+"\n")
+            scene_file.write(str(-obj[1][0]*1000 + 500) + " " + str(obj[1][1]*1000 + 2000)+"\n")
+            scene_file.write(str(-obj[2][0]*1000 + 500) + " " + str(obj[2][1]*1000 + 2000)+"\n")
+            scene_file.write(str(-obj[3][0]*1000 + 500) + " " + str(obj[3][1]*1000 + 2000)+"\n")
 
   
 
@@ -553,6 +568,8 @@ class YoubotEnvironment():
         self.copy_planning_scene_msg.scene_object_list.pop(deleted_index)
         print("copy planning_scene_msg size:" + str(len(self.copy_planning_scene_msg.scene_object_list)))
 
+    def move_to_local_target(self, youbot_name, local_target_x, local_target_y, local_target_theta):
+        self.base_controller.move_base_local(youbot_name, local_target_x, local_target_y, local_target_theta)
 
     def move_to_target(self, youbot_name, target_pose):
         # works under gazebo and real world env
@@ -950,7 +967,7 @@ class YoubotEnvironment():
         # move youbot_arm to target joint_pose
         #INPUT: 
         #  joint_target: [q1,q2,q3,q4,q5], in the range between arm_util.MIN_JOINT_POS and arm_util.MAX_JOINT_POS
-
+        prepare_time_start0 = time.time()
         physicsClient = p.connect(p.DIRECT)#or p.DIRECT for non-graphical version
         p.setAdditionalSearchPath(pybullet_data.getDataPath()) #optionally
         p.setGravity(0,0,-10)
@@ -975,6 +992,7 @@ class YoubotEnvironment():
             self.prmstar_planner.set_robot_pose(robot_position, robot_orientation)
 
             arm_controller = arm_util.ArmController(youbot_name, self.mode)
+            print("prepare_time2:--- %s seconds ---" % (time.time() - prepare_time_start2))
             start = arm_controller.get_current_joint_pos()
             [final_path, final_cost] = self.prmstar_planner.path_plan(tuple(start), tuple(joint_target))
             arm_util.execute_path(youbot_name, final_path)
@@ -1278,21 +1296,21 @@ class YoubotEnvironment():
         #plan and move arm to pre_pick_pos
         # [final_path, final_cost] = self.prmstar_planner.path_plan(tuple(start), tuple(pre_pick_joint_value))
         if self.mode == 0:
-            arm_util.set_gripper_width("", 0.06, self.mode)
+            arm_util.set_gripper_width(youbot_name, 0.06, self.mode)
         else:
-            arm_util.set_gripper_width("", 0.0, self.mode)
+            arm_util.set_gripper_width(youbot_name, 0.0, self.mode)
         
        
         # self.move_arm_to_joint_pose_old("youbot_0", pre_pick_joint_value)
 #DEBUG        
-        self.move_arm_to_joint_pose_old("", pre_pick_joint_value)
+        self.move_arm_to_joint_pose_old(youbot_name, pre_pick_joint_value)
 #DEBUG        
         
         # arm_util.execute_path(youbot_name, final_path)
 
         print("moved to the pre_pick pose")
         #directly move arm to pick_pos
-        arm_controller = arm_util.ArmController("", self.mode)
+        arm_controller = arm_util.ArmController(youbot_name, self.mode)
         start = arm_controller.get_current_joint_pos()
         # [final_path, final_cost] = self.prmstar_planner.direct_path(tuple(start), tuple(pick_joint_value))
         print("before execution waiting.....")
@@ -1301,21 +1319,21 @@ class YoubotEnvironment():
 
 #        self.move_arm_to_joint_pose_old_direct("youbot_0", pick_joint_value)
  #DEBUG
-        self.move_arm_to_joint_pose_old_direct("", pick_joint_value)
+        self.move_arm_to_joint_pose_old_direct(youbot_name, pick_joint_value)
  #DEBUG       
         
         print("moved to the pick pose")
         if self.mode == 0:
-            arm_util.set_gripper_width("", 0.0, self.mode)
+            arm_util.set_gripper_width(youbot_name, 0.0, self.mode)
             rospy.sleep(rospy.Duration.from_sec(5.0))
         else:
-            arm_util.set_gripper_width("", 0.06, self.mode)
+            arm_util.set_gripper_width(youbot_name, 0.06, self.mode)
             rospy.sleep(rospy.Duration.from_sec(2.5))
 
 
 
         #directly retract arm to pre_pick_pos
-        arm_controller = arm_util.ArmController("", self.mode)
+        arm_controller = arm_util.ArmController(youbot_name, self.mode)
         start = arm_controller.get_current_joint_pos()
         # [final_path, final_cost] = self.prmstar_planner.direct_path(tuple(start), tuple(pre_pick_joint_value))
         # arm_util.execute_path(youbot_name, final_path)
@@ -1323,7 +1341,7 @@ class YoubotEnvironment():
 
         #self.move_arm_to_joint_pose_old_direct("youbot_0", pre_pick_joint_value)
         #DEBUG
-        self.move_arm_to_joint_pose_old_direct("", pre_pick_joint_value)        
+        self.move_arm_to_joint_pose_old_direct(youbot_name, pre_pick_joint_value)        
         #DEBUG
 
 

@@ -114,6 +114,11 @@ struct SE2Pose
     }
 };
 
+
+
+
+
+
 geometry_msgs::Pose assignGeometryPose(double x, double y, double z, double q_x, double q_y, double q_z, double q_w);
 
 // ob::OptimizationObjectivePtr getPathLengthObjective(const ob::SpaceInformationPtr& si);

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(arcl_youbot_application)
+project(arcl_youbot_vision)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -16,9 +16,8 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   youbot_grasp
   pcl_ros
+  cv_bridge
 )
-
-
 
 find_package(ompl REQUIRED)
 ## System dependencies are found with CMake's conventions
@@ -35,7 +34,7 @@ set(geometry_INCLUDE_DIRS /usr/include/boost/geometry)
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
-catkin_python_setup()
+# catkin_python_setup()
 
 ################################################
 ## Declare ROS messages, services and actions ##
@@ -62,11 +61,11 @@ catkin_python_setup()
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-add_message_files(
-    FILES
-    PlanningSceneMsg.msg
-    SceneObjectMsg.msg
-)
+# add_message_files(
+#     FILES
+#     PlanningSceneMsg.msg
+#     SceneObjectMsg.msg
+# )
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -76,12 +75,12 @@ add_message_files(
 # )
 
 ## Generate actions in the 'action' folder
- add_action_files(
-   DIRECTORY action
-   FILES
-   Manipulation.action
-   LocalManipulation.action
-)
+#  add_action_files(
+#    DIRECTORY action
+#    FILES
+#    Manipulation.action
+#    LocalManipulation.action
+# )
 
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
@@ -155,18 +154,12 @@ include_directories(
 # add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 
+add_executable(pointcloud_process src/pointcloud_process.cpp   src/util.cpp  src/target_selector.cpp)
+
+target_link_libraries(pointcloud_process ${catkin_LIBRARIES} ${ompl_LIBRARIES})
+add_dependencies(pointcloud_process ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 
-add_executable(localmanipulation_server src/LocalManipulationServer.cpp src/planningScene.cpp src/planningSceneObject.cpp src/utilities.cpp  src/gazeboUtility.cpp include/arcl_youbot_application/utilities.hpp)
-
-target_link_libraries(localmanipulation_server ${catkin_LIBRARIES} ${ompl_LIBRARIES})
-add_dependencies(localmanipulation_server ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-
-add_executable(manipulation_server src/ManipulationServer.cpp src/planningScene.cpp src/planningSceneObject.cpp src/utilities.cpp  src/gazeboUtility.cpp include/arcl_youbot_application/utilities.hpp)
-
-target_link_libraries(manipulation_server ${catkin_LIBRARIES} ${ompl_LIBRARIES})
-add_dependencies(manipulation_server ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context

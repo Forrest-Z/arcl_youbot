@@ -1,0 +1,25 @@
+std_msgs/String target_object_type
+float32 object_x
+float32 object_y 
+float32 object_z
+float32 primary_axis_x
+float32 primary_axis_y
+---
+geometry_msgs/Pose final_base_pose
+float32 r
+float32 z 
+float32 q1
+float32 q5
+float32 theta
+float32 q2
+float32 q3
+float32 q4
+float32 q1_pre
+float32 q2_pre
+float32 q3_pre
+float32 q4_pre
+float32 q5_pre
+float32 normal_x
+float32 normal_y
+float32 normal_z
+---
