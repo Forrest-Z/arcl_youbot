@@ -27,17 +27,16 @@ int main(int argc, char** argv)
     t_selector.set_rgb_topic("/youbot_rgb_image");
     t_selector.set_depth_topic("/youbot_depth_image");
     t_selector.set_camera_info_topic("/youbot_camera_info");
-    t_selector.set_camera_frame("camera_rgb_optical_frame");
-    t_selector.set_base_frame("base_link");
+    t_selector.set_camera_frame("/camera_rgb_optical_frame");
+    t_selector.set_base_frame("/base_link");
     t_selector.set_image_segment_topic("/image_segment");
     t_selector.set_segment_mask_topic("/segment_mask");
 
 
     //publish_pointcloud(nh, "point_base_link", cloud_base_link);
-    t_selector.get_next_target_instance();
+    // t_selector.get_next_target_instance_0();
+    t_selector.get_labeled_scene_pointcloud();
 
     
-
-    
-    ros::spin();
+    // ros::spin();
 }

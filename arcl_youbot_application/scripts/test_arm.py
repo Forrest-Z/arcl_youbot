@@ -10,11 +10,11 @@ import numpy as np
 
 if __name__ == "__main__":
     rospy.init_node("reachibility")
-    # env = app_util.YoubotEnvironment(-1.5, 1.5, -3.0, 1.0, 'youbot_0')   
-    env = app_util.YoubotEnvironment(-1.5, 1.5, -3.0, 1.0)    
+    env = app_util.YoubotEnvironment(-1.5, 1.5, -3.0, 1.0, 'youbot_0', 0)   
+    # env = app_util.YoubotEnvironment(-1.5, 1.5, -3.0, 1.0)    
 
     # env = app_util.YoubotEnvironment(-2.5, 2.5, 0.0, 5.0)
-    env.mode = 1
+    # env.mode = 1
     #import object list from file
     my_path = os.path.abspath(os.path.dirname(__file__))
     
@@ -22,6 +22,8 @@ if __name__ == "__main__":
     # reserved_object_list = []
     # for test_obj in env.object_list:
     #     reserved_object_list.append(test_obj)
+    arm_drop_joint = [math.radians(170), math.radians(55), math.radians(-56), math.radians(180), math.radians(170)]
+
     middle_view_joint = [170/180.0*math.pi, 35/180.0*math.pi, -56 / 180.0 * math.pi, 180.5 / 180.0 * math.pi, 170 / 180.0 * math.pi]
     high_view_joint = [170/180.0*math.pi, 43/180.0*math.pi, -56 / 180.0 * math.pi, 170.5 / 180.0 * math.pi, 170 / 180.0 * math.pi]
     far_view_joint = [170/180.0*math.pi, 43/180.0*math.pi, -56 / 180.0 * math.pi, 160.5 / 180.0 * math.pi, 170 / 180.0 * math.pi]
@@ -43,11 +45,11 @@ if __name__ == "__main__":
 #     target_pose_x:0.138492341742
 # target_pose_y:-0.00447503946685
 # target_pose_theta:-0.0447185758475
-    # arm_util.set_gripper_width("youbot_0", 0.06, 1)
+    arm_util.set_gripper_width("youbot_0", 0.06, 0)
 
     # env.move_to_local_target('youbot_0', -0.138492341742, 0.00447503946685, 0.0447185758475)
-    # env.move_arm_to_joint_pose_old_direct("youbot_0", middle_view_joint)
-    env.move_arm_to_joint_pose_old_direct("youbot_0", high_view_joint)
+    env.move_arm_to_joint_pose_direct("youbot_0", arm_drop_joint)
+    # env.move_arm_to_joint_pose_old_direct("youbot_0", high_view_joint)
     # env.move_arm_to_joint_pose_old_direct("youbot_0", far_view_joint)
 
     # env.move_arm_to_joint_pose_old("youbot_0", arm_up_joint_1)

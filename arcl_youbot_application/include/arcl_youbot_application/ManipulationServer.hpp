@@ -44,7 +44,7 @@
 #define YOUBOT_BASE_LENGTH  0.623
 #define YOUBOT_BASE_WIDTH  0.46
 #define USE_GAZEBO_
-#define DEBUG_
+// #define DEBUG_
 
 
 class ManipulationServer

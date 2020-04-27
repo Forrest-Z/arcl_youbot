@@ -134,16 +134,14 @@ if __name__ == "__main__":
     # print(env_obj_list)
 
     # DP
-    # pick_rounds_index_list = [[10, 11, 3], [7, 8, 5, 12], [0, 6], [9, 4, 2]]
-    # pick_rounds_pose_list = [[Pose(Point(-0.643515508055,-0.122821919396,0),Quaternion(0,0,0,0)),Pose(Point(-1.03520174823,-0.336748850021,0),Quaternion(0,0,0,0)),Pose(Point(-0.828584875059,-1.02804475029,0),Quaternion(0,0,0,0)),],[Pose(Point(0.823003386122,-0.802467928306,0),Quaternion(0,0,0,0)),Pose(Point(1.09946250004,-1.38999014649,0),Quaternion(0,0,0,0)),Pose(Point(1.03756499278,-1.917554773,0),Quaternion(0,0,0,0)),Pose(Point(0.505767623677,-2.18939523654,0),Quaternion(0,0,0,0)),],[Pose(Point(0.638322181021,-0.171834099524,0),Quaternion(0,0,0,0)),Pose(Point(0.467518211393,-0.74200452279,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.0278446283252,-1.34225166689,0),Quaternion(0,0,0,0)),Pose(Point(-0.244377644919,-1.98662260365,0),Quaternion(0,0,0,0)),Pose(Point(-0.708715769235,-2.22277885895,0),Quaternion(0,0,0,0)),],]
+    pick_rounds_index_list = [[9], [2, 11], [1], [3], [10, 12], [0, 5], [6]]
+    pick_rounds_pose_list = [[Pose(Point(-0.683016193367,-0.425243096452,0),Quaternion(0,0,0,0)),],[Pose(Point(0.472523801307,-1.75371351518,0),Quaternion(0,0,0,0)),Pose(Point(-0.0258034938946,-2.2349652171,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.631459353839,-1.33854507522,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.338779258296,-0.0935720981184,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.280279736286,-0.448332669034,0),Quaternion(0,0,0,0)),Pose(Point(-0.94868945199,-1.74457276598,0),Quaternion(0,0,0,0)),],[Pose(Point(0.85785154938,-1.18506542227,0),Quaternion(0,0,0,0)),Pose(Point(1.13647644996,-1.66429931096,0),Quaternion(0,0,0,0)),],[Pose(Point(0.741259927745,-0.180241800908,0),Quaternion(0,0,0,0)),],]
     # Greedy
-    # pick_rounds_index_list = [[11, 10, 6], [0, 7, 8, 5], [3, 9, 4], [12, 2]]
-    # pick_rounds_pose_list = [[Pose(Point(-0.438969466282,-0.375161614028,0),Quaternion(0,0,0,0)),Pose(Point(-0.827659955947,-0.561075074991,0),Quaternion(0,0,0,0)),Pose(Point(-0.462567264056,-0.733122865089,0),Quaternion(0,0,0,0)),],[Pose(Point(0.645147491288,-0.0685088091877,0),Quaternion(0,0,0,0)),Pose(Point(1.10612695846,-0.672430226311,0),Quaternion(0,0,0,0)),Pose(Point(1.10046250004,-1.38899014649,0),Quaternion(0,0,0,0)),Pose(Point(1.03856499278,-1.916554773,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.484126854911,-1.03615894724,0),Quaternion(0,0,0,0)),Pose(Point(-0.412863517087,-1.56453111939,0),Quaternion(0,0,0,0)),Pose(Point(-0.243377644919,-1.98562260365,0),Quaternion(0,0,0,0)),],[Pose(Point(0.0778764212601,-1.62485719609,0),Quaternion(0,0,0,0)),Pose(Point(-0.603936896048,-2.15684360428,0),Quaternion(0,0,0,0)),],]
-    pick_rounds_index_list = [[3, 9, 4], [12, 2]]
-    pick_rounds_pose_list = [[Pose(Point(-0.484126854911,-1.03615894724,0),Quaternion(0,0,0,0)),Pose(Point(-0.412863517087,-1.56453111939,0),Quaternion(0,0,0,0)),Pose(Point(-0.243377644919,-1.98562260365,0),Quaternion(0,0,0,0)),],[Pose(Point(0.0778764212601,-1.62485719609,0),Quaternion(0,0,0,0)),Pose(Point(-0.603936896048,-2.15684360428,0),Quaternion(0,0,0,0)),],]
+    pick_rounds_index_list = [[0], [1], [11], [12]]
+    pick_rounds_pose_list = [[Pose(Point(-0.337779258296,-0.0925720981184,0),Quaternion(0,0,0,0)),Pose(Point(-0.673112148581,-0.414992878439,0),Quaternion(0,0,0,0)),],[Pose(Point(0.742259927745,-0.179241800908,0),Quaternion(0,0,0,0)),Pose(Point(1.26465516555,-1.65681052557,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.685037924917,-0.419289319079,0),Quaternion(0,0,0,0)),Pose(Point(0.27066011026,-1.87491735555,0),Quaternion(0,0,0,0)),],[Pose(Point(0.85885154938,-1.18406542227,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.630459353839,-1.33754507522,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.36849904939,-1.85849184156,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.929863789521,-1.75251212121,0),Quaternion(0,0,0,0)),],]
+    pick_rounds_pose_list = [[Pose(Point(0.85885154938,-1.18406542227,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.630459353839,-1.33754507522,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.36849904939,-1.85849184156,0),Quaternion(0,0,0,0)),],[Pose(Point(-0.929863789521,-1.75251212121,0),Quaternion(0,0,0,0)),],]
 
-    env.move_arm_to_joint_pose("youbot_0", arm_drop_joint)
-    raw_input("press to start")
+
 
     loaded = False
     loaded_obj_name = ''
@@ -179,6 +177,10 @@ if __name__ == "__main__":
             
             if loaded:
                 env.combined_move_base_and_arm_drop_pick("youbot_0", loaded_obj_name, arm_drop_joint, pre_pick_joint_value, target_base_pose)
+<<<<<<< HEAD
+=======
+                loaded = False
+>>>>>>> a19ae9c28f135f61caa5de3fd4f6910bc48cc88d
             else:
                 env.combined_move_base_and_arm_pick("youbot_0", pre_pick_joint_value, target_base_pose)
                 loaded = True
@@ -190,7 +192,10 @@ if __name__ == "__main__":
             if j == len(pick_index_list) - 1:
                 env.combined_move_base_and_arm_drop("youbot_0", obj_name, arm_drop_joint, rest_base_pose)
                 loaded = False
+<<<<<<< HEAD
         time.sleep(5)
+=======
+>>>>>>> a19ae9c28f135f61caa5de3fd4f6910bc48cc88d
 
     # for i, pick_index_list in enumerate(pick_rounds_index_list):
     #     for j, index in enumerate(pick_index_list):

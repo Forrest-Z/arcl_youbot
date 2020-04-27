@@ -57,7 +57,7 @@
 #include "fcl/math/vec_3f.h"
 #include "fcl/BVH/BVH_model.h"
 // #include "gazebo_util/gazeboUtility.hpp"
-#define DEBUG_
+// #define DEBUG_
 
 class GraspGenerator
 {

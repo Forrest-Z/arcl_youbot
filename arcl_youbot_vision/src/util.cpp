@@ -44,7 +44,7 @@ bool GetInputFromCamera( ros::NodeHandle &nh,
 
     msg_image = *img_ptr;
     msg_depth = *dep_ptr;
-
+    std::cout<<"get rgb points num:"<<msg_image.data.size()<<std::endl;
     caminfo.camera_K.resize(9);
     for( int k=0; k<9; k++ ) caminfo.camera_K[k] = ci_depth->K[k];
     caminfo.depth_scale = ci_depth->K[8];
@@ -55,7 +55,8 @@ bool GetInputFromCamera( ros::NodeHandle &nh,
      = cv_bridge::toCvCopy(*dep_ptr, dep_ptr->encoding);
 
     int bitdepth = sensor_msgs::image_encodings::bitDepth(dep_ptr->encoding);
-    if( bitdepth==16 )
+    std::cout<<"bitdepth:"<<bitdepth<<std::endl;
+    if( bitdepth==16 || bitdepth==64)
     {
         PointCloudfromDepth<PointXYZRGB, uint16_t>(
             cloud_cam, cv_dep->image, caminfo.depth_scale,
@@ -198,9 +199,9 @@ void PointCloudfromDepth( PointCloud<PointT> &cloud,
     {
         PointT &pt = cloud(c,r);
 
-        pt.r = image.at<cv::Vec3b>(r,c)[0];
+        pt.r = image.at<cv::Vec3b>(r,c)[2];
         pt.g = image.at<cv::Vec3b>(r,c)[1];
-        pt.b = image.at<cv::Vec3b>(r,c)[2];
+        pt.b = image.at<cv::Vec3b>(r,c)[0];
     }
 
     if( !isOrganized )    
@@ -364,6 +365,20 @@ void PointCloudsfromDepth<PointXYZRGB, uint16_t>(
 void publish_pointcloud(ros::NodeHandle& nh ,std::string topic_name, pcl::PointCloud<pcl::PointXYZRGB>& pointcloud){
     ros::Publisher pub = nh.advertise<pcl::PointCloud<pcl::PointXYZRGB>> (topic_name, 1);
 
+    std::cout<<"publish pointcloud in base link, point num:"<<pointcloud.points.size()<<std::endl;
+    ros::Rate loop_rate(4);
+    while (nh.ok())
+    {
+        pub.publish(pointcloud);
+        ros::spinOnce ();
+        loop_rate.sleep ();
+    }
+
+}
+
+void publish_pointcloud(ros::NodeHandle& nh ,std::string topic_name, pcl::PointCloud<pcl::PointXYZRGBNormal>& pointcloud){
+    ros::Publisher pub = nh.advertise<pcl::PointCloud<pcl::PointXYZRGB>> (topic_name, 1);
+
     std::cout<<"publish pointcloud in base link"<<std::endl;
     ros::Rate loop_rate(4);
     while (nh.ok())
@@ -373,4 +388,20 @@ void publish_pointcloud(ros::NodeHandle& nh ,std::string topic_name, pcl::PointC
         loop_rate.sleep ();
     }
 
+}
+
+std::tuple<double, double, double> get_pointcloud_center(pcl::PointCloud<pcl::PointXYZRGBNormal>& pc){
+    double center_x = 0;
+    double center_y = 0;
+    double center_z = 0;
+    for(int i = 0; i < pc.points.size(); i++){
+        center_x += pc.points[i].x;
+        center_y += pc.points[i].y;
+        center_z += pc.points[i].z;
+
+    }
+    center_x = center_x / pc.points.size();
+    center_y = center_y / pc.points.size();
+    center_z = center_z / pc.points.size();
+    return std::make_tuple(center_x, center_y, center_z);
 }

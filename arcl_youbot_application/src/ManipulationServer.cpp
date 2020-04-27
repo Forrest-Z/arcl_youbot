@@ -127,9 +127,9 @@ void ManipulationServer::GenerateSamplesForArmConf(geometry_msgs::Pose gripper_p
     double tip_z;
    // 0.067 is the length of the gripper finger
     
-    tip_z = gripper_pose.position.z + normal_z*0.035;  // -0.06 only for gazebo
+    tip_z = gripper_pose.position.z + normal_z*0.0424 - 0.06;  // -0.06 only for gazebo
     // tip_z = gripper_pose.position.z;
-
+    ROS_WARN_STREAM("tip_z:"<<tip_z);
     cylin_z = tip_z - ykin::H2 + ykin::L0; // relative to arm_link_0
     
     std::cout<<"cylin_z:"<<cylin_z<<std::endl;
@@ -217,7 +217,7 @@ void ManipulationServer::goalCB()
     #ifdef DEBUG_
     ROS_WARN("action being called");
     #endif
-
+    ROS_WARN_STREAM("plan for object:"<<target_object_name_);
     ManipulationSceneToGraspScene(manipulation_scene_, grasp_scene);
 
     double target_dx, target_dy, target_dz;
@@ -233,9 +233,9 @@ void ManipulationServer::goalCB()
     arc::PlanningScene base_planning_scene(nh_, -5, 5, -5, 5);
     base_planning_scene.InitFromMsg(manipulation_scene_);
     base_planning_scene.updateCollisionHash();
-    ROS_WARN_STREAM("CURRENT DEBUG PRINT_____________________________");
-    base_planning_scene.printDebugInfo();
-    ROS_WARN_STREAM("END DEBUG PRINT_______________________");
+    // ROS_WARN_STREAM("CURRENT DEBUG PRINT_____________________________");
+    // base_planning_scene.printDebugInfo();
+    // ROS_WARN_STREAM("END DEBUG PRINT_______________________");
 
     if(is_synchronize_)
     {
@@ -559,6 +559,8 @@ void ManipulationServer::goalCB()
         	result_.normal_x = normal_x;
         	result_.normal_y = normal_y;
         	result_.normal_z = normal_z;
+            ROS_WARN_STREAM("final_base_pose:"<<base_pose.position.x<<","<<base_pose.position.y);
+
         	as_.setSucceeded(result_);
         }
     }

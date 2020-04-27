@@ -11,7 +11,7 @@ from std_msgs.msg import UInt8
 import os.path
 import math
 import time
-import TSP_DP_new as TSP_DP
+# import TSP_DP_new as TSP_DP
 import copy
 import sys, termios, tty, os, time
 

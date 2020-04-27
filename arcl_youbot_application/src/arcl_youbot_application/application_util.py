@@ -81,6 +81,9 @@ class YoubotEnvironment():
         self.mode = mode
         self.base_controller = base_util.BaseController(youbot_name, self.mode)
         self.prmstar_planner = None
+        
+        self.dp_seq = []
+        self.greedy_seq = []
 
     def import_obj_from_file(self, filename):
         # filename: ffabsolute path for the environment file
@@ -92,13 +95,22 @@ class YoubotEnvironment():
             current_obj = []
             for _ in range(vertex_num):
                 point = string.split(f.readline())
-                point[0] = float(point[0])
-                point[1] = float(point[1])
+                point[0] = float(point[0]) / 285.7 - 3.5
+                point[1] = 7 - float(point[1]) / 285.7
                 current_obj.append((point[0], point[1]))
             self.object_list['obj_'+str(obj_index)] = current_obj
         print(self.object_list)
         self.object_list['wall'] = WALL
-
+        additional_line = f.readline()
+        if additional_line == "":
+            pass
+        else:
+            for obj_index in string.split(additional_line):
+                self.dp_seq.append(int(obj_index))
+            greedy_line = f.readline()
+            for obj_index in string.split(greedy_line):
+                self.greedy_seq.append(int(obj_index))
+            
         print len(self.object_list)
 
     def export_obj_to_file(self, filename):
@@ -246,8 +258,8 @@ class YoubotEnvironment():
     def manipulation_action_done_cb(self, goal_state, result):
         #callback function for grasp planning action request
 
-        print("manipulationaction returned")
-        print(result)
+        # print("manipulationaction returned")
+        # print(result)
         self.grasp_plan_result = result
 
     def move_arm_to_joint_pose_old_cb(self, goal_state, result):
@@ -395,10 +407,10 @@ class YoubotEnvironment():
             print(obj_name)
             #write num of object vertices
             scene_file.write("4\n")
-            scene_file.write(str(-obj[0][0] * 1000 + 500) + " " + str(obj[0][1]*1000 + 2000)+"\n")
-            scene_file.write(str(-obj[1][0]*1000 + 500) + " " + str(obj[1][1]*1000 + 2000)+"\n")
-            scene_file.write(str(-obj[2][0]*1000 + 500) + " " + str(obj[2][1]*1000 + 2000)+"\n")
-            scene_file.write(str(-obj[3][0]*1000 + 500) + " " + str(obj[3][1]*1000 + 2000)+"\n")
+            scene_file.write(str(-obj[0][0] * 1000 + 780) + " " + str(obj[0][1]*1000 + 2300)+"\n")
+            scene_file.write(str(-obj[1][0]*1000 + 780) + " " + str(obj[1][1]*1000 + 2300)+"\n")
+            scene_file.write(str(-obj[2][0]*1000 + 780) + " " + str(obj[2][1]*1000 + 2300)+"\n")
+            scene_file.write(str(-obj[3][0]*1000 + 780) + " " + str(obj[3][1]*1000 + 2300)+"\n")
 
   
 
@@ -578,8 +590,10 @@ class YoubotEnvironment():
             # target_pose: the target pose in global coordinate
                     # type: geometry_msgs/Pose
         current_pos_2d = self.base_controller.get_youbot_base_pose2d()
-        print("current_pos_2d")
-        print(current_pos_2d)
+        # print("current_pos_2d")
+        # print(current_pos_2d)
+        print("env.move_to_target():from: " + str(current_pos_2d[0]) + "," + str(current_pos_2d[1])+ " to: " + str(target_pose.position.x) + "," + str(target_pose.position.y))
+
         target_pos_2d = [0, 0, 0]
         target_pos_2d[0] = target_pose.position.x
         target_pos_2d[1] = target_pose.position.y
@@ -595,24 +609,24 @@ class YoubotEnvironment():
         obstacles = self.object_list.values()
         start_heading = current_pos_2d[2]
         goal_heading = target_pos_2d[2]
-        print("start:")
-        print(start_pos, start_heading)
-        print("goal:")
-        print(goal_pos, goal_heading)
+        # print("start:")
+        # print(start_pos, start_heading)
+        # print("goal:")
+        # print(goal_pos, goal_heading)
         start_time = time.time()
         # path_with_heading, g, large_g = base_util.vg_find_combined_path(start_pos, goal_pos, start_heading, goal_heading, obstacles)
         path_with_heading, g = base_util.vg_find_large_path(start_pos, goal_pos, start_heading, goal_heading, obstacles)
         # path_with_heading, g = base_util.vg_find_small_path(start_pos, goal_pos, start_heading, goal_heading, obstacles)
-        print("time: " + str(time.time() - start_time))
-        print("path:")
-        print(path_with_heading)
+        # print("time: " + str(time.time() - start_time))
+        # print("path:")
+        # print(path_with_heading)
         
         # base_util.plot_vg_path(obstacles, path_with_heading, g, large_g)
         # base_util.plot_vg_path(obstacles, path_with_heading, g)
 
-        print('Start moving!!!')
+        # print('Start moving!!!')
         self.base_controller.execute_path_vel_pub(path_with_heading, True)
-        print('Moved!!!')
+        # print('Moved!!!')
 
     def get_path(self, youbot_name, start_pose, target_pose):
         # works under gazebo and real world env
@@ -813,6 +827,7 @@ class YoubotEnvironment():
     # joint_target in the range of [0, 5]
 
     def combined_move_base_and_arm_pick(self, youbot_name, pre_pick_joint_value, base_target_pose):
+        print("env.combined_move_base_and_arm_pick:")
         move = threading.Thread(target=self.move_to_target, args=(youbot_name, base_target_pose))
         move.start()
 
@@ -1038,7 +1053,6 @@ class YoubotEnvironment():
             p.setGravity(0,0,-10)
             my_path = os.path.abspath(os.path.dirname(__file__))
             my_path = os.path.join(my_path, "../../../luh_youbot_description/robots/youbot_0.urdf")
-            print(my_path)
             self.prmstar_planner = prmstar.PRMStarPlanner(p, my_path)
 
         arm_controller = arm_util.ArmController(youbot_name, self.mode)
@@ -1128,6 +1142,7 @@ class YoubotEnvironment():
         print("moved back to the pre_pick pose")
 
     def pick_object_from_prev(self, youbot_name, pick_joint_value, pre_pick_joint_value):
+        print("env.pick_object_from_prev:")
         if self.mode == 0 or self.mode == 1:
             pick_joint_value[4] = -pick_joint_value[4]
 
@@ -1137,30 +1152,34 @@ class YoubotEnvironment():
             else:
                 pick_joint_value[4] += 1.57
 
-        print('pick_joint_value:')
-        print(pick_joint_value)
+        # print('pick_joint_value:')
+        # print(pick_joint_value)
         arm_util.subtract_offset(pick_joint_value)
        
         #directly move arm to pick_pos
         arm_controller = arm_util.ArmController(youbot_name, self.mode)
         start = arm_controller.get_current_joint_pos()
         [final_path, final_cost] = self.prmstar_planner.direct_path(tuple(start), tuple(pick_joint_value))
-        print("before execution waiting.....")
+        # print("before execution waiting.....")
         arm_util.execute_path(youbot_name, final_path)
-        print("moved to the pick pose")
+        # print("moved to the pick pose")
         if self.mode == 0:
             gripper_client = arm_util.set_gripper_width(youbot_name, 0.0, self.mode)
             rospy.sleep(rospy.Duration.from_sec(1.5))
         else:
             gripper_client = arm_util.set_gripper_width(youbot_name, 0.06, self.mode)
-            rospy.sleep(rospy.Duration.from_sec(1.5))
+            rospy.sleep(rospy.Duration.from_sec(1.5))   
         gripper_client.wait_for_result()
+        gripper_client = arm_util.set_gripper_width(youbot_name, 0.06, self.mode)
+        rospy.sleep(rospy.Duration.from_sec(1))   
+        gripper_client.wait_for_result()
+
         #directly retract arm to pre_pick_pos
         arm_controller = arm_util.ArmController(youbot_name, self.mode)
         start = arm_controller.get_current_joint_pos()
         [final_path, final_cost] = self.prmstar_planner.direct_path(tuple(start), tuple(pre_pick_joint_value))
         arm_util.execute_path(youbot_name, final_path)
-        print("moved back to the pre_pick pose")
+        # print("moved back to the pre_pick pose")
 
     def get_pick_object_path(self, youbot_name, pick_joint_value, pre_pick_joint_value, current_pos_2d, current_joint_pos):
         #Given picking joint configuration, executes the goto following steps:
@@ -1200,8 +1219,8 @@ class YoubotEnvironment():
                 pick_joint_value[4] += 1.57
                 pre_pick_joint_value[4] += 1.57
 
-        print('pick_joint_value:')
-        print(pick_joint_value)
+        # print('pick_joint_value:')
+        # print(pick_joint_value)
         arm_util.subtract_offset(pick_joint_value)
         arm_util.subtract_offset(pre_pick_joint_value)
 

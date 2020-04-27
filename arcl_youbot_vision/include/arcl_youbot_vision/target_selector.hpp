@@ -6,6 +6,12 @@
 #include <ros/ros.h>
 #include <arcl_youbot_msgs/AllMask.h>
 #include <pcl/features/normal_3d.h>
+#include <pcl/io/pcd_io.h>
+#include <pcl/filters/statistical_outlier_removal.h>
+#include <Eigen/SVD> 
+#include <Eigen/Dense>
+#include <tf/transform_datatypes.h>
+#include <pcl/filters/voxel_grid.h>
 
 class target_selector{
     private:
@@ -23,6 +29,7 @@ class target_selector{
         camerainfo_t caminfo_;
         pcl::PointCloud<pcl::PointXYZRGB> cloud_camera_;
         pcl::PointCloud<pcl::PointXYZRGB> cloud_base_;
+        bool is_segment_mask_ready_;
 
     public:
         target_selector(ros::NodeHandle& nh);
@@ -35,11 +42,11 @@ class target_selector{
         void set_image_segment_topic(std::string);
         void set_segment_mask_topic(std::string);
         bool is_mask_separated(std::vector<std::pair<int, int>>, int);
-        void get_next_target_instance();
+        void get_next_target_instance_0();
         void get_current_scene();
         void segment_mask_callback(const arcl_youbot_msgs::AllMask& msg);
         void get_instance_mask();
-
+        void get_labeled_scene_pointcloud();
 };
 
 
